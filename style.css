@@ -1,0 +1,105 @@
+:root {
+  color-scheme: dark;
+  --bg: #050914;
+  --panel: #091529;
+  --line: #1d3556;
+  --text: #e9f2ff;
+  --muted: #8da3bd;
+  --accent: #79e6ff;
+  --accent2: #ffdf69;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 50% -20%, #173463 0, transparent 42%),
+    linear-gradient(#050914, #02040a 70%);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  overflow-x: hidden;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 18px;
+}
+
+#game-shell {
+  width: min(100%, 1120px);
+  border: 1px solid #233c5d;
+  background: rgba(4, 10, 20, .88);
+  box-shadow: 0 30px 90px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.025);
+}
+
+#topbar, #footerbar {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 14px;
+  border-color: #1b314e;
+  background: linear-gradient(180deg, rgba(15,31,55,.95), rgba(6,15,29,.96));
+}
+
+#topbar { border-bottom: 1px solid #1b314e; justify-content: space-between; }
+#footerbar { border-top: 1px solid #1b314e; justify-content: center; flex-wrap: wrap; font-size: 11px; color: #8fa7c1; }
+
+.brand { font-weight: 900; letter-spacing: .12em; white-space: nowrap; }
+.brand span { color: var(--accent); }
+.hint { color: #758aa3; font-size: 11px; text-align: right; }
+
+#canvas-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #030712; overflow: hidden; }
+canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: none; }
+
+#scanlines {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: .12;
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, #000 3px 4px);
+  mix-blend-mode: multiply;
+}
+
+#touch-ui { display: none; position: absolute; inset: 0; pointer-events: none; }
+#touch-ui button {
+  pointer-events: auto;
+  border: 1px solid rgba(255,255,255,.26);
+  background: rgba(4,12,25,.56);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  font: 700 13px/1 ui-monospace, monospace;
+}
+
+.dpad { position: absolute; left: 18px; bottom: 18px; width: 154px; height: 154px; }
+.dpad button { position: absolute; width: 52px; height: 52px; border-radius: 12px; }
+.dpad .up { left: 51px; top: 0; }
+.dpad .left { left: 0; top: 51px; }
+.dpad .down { left: 51px; top: 102px; }
+.dpad .right { left: 102px; top: 51px; }
+
+.actions { position: absolute; right: 18px; bottom: 18px; width: 250px; height: 170px; }
+.actions button { position: absolute; border-radius: 50%; width: 58px; height: 58px; }
+.actions .attack { right: 0; top: 56px; background: rgba(159,28,42,.6); }
+.actions .special { right: 64px; top: 0; background: rgba(58,70,196,.6); }
+.actions .jump { right: 68px; top: 108px; width: 62px; height: 48px; border-radius: 14px; }
+.actions .swap { left: 0; top: 62px; width: 48px; height: 48px; }
+.actions .dash { left: 54px; top: 20px; width: 58px; height: 48px; border-radius: 14px; background: rgba(24,130,151,.65); font-size: 10px; }
+
+@media (hover: none), (pointer: coarse) {
+  body { padding: 0; place-items: start center; background: #02050b; }
+  #game-shell { width: 100%; border-left: 0; border-right: 0; }
+  #topbar, #footerbar { display: none; }
+  #canvas-wrap { min-height: 100svh; aspect-ratio: auto; display: grid; place-items: center; }
+  canvas { width: 100vw; height: auto; max-height: 100svh; object-fit: contain; }
+  #touch-ui { display: block; }
+}

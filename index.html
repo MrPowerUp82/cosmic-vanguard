@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07101f" />
+  <title>Cosmic Vanguard — Beat 'em up</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <div id="topbar">
+      <div class="brand">COSMIC <span>VANGUARD</span></div>
+      <div class="hint">Beat 'em up original inspirado em clássicos arcade</div>
+    </div>
+
+    <div id="canvas-wrap">
+      <canvas id="game" width="960" height="540" aria-label="Cosmic Vanguard"></canvas>
+      <div id="scanlines" aria-hidden="true"></div>
+
+      <div id="touch-ui" aria-hidden="true">
+        <div class="dpad">
+          <button data-key="ArrowUp" class="up">▲</button>
+          <button data-key="ArrowLeft" class="left">◀</button>
+          <button data-key="ArrowDown" class="down">▼</button>
+          <button data-key="ArrowRight" class="right">▶</button>
+        </div>
+        <div class="actions">
+          <button data-key="KeyQ" class="swap">↺</button>
+          <button data-key="KeyC" class="dash">MOVE</button>
+          <button data-key="Space" class="jump">JUMP</button>
+          <button data-key="KeyK" class="special">SP</button>
+          <button data-key="KeyJ" class="attack">ATK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="footerbar">
+      <span>WASD/Setas: mover</span>
+      <span>J/Z: atacar</span>
+      <span>K/X: especial</span>
+      <span>L/C: movimento especial</span>
+      <span>Espaço: pular</span>
+      <span>Q/E: trocar herói</span>
+      <span>Esc: pausa</span>
+    </div>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

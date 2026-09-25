@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cosmic Vanguard - Sprite Sheet Viewer</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --panel: #171b2e;
+      --panel-2: #1f2640;
+      --text: #eef2ff;
+      --muted: #9ca8d4;
+      --accent: #79d0ff;
+      --accent-2: #ffd166;
+      --line: #2c365e;
+      --danger: #ff6b6b;
+      --ok: #59d98e;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      height: 100%;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 18px;
+      overflow: auto;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .section {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .row.row-1 { grid-template-columns: 1fr; }
+    .row.row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0f1427;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      line-height: 1.4;
+    }
+
+    button {
+      cursor: pointer;
+      background: #18203a;
+      transition: 0.15s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.15);
+    }
+
+    .btn-accent { background: #18324f; border-color: #2f5f94; }
+    .btn-warn { background: #47351a; border-color: #8d692d; }
+    .btn-ok { background: #183526; border-color: #2d7f4f; }
+    .btn-danger { background: #442024; border-color: #8f3843; }
+
+    .viewer-toolbar {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(15,18,32,0.92);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #1a2038;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .viewer-wrap {
+      overflow: auto;
+      padding: 18px;
+      background:
+        linear-gradient(45deg, #14192c 25%, transparent 25%),
+        linear-gradient(-45deg, #14192c 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #14192c 75%),
+        linear-gradient(-45deg, transparent 75%, #14192c 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+    }
+
+    .sheet-stage {
+      position: relative;
+      display: inline-block;
+      min-width: 400px;
+      min-height: 240px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+    }
+
+    #sheetImage {
+      display: block;
+      max-width: none;
+      image-rendering: pixelated;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: auto;
+    }
+
+    .bottom-panels {
+      border-top: 1px solid var(--line);
+      padding: 14px 18px 20px;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      background: var(--panel);
+    }
+
+    .preview-card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .preview-card h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .canvas-box {
+      background:
+        linear-gradient(45deg, #14192c 25%, transparent 25%),
+        linear-gradient(-45deg, #14192c 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #14192c 75%),
+        linear-gradient(-45deg, transparent 75%, #14192c 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px;
+      overflow: auto;
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .help-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .tiny {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--accent-2); }
+
+    @media (max-width: 1100px) {
+      body {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .bottom-panels {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>Sprite Sheet Viewer</h1>
+    <p class="subtitle">
+      Ferramenta para testar cortes de sprite sheet no navegador. Escolha um sheet, marque um frame com o mouse,
+      ajuste os valores e veja a animação em tempo real.
+    </p>
+
+    <div class="section">
+      <h2>1) Sprite sheet</h2>
+      <div class="row row-1">
+        <div>
+          <label for="sheetSelect">Sheet pré-carregado</label>
+          <select id="sheetSelect"></select>
+        </div>
+      </div>
+      <div class="row row-1">
+        <div>
+          <label for="uploadInput">Ou carregar PNG local</label>
+          <input id="uploadInput" type="file" accept="image/*" />
+        </div>
+      </div>
+      <div class="row row-1">
+        <div>
+          <label for="animationSelect">Animação do atlas usada no jogo</label>
+          <select id="animationSelect"></select>
+        </div>
+      </div>
+      <p class="tiny" id="sheetInfo">—</p>
+    </div>
+
+    <div class="section">
+      <h2>2) Configuração do corte</h2>
+      <div class="row">
+        <div>
+          <label for="frameX">X inicial</label>
+          <input id="frameX" type="number" value="0" min="0" step="1" />
+        </div>
+        <div>
+          <label for="frameY">Y inicial</label>
+          <input id="frameY" type="number" value="0" min="0" step="1" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="frameW">Largura do frame</label>
+          <input id="frameW" type="number" value="128" min="1" step="1" />
+        </div>
+        <div>
+          <label for="frameH">Altura do frame</label>
+          <input id="frameH" type="number" value="128" min="1" step="1" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="frameCount">Quantidade de frames</label>
+          <input id="frameCount" type="number" value="4" min="1" step="1" />
+        </div>
+        <div>
+          <label for="columns">Colunas antes de quebrar linha</label>
+          <input id="columns" type="number" value="4" min="1" step="1" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="gapX">Espaçamento X</label>
+          <input id="gapX" type="number" value="0" step="1" />
+        </div>
+        <div>
+          <label for="gapY">Espaçamento Y</label>
+          <input id="gapY" type="number" value="0" step="1" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="previewScale">Escala do preview</label>
+          <input id="previewScale" type="number" value="3" min="1" max="10" step="1" />
+        </div>
+        <div>
+          <label for="fps">FPS</label>
+          <input id="fps" type="number" value="8" min="1" max="60" step="1" />
+        </div>
+      </div>
+      <div class="row row-3">
+        <button id="fitNaturalBtn" class="btn-warn">Usar tamanho do retângulo</button>
+        <button id="resetBtn">Resetar</button>
+        <button id="toggleBoxesBtn" class="btn-accent">Ocultar caixas</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>3) Controles da animação</h2>
+      <div class="row row-3">
+        <button id="prevBtn">◀ Frame</button>
+        <button id="playBtn" class="btn-ok">▶ Play</button>
+        <button id="nextBtn">Frame ▶</button>
+      </div>
+      <div class="row row-1">
+        <div>
+          <label for="currentFrame">Frame atual</label>
+          <input id="currentFrame" type="number" value="0" min="0" step="1" />
+        </div>
+      </div>
+      <p class="tiny">Dica: clique e arraste em cima do sprite sheet para marcar um frame manualmente.</p>
+    </div>
+
+    <div class="section">
+      <h2>4) Exportar preset</h2>
+      <div class="row row-1">
+        <div>
+          <label for="presetName">Nome do preset</label>
+          <input id="presetName" type="text" placeholder="Ex.: Solarion Idle" />
+        </div>
+      </div>
+      <div class="row row-3">
+        <button id="savePresetBtn" class="btn-ok">Salvar no navegador</button>
+        <button id="loadPresetBtn">Carregar</button>
+        <button id="deletePresetBtn" class="btn-danger">Excluir</button>
+      </div>
+      <div class="row row-1">
+        <div>
+          <label for="savedPresets">Presets salvos</label>
+          <select id="savedPresets"></select>
+        </div>
+      </div>
+      <div class="row row-1">
+        <div>
+          <label for="jsonOutput">JSON atual</label>
+          <textarea id="jsonOutput" readonly></textarea>
+        </div>
+      </div>
+      <div class="row row-3">
+        <button id="copyJsonBtn" class="btn-accent">Copiar JSON</button>
+        <button id="downloadJsonBtn">Baixar JSON</button>
+        <button id="applyJsonBtn">Aplicar JSON do campo</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Como usar</h2>
+      <ol class="help-list">
+        <li>Escolha um herói no seletor.</li>
+        <li>Clique e arraste sobre o primeiro frame da animação.</li>
+        <li>Ajuste quantidade de frames, colunas e espaçamentos.</li>
+        <li>Confira as caixas laranja e o preview animado.</li>
+        <li>Salve um preset por animação para reutilizar depois.</li>
+      </ol>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="viewer-toolbar">
+      <span class="pill" id="mousePos">Mouse: x -, y -</span>
+      <span class="pill" id="selectionInfo">Seleção: -</span>
+      <span class="pill" id="frameSummary">Frames: 0</span>
+      <span class="pill" id="playStatus">Status: pausado</span>
+    </div>
+
+    <div class="viewer-wrap" id="viewerWrap">
+      <div class="sheet-stage" id="sheetStage">
+        <img id="sheetImage" alt="Sprite sheet" />
+        <canvas id="overlay"></canvas>
+      </div>
+    </div>
+
+    <div class="bottom-panels">
+      <div class="preview-card">
+        <h3>Preview animado</h3>
+        <div class="canvas-box">
+          <canvas id="previewCanvas" width="256" height="256"></canvas>
+        </div>
+      </div>
+
+      <div class="preview-card">
+        <h3>Frames extraídos</h3>
+        <div class="canvas-box">
+          <canvas id="stripCanvas" width="900" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const SHEETS = [
+      { id: 'solarion', name: 'Solarion', src: 'assets/sprites/processed/solarion.png' },
+      { id: 'night_talon', name: 'Night Talon', src: 'assets/sprites/processed/night_talon.png' },
+      { id: 'valoria', name: 'Valoria', src: 'assets/sprites/processed/valoria.png' },
+      { id: 'red_velocity', name: 'Red Velocity', src: 'assets/sprites/processed/red_velocity.png' },
+      { id: 'abyss_king', name: 'Abyss King', src: 'assets/sprites/processed/abyss_king.png' },
+      { id: 'emerald_nova', name: 'Emerald Nova', src: 'assets/sprites/processed/emerald_nova.png' },
+    ];
+
+    const GAME_ANIMATIONS = [
+      { id: 'idle', label: 'Idle', row: 0, count: 4 },
+      { id: 'walk', label: 'Walk', row: 1, count: 6 },
+      { id: 'attack', label: 'Attack / Combo', row: 2, count: 4 },
+      { id: 'jump', label: 'Jump / Takeoff', row: 3, count: 3 },
+      { id: 'dash', label: 'Mobility / Dash / Flight', row: 4, count: 4 },
+      { id: 'hurt', label: 'Hit Reaction', row: 5, count: 2 },
+      { id: 'special', label: 'Special Attack', row: 6, count: 6 },
+    ];
+
+    const el = {
+      sheetSelect: document.getElementById('sheetSelect'),
+      uploadInput: document.getElementById('uploadInput'),
+      animationSelect: document.getElementById('animationSelect'),
+      sheetInfo: document.getElementById('sheetInfo'),
+      sheetImage: document.getElementById('sheetImage'),
+      overlay: document.getElementById('overlay'),
+      frameX: document.getElementById('frameX'),
+      frameY: document.getElementById('frameY'),
+      frameW: document.getElementById('frameW'),
+      frameH: document.getElementById('frameH'),
+      frameCount: document.getElementById('frameCount'),
+      columns: document.getElementById('columns'),
+      gapX: document.getElementById('gapX'),
+      gapY: document.getElementById('gapY'),
+      previewScale: document.getElementById('previewScale'),
+      fps: document.getElementById('fps'),
+      currentFrame: document.getElementById('currentFrame'),
+      previewCanvas: document.getElementById('previewCanvas'),
+      stripCanvas: document.getElementById('stripCanvas'),
+      mousePos: document.getElementById('mousePos'),
+      selectionInfo: document.getElementById('selectionInfo'),
+      frameSummary: document.getElementById('frameSummary'),
+      playStatus: document.getElementById('playStatus'),
+      playBtn: document.getElementById('playBtn'),
+      prevBtn: document.getElementById('prevBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      fitNaturalBtn: document.getElementById('fitNaturalBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      toggleBoxesBtn: document.getElementById('toggleBoxesBtn'),
+      jsonOutput: document.getElementById('jsonOutput'),
+      copyJsonBtn: document.getElementById('copyJsonBtn'),
+      downloadJsonBtn: document.getElementById('downloadJsonBtn'),
+      applyJsonBtn: document.getElementById('applyJsonBtn'),
+      presetName: document.getElementById('presetName'),
+      savedPresets: document.getElementById('savedPresets'),
+      savePresetBtn: document.getElementById('savePresetBtn'),
+      loadPresetBtn: document.getElementById('loadPresetBtn'),
+      deletePresetBtn: document.getElementById('deletePresetBtn'),
+    };
+
+    const state = {
+      imageName: 'solarion',
+      customImageName: null,
+      showBoxes: true,
+      playing: false,
+      currentFrame: 0,
+      lastFrameTime: 0,
+      dragStart: null,
+      dragCurrent: null,
+      selection: null,
+      animReq: null,
+    };
+
+    function populateSheets() {
+      el.sheetSelect.innerHTML = '';
+      SHEETS.forEach(sheet => {
+        const option = document.createElement('option');
+        option.value = sheet.id;
+        option.textContent = sheet.name;
+        el.sheetSelect.appendChild(option);
+      });
+    }
+
+    function populateAnimations() {
+      el.animationSelect.innerHTML = '';
+      GAME_ANIMATIONS.forEach(anim => {
+        const option = document.createElement('option');
+        option.value = anim.id;
+        option.textContent = anim.label;
+        el.animationSelect.appendChild(option);
+      });
+    }
+
+    function applyGameAnimationPreset() {
+      const anim = GAME_ANIMATIONS.find(a => a.id === el.animationSelect.value) || GAME_ANIMATIONS[0];
+      el.frameX.value = 0;
+      el.frameY.value = anim.row * 240;
+      el.frameW.value = 320;
+      el.frameH.value = 240;
+      el.frameCount.value = anim.count;
+      el.columns.value = anim.count;
+      el.gapX.value = 0;
+      el.gapY.value = 0;
+      state.currentFrame = 0;
+      el.currentFrame.value = 0;
+      updateAll();
+    }
+
+    function config() {
+      return {
+        sheetId: state.imageName,
+        sheetLabel: el.sheetSelect.options[el.sheetSelect.selectedIndex]?.text || state.customImageName || 'Custom',
+        x: Number(el.frameX.value) || 0,
+        y: Number(el.frameY.value) || 0,
+        width: Math.max(1, Number(el.frameW.value) || 1),
+        height: Math.max(1, Number(el.frameH.value) || 1),
+        count: Math.max(1, Number(el.frameCount.value) || 1),
+        columns: Math.max(1, Number(el.columns.value) || 1),
+        gapX: Number(el.gapX.value) || 0,
+        gapY: Number(el.gapY.value) || 0,
+        scale: Math.max(1, Number(el.previewScale.value) || 1),
+        fps: Math.max(1, Number(el.fps.value) || 1),
+      };
+    }
+
+    function setConfig(cfg) {
+      el.frameX.value = cfg.x ?? 0;
+      el.frameY.value = cfg.y ?? 0;
+      el.frameW.value = cfg.width ?? 128;
+      el.frameH.value = cfg.height ?? 128;
+      el.frameCount.value = cfg.count ?? 4;
+      el.columns.value = cfg.columns ?? 4;
+      el.gapX.value = cfg.gapX ?? 0;
+      el.gapY.value = cfg.gapY ?? 0;
+      el.previewScale.value = cfg.scale ?? 3;
+      el.fps.value = cfg.fps ?? 8;
+      el.currentFrame.value = Math.min(Number(el.currentFrame.value) || 0, Math.max(0, (cfg.count ?? 1) - 1));
+      state.currentFrame = Number(el.currentFrame.value) || 0;
+      updateAll();
+    }
+
+    function resetConfig() {
+      setConfig({ x: 0, y: 0, width: 128, height: 128, count: 4, columns: 4, gapX: 0, gapY: 0, scale: 3, fps: 8 });
+      state.selection = null;
+      updateAll();
+    }
+
+    function loadSelectedSheet() {
+      const selected = SHEETS.find(s => s.id === el.sheetSelect.value);
+      if (!selected) return;
+      state.imageName = selected.id;
+      state.customImageName = null;
+      el.sheetImage.src = selected.src;
+      el.sheetImage.onload = () => {
+        onImageLoaded();
+      };
+    }
+
+    function onImageLoaded() {
+      resizeOverlay();
+      el.sheetInfo.textContent = `Arquivo: ${el.sheetImage.currentSrc.split('/').pop()} | ${el.sheetImage.naturalWidth} x ${el.sheetImage.naturalHeight}px`;
+      updateAll();
+    }
+
+    function resizeOverlay() {
+      const rect = el.sheetImage.getBoundingClientRect();
+      el.overlay.width = Math.max(1, Math.round(rect.width));
+      el.overlay.height = Math.max(1, Math.round(rect.height));
+      el.overlay.style.width = rect.width + 'px';
+      el.overlay.style.height = rect.height + 'px';
+    }
+
+    function imageScale() {
+      return {
+        sx: el.sheetImage.naturalWidth / el.overlay.width,
+        sy: el.sheetImage.naturalHeight / el.overlay.height,
+      };
+    }
+
+    function toImageCoords(evt) {
+      const rect = el.overlay.getBoundingClientRect();
+      const px = evt.clientX - rect.left;
+      const py = evt.clientY - rect.top;
+      const scale = imageScale();
+      return {
+        x: Math.max(0, Math.round(px * scale.sx)),
+        y: Math.max(0, Math.round(py * scale.sy)),
+      };
+    }
+
+    function toCanvasCoords(ix, iy) {
+      const scale = imageScale();
+      return {
+        x: ix / scale.sx,
+        y: iy / scale.sy,
+      };
+    }
+
+    function getRects() {
+      const c = config();
+      const rects = [];
+      for (let i = 0; i < c.count; i++) {
+        const col = i % c.columns;
+        const row = Math.floor(i / c.columns);
+        rects.push({
+          i,
+          x: c.x + col * (c.width + c.gapX),
+          y: c.y + row * (c.height + c.gapY),
+          w: c.width,
+          h: c.height,
+        });
+      }
+      return rects;
+    }
+
+    function drawOverlay() {
+      const ctx = el.overlay.getContext('2d');
+      ctx.clearRect(0, 0, el.overlay.width, el.overlay.height);
+
+      if (!state.showBoxes) return;
+
+      const rects = getRects();
+      rects.forEach((r, index) => {
+        const p = toCanvasCoords(r.x, r.y);
+        const size = toCanvasCoords(r.w, r.h);
+        ctx.lineWidth = index === state.currentFrame ? 3 : 2;
+        ctx.strokeStyle = index === state.currentFrame ? '#59d98e' : '#ffb703';
+        ctx.strokeRect(p.x + 0.5, p.y + 0.5, size.x, size.y);
+        ctx.fillStyle = index === state.currentFrame ? 'rgba(89,217,142,0.18)' : 'rgba(255,183,3,0.12)';
+        ctx.fillRect(p.x, p.y, size.x, size.y);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial';
+        ctx.fillText(String(index), p.x + 4, p.y + 14);
+      });
+
+      if (state.dragStart && state.dragCurrent) {
+        const sx = Math.min(state.dragStart.x, state.dragCurrent.x);
+        const sy = Math.min(state.dragStart.y, state.dragCurrent.y);
+        const sw = Math.abs(state.dragCurrent.x - state.dragStart.x);
+        const sh = Math.abs(state.dragCurrent.y - state.dragStart.y);
+        const p = toCanvasCoords(sx, sy);
+        const size = toCanvasCoords(sw, sh);
+        ctx.strokeStyle = '#79d0ff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(p.x + 0.5, p.y + 0.5, size.x, size.y);
+        ctx.setLineDash([]);
+      }
+    }
+
+    function renderPreview() {
+      if (!el.sheetImage.naturalWidth) return;
+      const c = config();
+      const rects = getRects();
+      if (!rects.length) return;
+      state.currentFrame = Math.min(state.currentFrame, rects.length - 1);
+      const rect = rects[state.currentFrame];
+
+      const canvas = el.previewCanvas;
+      const ctx = canvas.getContext('2d');
+      const outW = c.width * c.scale;
+      const outH = c.height * c.scale;
+      canvas.width = outW;
+      canvas.height = outH;
+      ctx.clearRect(0, 0, outW, outH);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(el.sheetImage, rect.x, rect.y, rect.w, rect.h, 0, 0, outW, outH);
+    }
+
+    function renderStrip() {
+      if (!el.sheetImage.naturalWidth) return;
+      const c = config();
+      const rects = getRects();
+      const maxRows = Math.ceil(rects.length / Math.max(1, c.columns));
+      const canvas = el.stripCanvas;
+      const gap = 8;
+      const canvasW = (c.width + gap) * Math.max(1, c.columns) + gap;
+      const rowsUsed = Math.max(1, maxRows);
+      const canvasH = (c.height + gap) * rowsUsed + gap;
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvasW, canvasH);
+      ctx.imageSmoothingEnabled = false;
+      rects.forEach((r, idx) => {
+        const col = idx % c.columns;
+        const row = Math.floor(idx / c.columns);
+        const dx = gap + col * (c.width + gap);
+        const dy = gap + row * (c.height + gap);
+        ctx.drawImage(el.sheetImage, r.x, r.y, r.w, r.h, dx, dy, c.width, c.height);
+        ctx.strokeStyle = idx === state.currentFrame ? '#59d98e' : '#3b4572';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(dx + 0.5, dy + 0.5, c.width, c.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial';
+        ctx.fillText(String(idx), dx + 4, dy + 14);
+      });
+    }
+
+    function refreshJsonOutput() {
+      el.jsonOutput.value = JSON.stringify({
+        name: el.presetName.value || '',
+        ...config(),
+      }, null, 2);
+    }
+
+    function updateStatus() {
+      const c = config();
+      el.currentFrame.max = Math.max(0, c.count - 1);
+      el.selectionInfo.textContent = `Seleção: x ${c.x}, y ${c.y}, w ${c.width}, h ${c.height}`;
+      el.frameSummary.textContent = `Frames: ${c.count} | Colunas: ${c.columns} | Gap: ${c.gapX}/${c.gapY}`;
+      el.playStatus.textContent = state.playing ? `Status: tocando ${c.fps} fps` : 'Status: pausado';
+      refreshJsonOutput();
+    }
+
+    function updateAll() {
+      resizeOverlay();
+      drawOverlay();
+      renderPreview();
+      renderStrip();
+      updateStatus();
+    }
+
+    function animationLoop(ts) {
+      const c = config();
+      if (!state.playing) return;
+      if (!state.lastFrameTime) state.lastFrameTime = ts;
+      const interval = 1000 / c.fps;
+      if (ts - state.lastFrameTime >= interval) {
+        state.currentFrame = (state.currentFrame + 1) % c.count;
+        el.currentFrame.value = state.currentFrame;
+        state.lastFrameTime = ts;
+        updateAll();
+      }
+      state.animReq = requestAnimationFrame(animationLoop);
+    }
+
+    function setPlaying(next) {
+      state.playing = next;
+      el.playBtn.textContent = next ? '⏸ Pause' : '▶ Play';
+      state.lastFrameTime = 0;
+      if (next) {
+        cancelAnimationFrame(state.animReq);
+        state.animReq = requestAnimationFrame(animationLoop);
+      } else {
+        cancelAnimationFrame(state.animReq);
+      }
+      updateStatus();
+    }
+
+    function getStorageKey() {
+      return 'cosmic-vanguard-sprite-presets';
+    }
+
+    function loadPresets() {
+      try {
+        return JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function savePresets(list) {
+      localStorage.setItem(getStorageKey(), JSON.stringify(list));
+    }
+
+    function refreshPresetList() {
+      const presets = loadPresets();
+      el.savedPresets.innerHTML = '';
+      if (!presets.length) {
+        const option = document.createElement('option');
+        option.textContent = 'Nenhum preset salvo';
+        option.value = '';
+        el.savedPresets.appendChild(option);
+        return;
+      }
+      presets.forEach((preset, index) => {
+        const option = document.createElement('option');
+        option.value = String(index);
+        option.textContent = `${preset.name || 'Sem nome'} (${preset.sheetLabel || preset.sheetId || 'custom'})`;
+        el.savedPresets.appendChild(option);
+      });
+    }
+
+    function saveCurrentPreset() {
+      const name = el.presetName.value.trim();
+      if (!name) {
+        alert('Digite um nome para o preset.');
+        return;
+      }
+      const presets = loadPresets();
+      presets.push({ name, ...config() });
+      savePresets(presets);
+      refreshPresetList();
+      el.savedPresets.value = String(presets.length - 1);
+    }
+
+    function loadSelectedPreset() {
+      const presets = loadPresets();
+      const idx = Number(el.savedPresets.value);
+      const preset = presets[idx];
+      if (!preset) return;
+      el.presetName.value = preset.name || '';
+      if (preset.sheetId && SHEETS.some(s => s.id === preset.sheetId)) {
+        el.sheetSelect.value = preset.sheetId;
+        loadSelectedSheet();
+      }
+      setConfig(preset);
+    }
+
+    function deleteSelectedPreset() {
+      const presets = loadPresets();
+      const idx = Number(el.savedPresets.value);
+      if (!Number.isInteger(idx) || !presets[idx]) return;
+      presets.splice(idx, 1);
+      savePresets(presets);
+      refreshPresetList();
+    }
+
+    function downloadJson() {
+      const blob = new Blob([el.jsonOutput.value], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(el.presetName.value || state.imageName || 'sprite-config').replace(/\s+/g, '_').toLowerCase()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function applyJson() {
+      try {
+        const data = JSON.parse(el.jsonOutput.value);
+        if (data.sheetId && SHEETS.some(s => s.id === data.sheetId)) {
+          el.sheetSelect.value = data.sheetId;
+          loadSelectedSheet();
+        }
+        el.presetName.value = data.name || '';
+        setConfig(data);
+      } catch (error) {
+        alert('JSON inválido.');
+      }
+    }
+
+    function wireEvents() {
+      [
+        el.frameX, el.frameY, el.frameW, el.frameH, el.frameCount,
+        el.columns, el.gapX, el.gapY, el.previewScale, el.fps
+      ].forEach(input => input.addEventListener('input', updateAll));
+
+      el.currentFrame.addEventListener('input', () => {
+        state.currentFrame = Math.max(0, Number(el.currentFrame.value) || 0);
+        updateAll();
+      });
+
+      el.sheetSelect.addEventListener('change', loadSelectedSheet);
+      el.animationSelect.addEventListener('change', applyGameAnimationPreset);
+      el.playBtn.addEventListener('click', () => setPlaying(!state.playing));
+      el.prevBtn.addEventListener('click', () => {
+        const c = config();
+        state.currentFrame = (state.currentFrame - 1 + c.count) % c.count;
+        el.currentFrame.value = state.currentFrame;
+        updateAll();
+      });
+      el.nextBtn.addEventListener('click', () => {
+        const c = config();
+        state.currentFrame = (state.currentFrame + 1) % c.count;
+        el.currentFrame.value = state.currentFrame;
+        updateAll();
+      });
+      el.fitNaturalBtn.addEventListener('click', () => {
+        if (!state.selection) return;
+        el.frameX.value = state.selection.x;
+        el.frameY.value = state.selection.y;
+        el.frameW.value = state.selection.w;
+        el.frameH.value = state.selection.h;
+        updateAll();
+      });
+      el.resetBtn.addEventListener('click', resetConfig);
+      el.toggleBoxesBtn.addEventListener('click', () => {
+        state.showBoxes = !state.showBoxes;
+        el.toggleBoxesBtn.textContent = state.showBoxes ? 'Ocultar caixas' : 'Mostrar caixas';
+        drawOverlay();
+      });
+
+      el.copyJsonBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(el.jsonOutput.value);
+          el.copyJsonBtn.textContent = 'Copiado!';
+          setTimeout(() => el.copyJsonBtn.textContent = 'Copiar JSON', 1200);
+        } catch (e) {
+          alert('Não foi possível copiar.');
+        }
+      });
+      el.downloadJsonBtn.addEventListener('click', downloadJson);
+      el.applyJsonBtn.addEventListener('click', applyJson);
+      el.savePresetBtn.addEventListener('click', saveCurrentPreset);
+      el.loadPresetBtn.addEventListener('click', loadSelectedPreset);
+      el.deletePresetBtn.addEventListener('click', deleteSelectedPreset);
+
+      window.addEventListener('resize', updateAll);
+
+      el.uploadInput.addEventListener('change', (evt) => {
+        const file = evt.target.files[0];
+        if (!file) return;
+        state.customImageName = file.name;
+        state.imageName = 'custom';
+        const objectUrl = URL.createObjectURL(file);
+        el.sheetImage.src = objectUrl;
+        el.sheetImage.onload = () => {
+          el.sheetInfo.textContent = `Arquivo: ${file.name} | ${el.sheetImage.naturalWidth} x ${el.sheetImage.naturalHeight}px`;
+          onImageLoaded();
+        };
+      });
+
+      el.overlay.addEventListener('mousemove', (evt) => {
+        if (!el.sheetImage.naturalWidth) return;
+        const pos = toImageCoords(evt);
+        el.mousePos.textContent = `Mouse: x ${pos.x}, y ${pos.y}`;
+        if (state.dragStart) {
+          state.dragCurrent = pos;
+          drawOverlay();
+        }
+      });
+
+      el.overlay.addEventListener('mousedown', (evt) => {
+        if (!el.sheetImage.naturalWidth) return;
+        const pos = toImageCoords(evt);
+        state.dragStart = pos;
+        state.dragCurrent = pos;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!state.dragStart || !state.dragCurrent) return;
+        const x = Math.min(state.dragStart.x, state.dragCurrent.x);
+        const y = Math.min(state.dragStart.y, state.dragCurrent.y);
+        const w = Math.max(1, Math.abs(state.dragCurrent.x - state.dragStart.x));
+        const h = Math.max(1, Math.abs(state.dragCurrent.y - state.dragStart.y));
+        state.selection = { x, y, w, h };
+        el.frameX.value = x;
+        el.frameY.value = y;
+        el.frameW.value = w;
+        el.frameH.value = h;
+        state.dragStart = null;
+        state.dragCurrent = null;
+        updateAll();
+      });
+    }
+
+    function init() {
+      populateSheets();
+      populateAnimations();
+      refreshPresetList();
+      wireEvents();
+      el.sheetSelect.value = 'solarion';
+      loadSelectedSheet();
+      el.animationSelect.value = 'idle';
+      applyGameAnimationPreset();
+    }
+
+    init();
+  </script>
+</body>
+</html>
