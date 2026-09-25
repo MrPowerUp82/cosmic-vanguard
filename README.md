@@ -83,3 +83,9 @@ Depois abra `http://localhost:8000`.
 - `sprite-viewer.html` — ferramenta de inspeção de frames
 - `assets/sprites/` — sheets originais
 - `assets/sprites/processed/` — atlases usados pelo gameplay
+
+
+## Atualização: sprites de inimigos e boss
+- Shadow Trooper, Pulse Gunner, Armored Brute, Rift Assassin e Void Tyrant agora foram aplicados no gameplay.
+- Cada inimigo usa animações de idle, walk, attack, jump/leap, hurt e special conforme o sprite sheet.
+- O sprite-viewer também lista os sheets dos inimigos para facilitar testes de corte.

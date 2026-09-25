@@ -92,8 +92,91 @@
     },
   };
 
+  const enemyAnim = (x, y, w, h, count, fps, loop = false) => ({ x, y, w, h, count, fps, loop });
+  const ENEMY_SHEETS = {
+    shadow_trooper: {
+      src: 'assets/sprites/enemies/shadow_trooper.png', scale: .42,
+      animations: {
+        idle: enemyAnim(32, 52, 540, 225, 4, 5, true),
+        walk: enemyAnim(595, 48, 980, 230, 6, 8, true),
+        attack: enemyAnim(28, 320, 900, 250, 4, 9),
+        jump: enemyAnim(1040, 312, 520, 250, 3, 7),
+        dash: enemyAnim(1040, 312, 520, 250, 3, 7),
+        hurt: enemyAnim(30, 560, 570, 135, 2, 6),
+        special: enemyAnim(18, 685, 1590, 220, 6, 11),
+      }
+    },
+    pulse_gunner: {
+      src: 'assets/sprites/enemies/pulse_gunner.png', scale: .44,
+      animations: {
+        idle: enemyAnim(28, 48, 555, 225, 4, 5, true),
+        walk: enemyAnim(590, 50, 995, 225, 6, 8, true),
+        attack: enemyAnim(24, 330, 1035, 205, 4, 9),
+        jump: enemyAnim(1080, 330, 520, 205, 3, 7),
+        dash: enemyAnim(1080, 330, 520, 205, 3, 7),
+        hurt: enemyAnim(1120, 565, 450, 155, 2, 6),
+        special: enemyAnim(40, 750, 1510, 155, 6, 11),
+      }
+    },
+    armored_brute: {
+      src: 'assets/sprites/enemies/armored_brute.png', scale: .46,
+      animations: {
+        idle: enemyAnim(26, 55, 560, 225, 4, 5, true),
+        walk: enemyAnim(610, 58, 970, 225, 6, 8, true),
+        attack: enemyAnim(24, 334, 960, 270, 4, 8),
+        jump: enemyAnim(860, 332, 630, 270, 3, 7),
+        dash: enemyAnim(860, 332, 630, 270, 3, 7),
+        hurt: enemyAnim(1230, 352, 360, 180, 2, 6),
+        special: enemyAnim(24, 675, 1585, 230, 6, 10),
+      }
+    },
+    rift_assassin: {
+      src: 'assets/sprites/enemies/rift_assassin.png', scale: .42,
+      animations: {
+        idle: enemyAnim(12, 48, 565, 225, 4, 5, true),
+        walk: enemyAnim(600, 50, 1000, 225, 6, 8, true),
+        attack: enemyAnim(18, 330, 965, 205, 4, 9),
+        jump: enemyAnim(1020, 330, 580, 205, 3, 7),
+        dash: enemyAnim(1020, 330, 580, 205, 3, 7),
+        hurt: enemyAnim(1120, 560, 455, 140, 2, 6),
+        special: enemyAnim(20, 680, 1600, 230, 6, 11),
+      }
+    },
+    void_tyrant: {
+      src: 'assets/sprites/enemies/void_tyrant.png', scale: .48,
+      animations: {
+        idle: enemyAnim(26, 44, 565, 230, 4, 5, true),
+        walk: enemyAnim(600, 46, 1010, 230, 6, 8, true),
+        attack: enemyAnim(22, 308, 965, 260, 4, 8),
+        jump: enemyAnim(1015, 308, 585, 260, 3, 7),
+        dash: enemyAnim(1015, 308, 585, 260, 3, 7),
+        hurt: enemyAnim(1130, 570, 450, 150, 2, 6),
+        special: enemyAnim(20, 690, 1600, 220, 6, 10),
+      }
+    },
+  };
+
+  const ENEMY_VISUALS = {
+    grunt:         { sheet: 'shadow_trooper', scaleMul: 1.00, name: 'SHADOW TROOPER', ranged: false, leap: true, special: 'shockRush' },
+    ranger:        { sheet: 'pulse_gunner',   scaleMul: 1.00, name: 'PULSE GUNNER',   ranged: true,  evade: true, special: 'volleyBlast' },
+    brute:         { sheet: 'armored_brute',  scaleMul: 1.08, name: 'ARMORED BRUTE',  ranged: false, slam: true, special: 'furyBreaker' },
+    elite:         { sheet: 'rift_assassin',  scaleMul: 1.02, name: 'RIFT ASSASSIN',  ranged: false, phaseLeap: true, special: 'riftOnslaught' },
+    breaker_boss:  { sheet: 'armored_brute',  scaleMul: 1.18, name: 'BREAKER',        ranged: false, slam: true, special: 'furyBreaker' },
+    overseer_boss: { sheet: 'pulse_gunner',   scaleMul: 1.12, name: 'OVERSEER',       ranged: true,  evade: true, special: 'volleyBlast' },
+    aerial_boss:   { sheet: 'rift_assassin',  scaleMul: 1.12, name: 'AERIAL WARDEN',  ranged: false, phaseLeap: true, special: 'riftOnslaught' },
+    null_boss:     { sheet: 'void_tyrant',    scaleMul: 1.24, name: 'NULL SOVEREIGN', ranged: false, phaseLeap: true, special: 'apocalypseWave' },
+  };
+
+  function getSheetDefinition(id) {
+    return SPRITE_SHEETS[id] || ENEMY_SHEETS[id] || null;
+  }
+
+  function enemyVisual(enemy) {
+    return ENEMY_VISUALS[enemy?.renderId] || ENEMY_VISUALS[enemy?.type] || ENEMY_VISUALS.grunt;
+  }
+
   const spriteImages = {};
-  for (const [id, sheet] of Object.entries(SPRITE_SHEETS)) {
+  for (const [id, sheet] of Object.entries({ ...SPRITE_SHEETS, ...ENEMY_SHEETS })) {
     const img = new Image();
     img.src = sheet.src;
     spriteImages[id] = img;
@@ -357,9 +440,12 @@
   function makeEnemy(type, x, y, options = {}) {
     const base = ENEMY_TYPES[type] || ENEMY_TYPES.grunt;
     const d = DIFFICULTY[save.difficulty] || DIFFICULTY.normal;
+    const renderId = options.renderId || type;
+    const visual = ENEMY_VISUALS[renderId] || ENEMY_VISUALS[type] || ENEMY_VISUALS.grunt;
     return {
       type,
-      name: options.name || type.toUpperCase(),
+      renderId,
+      name: options.name || visual.name || type.toUpperCase(),
       boss: !!options.boss,
       x, y, z: 0,
       w: options.boss ? 52 : 34,
@@ -373,11 +459,20 @@
       cooldown: .25 + Math.random() * .5,
       color: options.color || base.color,
       score: options.score || base.score,
-      ranged: options.ranged ?? !!base.ranged,
+      ranged: options.ranged ?? !!base.ranged ?? !!visual.ranged,
       scale: options.scale || base.scale || 1,
       facing: -1,
+      moving: false,
+      animTime: 0,
       hurtTimer: 0,
       attackTimer: 0,
+      attackDuration: visual.ranged ? .42 : .46,
+      jumpTimer: 0,
+      jumpDuration: 0,
+      jumpMove: 0,
+      specialTimer: 0,
+      specialDuration: 0,
+      specialMove: 0,
       invuln: 0,
       dead: false,
       deathTimer: 0,
@@ -411,10 +506,10 @@
   }
 
   function bossPreset(name, final = false) {
-    if (final) return { hp: 520, speed: 105, damage: 23, range: 70, cooldown: .72, color: '#ff57d7', score: 1600, scale: 1.45 };
-    if (name === 'Breaker') return { hp: 290, speed: 92, damage: 20, range: 66, cooldown: .82, color: '#ff6b4a', score: 780, scale: 1.32 };
-    if (name === 'Overseer') return { hp: 275, speed: 104, damage: 18, range: 72, cooldown: .76, color: '#f0bd50', score: 780, scale: 1.28 };
-    return { hp: 265, speed: 118, damage: 17, range: 68, cooldown: .7, color: '#a797ff', score: 780, scale: 1.28 };
+    if (final) return { hp: 520, speed: 105, damage: 23, range: 82, cooldown: .72, color: '#ff57d7', score: 1600, scale: 1.45, renderId: 'null_boss' };
+    if (name === 'Breaker') return { hp: 290, speed: 92, damage: 20, range: 66, cooldown: .82, color: '#ff6b4a', score: 780, scale: 1.32, renderId: 'breaker_boss' };
+    if (name === 'Overseer') return { hp: 275, speed: 104, damage: 18, range: 225, cooldown: .76, color: '#f0bd50', score: 780, scale: 1.28, renderId: 'overseer_boss', ranged: true };
+    return { hp: 265, speed: 118, damage: 17, range: 68, cooldown: .7, color: '#a797ff', score: 780, scale: 1.28, renderId: 'aerial_boss' };
   }
 
   function update(dt) {
@@ -862,6 +957,150 @@
     beep(190, .035, 'sawtooth', .012);
   }
 
+  function queueEnemyAction(enemy, delayMs, fn) {
+    setTimeout(() => {
+      if (state !== 'stage' || !game || !game.enemies.includes(enemy) || enemy.dead || game.player.hp <= 0) return;
+      fn(enemy, game.player);
+    }, delayMs);
+  }
+
+  function enemyMeleeHit(e, dmgMul = 1, extraRange = 0, knock = 70, lane = 50) {
+    const p = game.player;
+    if (p.invuln > 0 || p.hp <= 0) return false;
+    if (Math.abs(p.x - e.x) < e.range + extraRange && Math.abs(p.y - e.y) < lane && Math.abs((p.z || 0) - (e.z || 0)) < 90) {
+      damagePlayer(e.damage * dmgMul, Math.sign(p.x - e.x || 1) * knock);
+      return true;
+    }
+    return false;
+  }
+
+  function enemyAreaHit(e, radius, dmgMul = 1, knock = 85) {
+    const p = game.player;
+    if (p.invuln > 0 || p.hp <= 0) return false;
+    const dx = p.x - e.x;
+    const dy = (p.y - e.y) * 1.15;
+    if (Math.hypot(dx, dy) <= radius) {
+      damagePlayer(e.damage * dmgMul, Math.sign(dx || 1) * knock);
+      return true;
+    }
+    return false;
+  }
+
+  function spawnEnemyProjectilePattern(e, count = 3, speed = 255, spread = 0.24, color = null, width = 12, height = 12) {
+    const p = game.player;
+    const baseAngle = Math.atan2(p.y - e.y, p.x - e.x);
+    for (let i = 0; i < count; i++) {
+      const angle = baseAngle + (i - (count - 1) / 2) * spread;
+      game.projectiles.push({
+        x: e.x, y: e.y - 4,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        damage: e.damage * (e.boss ? 0.92 : 0.72), color: color || e.color,
+        width, height, life: 1.7, owner: 'enemy', pierce: false, explosive: false, hit: new Set()
+      });
+    }
+  }
+
+  function startEnemyAttack(e) {
+    const visual = enemyVisual(e);
+    e.attackDuration = visual.ranged ? .42 : .46;
+    e.attackTimer = e.attackDuration;
+    e.animTime = 0;
+    if (visual.ranged) {
+      queueEnemyAction(e, 145, () => spawnEnemyProjectile(e, game.player));
+    } else {
+      queueEnemyAction(e, 145, () => enemyMeleeHit(e, e.boss && e.phase ? 1.1 : 1, 16, e.boss ? 110 : 70));
+    }
+  }
+
+  function startEnemyJump(e) {
+    const visual = enemyVisual(e);
+    e.jumpDuration = visual.evade ? .34 : (visual.slam ? .52 : .42);
+    e.jumpTimer = e.jumpDuration;
+    e.animTime = 0;
+    e.jumpMove = visual.evade ? -e.facing * 220 : e.facing * (visual.phaseLeap ? 260 : visual.slam ? 115 : 180);
+    if (visual.evade) {
+      burst(e.x, e.y, e.color, 7, 120);
+      return;
+    }
+    if (visual.slam) {
+      queueEnemyAction(e, 290, () => {
+        enemyAreaHit(e, e.boss ? 118 : 96, e.boss ? 1.25 : 1.05, e.boss ? 110 : 90);
+        burst(e.x, e.y + 12, '#ffd19a', e.boss ? 16 : 12, e.boss ? 210 : 170);
+        screenShake = Math.max(screenShake, e.boss ? 10 : 7);
+      });
+    } else if (visual.phaseLeap) {
+      queueEnemyAction(e, 220, () => {
+        e.x = clamp(game.player.x - e.facing * 40, game.cameraX - 60, game.stage.width - 70);
+        enemyMeleeHit(e, 1.05, 28, 95);
+        burst(e.x, e.y, '#7ef3ff', 10, 140);
+      });
+    } else {
+      queueEnemyAction(e, 220, () => {
+        enemyMeleeHit(e, 1.08, 28, 90);
+        burst(e.x, e.y, '#ffd5d5', 8, 110);
+      });
+    }
+  }
+
+  function startEnemySpecial(e) {
+    const visual = enemyVisual(e);
+    const kind = visual.special;
+    e.specialDuration = kind === 'apocalypseWave' ? .94 : kind === 'furyBreaker' ? .82 : .72;
+    e.specialTimer = e.specialDuration;
+    e.animTime = 0;
+    e.specialMove = kind === 'shockRush' ? e.facing * 170 : 0;
+    if (kind === 'shockRush') {
+      [180, 310, 460].forEach((ms, i) => queueEnemyAction(e, ms, () => {
+        e.x = clamp(e.x + e.facing * 42, game.cameraX - 60, game.stage.width - 70);
+        enemyMeleeHit(e, .82 + i * .12, 40, 78 + i * 12);
+        burst(e.x, e.y, '#ff6b6b', 8, 150);
+      }));
+    } else if (kind === 'volleyBlast') {
+      [210, 320, 430].forEach((ms, i) => queueEnemyAction(e, ms, () => {
+        spawnEnemyProjectilePattern(e, e.boss ? 3 : 2, 255 + i * 18, e.boss ? .20 : .12, '#f27dff', e.boss ? 12 : 10, e.boss ? 12 : 10);
+        burst(e.x + e.facing * 18, e.y - 4, '#ffb8ff', 5, 80);
+      }));
+    } else if (kind === 'furyBreaker') {
+      queueEnemyAction(e, 380, () => {
+        enemyAreaHit(e, e.boss ? 132 : 110, e.boss ? 1.42 : 1.22, e.boss ? 120 : 95);
+        burst(e.x, e.y + 8, '#ffc367', 20, 220);
+        screenShake = Math.max(screenShake, e.boss ? 12 : 9);
+      });
+    } else if (kind === 'riftOnslaught') {
+      [180, 330, 500].forEach((ms, i) => queueEnemyAction(e, ms, () => {
+        e.x = clamp(e.x + e.facing * 56, game.cameraX - 60, game.stage.width - 70);
+        enemyMeleeHit(e, .86 + i * .16, 48, 84 + i * 10);
+        burst(e.x, e.y, i % 2 ? '#8af8ff' : '#49d4ff', 10, 170);
+      }));
+    } else if (kind === 'apocalypseWave') {
+      queueEnemyAction(e, 360, () => {
+        for (let i = 0; i < 3; i++) {
+          game.projectiles.push({
+            x: e.x + e.facing * 18, y: e.y - 12 + i * 8,
+            vx: e.facing * (300 + i * 40), vy: -10 + i * 10,
+            damage: e.damage * 0.9, color: '#ff66ff', width: 20, height: 14,
+            life: 1.35, owner: 'enemy', pierce: false, explosive: true, hit: new Set()
+          });
+        }
+        if (Math.abs(game.player.y - e.y) < 54) enemyMeleeHit(e, 1.2, 250, 115);
+        burst(e.x + e.facing * 30, e.y - 10, '#ff77ff', 20, 210);
+        flash = Math.max(flash, .2);
+        screenShake = Math.max(screenShake, 12);
+      });
+    }
+  }
+
+  function enemyAnimation(e) {
+    const visual = enemyVisual(e);
+    const sheetId = visual.sheet;
+    if (e.hurtTimer > 0) return { sheetId, action: 'hurt', index: 0 };
+    if (e.specialTimer > 0) return getAnimationFrame(sheetId, 'special', e.specialDuration - e.specialTimer, e.specialDuration);
+    if (e.jumpTimer > 0) return getAnimationFrame(sheetId, 'jump', e.jumpDuration - e.jumpTimer, e.jumpDuration);
+    if (e.attackTimer > 0) return getAnimationFrame(sheetId, 'attack', e.attackDuration - e.attackTimer, e.attackDuration);
+    if (e.moving) return getAnimationFrame(sheetId, 'walk', e.animTime);
+    return getAnimationFrame(sheetId, 'idle', e.animTime);
+  }
+
   function updateProjectiles(dt) {
     const p = game.player;
     for (const pr of game.projectiles) {
@@ -893,10 +1132,15 @@
   function updateEnemies(dt) {
     const p = game.player;
     for (const e of game.enemies) {
+      const visual = enemyVisual(e);
+      e.animTime += dt;
       e.invuln = Math.max(0, e.invuln - dt);
       e.hurtTimer = Math.max(0, e.hurtTimer - dt);
       e.cooldown = Math.max(0, e.cooldown - dt);
       e.attackTimer = Math.max(0, e.attackTimer - dt);
+      e.jumpTimer = Math.max(0, e.jumpTimer - dt);
+      e.specialTimer = Math.max(0, e.specialTimer - dt);
+      e.moving = false;
 
       if (e.dead) {
         e.deathTimer += dt;
@@ -906,7 +1150,28 @@
         killEnemy(e);
         continue;
       }
-      if (e.hurtTimer > 0) continue;
+      if (e.boss && e.hp < e.maxHp * .5) e.phase = 1;
+
+      if (e.jumpTimer > 0) {
+        const progress = 1 - e.jumpTimer / Math.max(0.001, e.jumpDuration || 1);
+        e.z = Math.sin(progress * Math.PI) * (visual.evade ? 22 : visual.slam ? 48 : 38);
+        e.x += e.jumpMove * dt;
+        e.moving = true;
+      } else {
+        e.z = 0;
+        e.jumpMove = 0;
+      }
+
+      if (e.specialTimer > 0 && visual.special === 'shockRush') {
+        e.x += e.specialMove * dt;
+        e.moving = true;
+      }
+
+      if (e.hurtTimer > 0 || e.jumpTimer > 0 || e.specialTimer > 0) {
+        e.y = clamp(e.y, 12, 182);
+        e.x = clamp(e.x, game.cameraX - 80, game.stage.width - 70);
+        continue;
+      }
 
       const dx = p.x - e.x;
       const dy = p.y - e.y;
@@ -914,45 +1179,45 @@
       const absY = Math.abs(dy);
       e.facing = dx >= 0 ? 1 : -1;
 
-      if (e.boss && e.hp < e.maxHp * .5) e.phase = 1;
-
       const desiredRange = e.ranged ? e.range * .78 : e.range * .74;
+      let moveX = 0, moveY = 0;
       if (e.ranged && absX < 120) {
-        e.x -= Math.sign(dx) * e.speed * .7 * dt;
+        moveX -= Math.sign(dx) * e.speed * .7 * dt;
       } else if (absX > desiredRange || absY > 36) {
         const sx = absX > desiredRange ? Math.sign(dx) : 0;
         const sy = absY > 18 ? Math.sign(dy) : 0;
-        e.x += sx * e.speed * dt;
-        e.y += sy * e.speed * .55 * dt;
+        moveX += sx * e.speed * dt;
+        moveY += sy * e.speed * .55 * dt;
       }
-
+      if (moveX || moveY) e.moving = true;
+      e.x += moveX;
+      e.y += moveY;
       e.y = clamp(e.y, 12, 182);
       e.x = clamp(e.x, game.cameraX - 80, game.stage.width - 70);
 
-      if (e.cooldown <= 0 && absY < 46 && absX <= e.range) {
-        e.cooldown = e.cooldownBase * (e.boss && e.phase ? .75 : 1) * (.88 + Math.random() * .24);
-        e.attackTimer = .28;
-        if (e.ranged) {
-          spawnEnemyProjectile(e, p);
-          if (e.boss && e.phase) {
-            setTimeout(() => {
-              if (state === 'stage' && game && !e.dead) spawnEnemyProjectile(e, game.player);
-            }, 120);
-          }
-        } else {
-          setTimeout(() => {
-            if (state !== 'stage' || !game || e.dead) return;
-            const pp = game.player;
-            if (pp.invuln <= 0 && Math.abs(pp.x - e.x) < e.range + 12 && Math.abs(pp.y - e.y) < 48) {
-              damagePlayer(e.damage * (e.boss && e.phase ? 1.12 : 1), Math.sign(pp.x - e.x) * (e.boss ? 110 : 70));
-            }
-          }, 125);
+      if (e.cooldown <= 0 && absY < 54) {
+        const canJump = !e.ranged && absX > e.range * 1.1 && absX < e.range * 2.2 && (visual.leap || visual.slam || visual.phaseLeap);
+        const canSpecial = absX <= (e.ranged ? e.range * .95 : e.range * 1.35);
+        const specialChance = e.boss ? (e.phase ? 0.55 : 0.28) : visual.special && (e.type === 'elite' ? 0.26 : e.type === 'brute' ? 0.14 : e.type === 'grunt' ? 0.10 : e.type === 'ranger' ? 0.12 : 0.08);
+        const jumpChance = visual.evade ? (absX < 118 ? 0.75 : 0) : (e.boss ? 0.28 : 0.18);
+
+        if (visual.evade && absX < 118) {
+          e.cooldown = e.cooldownBase * 0.85;
+          startEnemyJump(e);
+        } else if (visual.special && canSpecial && Math.random() < specialChance) {
+          e.cooldown = e.cooldownBase * (e.boss ? 1.35 : 1.55);
+          startEnemySpecial(e);
+        } else if (canJump && Math.random() < jumpChance) {
+          e.cooldown = e.cooldownBase * 1.1;
+          startEnemyJump(e);
+        } else if (absX <= e.range) {
+          e.cooldown = e.cooldownBase * (e.boss && e.phase ? .75 : 1) * (.88 + Math.random() * .24);
+          startEnemyAttack(e);
         }
       }
 
-      if (e.boss && e.phase && Math.random() < dt * .22 && e.cooldown > .2) {
-        const dash = Math.sign(dx) * e.speed * 2.7 * dt;
-        e.x += dash;
+      if (e.boss && e.phase && !e.ranged && e.cooldown > .2 && Math.random() < dt * .22) {
+        e.x += Math.sign(dx) * e.speed * 1.8 * dt;
       }
     }
 
@@ -1179,7 +1444,7 @@
 
     ctx.fillStyle = '#52677f';
     ctx.font = '11px ui-monospace, monospace';
-    ctx.fillText('Sprite sheets originais aplicados em todas as animações e habilidades dos heróis.', 52, 510);
+    ctx.fillText('Heróis, inimigos e chefes agora usam sprite sheets com animações aplicadas no gameplay.', 52, 510);
   }
 
   function renderMap() {
@@ -1484,7 +1749,7 @@
   }
 
   function getAnimationFrame(heroId, action, time, duration = null) {
-    const def = SPRITE_SHEETS[heroId]?.animations?.[action];
+    const def = getSheetDefinition(heroId)?.animations?.[action];
     if (!def) return { action: 'idle', index: 0 };
     let index = 0;
     if (duration != null && duration > 0 && !def.loop) {
@@ -1512,7 +1777,7 @@
   }
 
   function drawSheetFrame(x, groundY, heroId, action, frameIndex, facing = 1, scaleMul = 1) {
-    const sheet = SPRITE_SHEETS[heroId];
+    const sheet = getSheetDefinition(heroId);
     const img = spriteImages[heroId];
     const def = sheet?.animations?.[action];
     if (!sheet || !def || !img || !img.complete || !img.naturalWidth) return false;
@@ -1550,13 +1815,16 @@
   function drawEnemy(e) {
     const sx = Math.round(e.x - game.cameraX);
     const sy = Math.round(354 + e.y * .75 - e.z);
-    if (sx < -120 || sx > W + 120) return;
+    if (sx < -150 || sx > W + 150) return;
     if (e.dead) ctx.globalAlpha = clamp(1 - e.deathTimer / .8, 0, 1);
-    drawShadow(sx, 363 + e.y * .75, e.boss ? 34 : 24, 0);
+    drawShadow(sx, 363 + e.y * .75, e.boss ? 34 : 24, e.z);
     ctx.save();
     if (e.hurtTimer > 0) ctx.translate((Math.random()-.5)*4,0);
-    const scale = (e.scale || 1) * (e.boss ? 1.15 : 1);
-    drawEnemySprite(sx, sy, e, scale);
+    const visual = enemyVisual(e);
+    const scale = visual.scaleMul * (e.scale || 1) * (e.boss ? 1.04 : 1);
+    const anim = enemyAnimation(e);
+    const drawn = drawSheetFrame(sx, sy, visual.sheet, anim.action, anim.index, e.facing, scale);
+    if (!drawn) drawEnemySprite(sx, sy, e, scale);
     ctx.restore();
     if (e.dead) ctx.globalAlpha=1;
     if (e.boss && !e.dead) {
