@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cosmic Vanguard - Sprite Sheet Viewer</title>
+  <title>Cosmic Vanguard - Sprite Studio & Intelligent Analyzer</title>
   <style>
     :root {
-      --bg: #0f1220;
-      --panel: #171b2e;
-      --panel-2: #1f2640;
+      --bg: #0c0f1d;
+      --panel: #14182b;
+      --panel-2: #1b213b;
+      --panel-3: #222a4a;
       --text: #eef2ff;
-      --muted: #9ca8d4;
-      --accent: #79d0ff;
+      --muted: #9aa7d0;
+      --accent: #58b6ff;
+      --accent-glow: rgba(88, 182, 255, 0.35);
       --accent-2: #ffd166;
-      --line: #2c365e;
-      --danger: #ff6b6b;
-      --ok: #59d98e;
+      --line: #2a3359;
+      --danger: #ff526c;
+      --ok: #4ce08b;
+      --purple: #b388ff;
+      --font-mono: 'Consolas', 'Fira Code', ui-monospace, monospace;
     }
 
     * { box-sizing: border-box; }
@@ -24,23 +28,235 @@
       padding: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       height: 100%;
     }
 
     body {
       display: grid;
-      grid-template-columns: 360px minmax(0, 1fr);
+      grid-template-columns: 380px minmax(0, 1fr);
       min-height: 100vh;
     }
 
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* Sidebar */
     .sidebar {
       background: var(--panel);
       border-right: 1px solid var(--line);
-      padding: 18px;
-      overflow: auto;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #0b0e1b;
+      font-size: 16px;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 2px 0 0;
+    }
+
+    /* Tab switcher */
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 8px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .nav-tab:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+    .nav-tab.active {
+      background: var(--panel-2);
+      color: var(--accent);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      border: 1px solid var(--line);
+    }
+
+    .section {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .section-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(88, 182, 255, 0.15);
+      color: var(--accent);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .row.row-1 { grid-template-columns: 1fr; }
+    .row.row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0d1122;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    input[type="number"] { font-family: var(--font-mono); }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    button {
+      cursor: pointer;
+      background: var(--panel-3);
+      font-weight: 600;
+      border: 1px solid var(--line);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:hover {
+      filter: brightness(1.2);
+      border-color: var(--accent);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1c5285, #1d6fa5);
+      border-color: #3b88c7;
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(29, 111, 165, 0.35);
+    }
+    .btn-ok { background: #16422d; border-color: #2e8b5c; color: #7cfbc0; }
+    .btn-warn { background: #4a3615; border-color: #9c732a; color: #ffdb7d; }
+    .btn-danger { background: #471d24; border-color: #943441; color: #ff919d; }
+
+    .tiny {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 4px 0 0;
+    }
+
+    /* Badges & Status */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .status-banner.ok {
+      background: rgba(76, 224, 139, 0.12);
+      border: 1px solid rgba(76, 224, 139, 0.4);
+      color: var(--ok);
+    }
+    .status-banner.warn {
+      background: rgba(255, 209, 102, 0.12);
+      border: 1px solid rgba(255, 209, 102, 0.4);
+      color: var(--accent-2);
+    }
+    .status-banner.danger {
+      background: rgba(255, 82, 108, 0.12);
+      border: 1px solid rgba(255, 82, 108, 0.4);
+      color: var(--danger);
+    }
+
+    .warnings-box {
+      max-height: 90px;
+      overflow-y: auto;
+      background: #090c17;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--accent-2);
+      margin-top: 6px;
+    }
+
+    /* Main Area Layout */
     .main {
       display: grid;
       grid-template-rows: auto auto 1fr auto;
@@ -48,134 +264,63 @@
       min-width: 0;
     }
 
+    /* Top Toolbar */
+    .viewer-toolbar {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(14, 17, 31, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+    .pill {
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+    .pill strong { color: var(--text); }
+    .toolbar-spacer { flex: 1; }
+
+    /* Gameplay Combat Card */
     .gameplay-card {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--line);
       background: var(--panel);
       min-width: 0;
     }
-
     .gameplay-controls {
       display: flex;
       gap: 10px;
-      align-items: end;
+      align-items: flex-end;
       flex-wrap: wrap;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
+    .gameplay-controls > div { min-width: 140px; flex: 1; }
+    .gameplay-controls button { width: auto; min-width: 160px; }
+    #gameplayCanvas { width: 100%; max-width: 960px; height: auto; border-radius: 8px; }
 
-    .gameplay-controls > div { min-width: 145px; flex: 1; }
-    .gameplay-controls button { width: auto; min-width: 165px; }
-    #gameplayCanvas { width: 100%; max-width: 960px; height: auto; }
-    #gameplayStatus { margin: 8px 0 0; }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 24px;
-    }
-
-    .subtitle {
-      margin: 0 0 18px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .section {
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .section h2 {
-      margin: 0 0 10px;
-      font-size: 16px;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .row.row-1 { grid-template-columns: 1fr; }
-    .row.row-3 { grid-template-columns: 1fr 1fr 1fr; }
-
-    label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    input, select, button, textarea {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: #0f1427;
-      color: var(--text);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 14px;
-    }
-
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-      font-family: Consolas, monospace;
-      line-height: 1.4;
-    }
-
-    button {
-      cursor: pointer;
-      background: #18203a;
-      transition: 0.15s ease;
-    }
-
-    button:hover {
-      filter: brightness(1.15);
-    }
-
-    .btn-accent { background: #18324f; border-color: #2f5f94; }
-    .btn-warn { background: #47351a; border-color: #8d692d; }
-    .btn-ok { background: #183526; border-color: #2d7f4f; }
-    .btn-danger { background: #442024; border-color: #8f3843; }
-    .jump-link { display: block; color: var(--accent); margin: 0 0 18px; }
-
-    .viewer-toolbar {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-      background: rgba(15,18,32,0.92);
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-
-    .pill {
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: #1a2038;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 12px;
-    }
-
+    /* Canvas Stage */
     .viewer-wrap {
       overflow: auto;
       min-width: 0;
-      padding: 18px;
+      padding: 16px;
       background:
-        linear-gradient(45deg, #14192c 25%, transparent 25%),
-        linear-gradient(-45deg, #14192c 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #14192c 75%),
-        linear-gradient(-45deg, transparent 75%, #14192c 75%);
-      background-size: 28px 28px;
-      background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+        linear-gradient(45deg, #101426 25%, transparent 25%),
+        linear-gradient(-45deg, #101426 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #101426 75%),
+        linear-gradient(-45deg, transparent 75%, #101426 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+      position: relative;
     }
 
     .sheet-stage {
@@ -184,7 +329,9 @@
       min-width: 400px;
       min-height: 240px;
       border: 1px solid var(--line);
-      background: rgba(255,255,255,0.02);
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.4);
     }
 
     #sheetImage {
@@ -197,41 +344,55 @@
       position: absolute;
       inset: 0;
       pointer-events: auto;
+      cursor: crosshair;
     }
 
+    /* Bottom Panels */
     .bottom-panels {
       border-top: 1px solid var(--line);
-      padding: 14px 18px 20px;
+      padding: 14px 16px;
       display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 18px;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
       background: var(--panel);
     }
 
     .preview-card {
       background: var(--panel-2);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-
     .preview-card h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .canvas-box {
       background:
-        linear-gradient(45deg, #14192c 25%, transparent 25%),
-        linear-gradient(-45deg, #14192c 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #14192c 75%),
-        linear-gradient(-45deg, transparent 75%, #14192c 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        linear-gradient(45deg, #11152a 25%, transparent 25%),
+        linear-gradient(-45deg, #11152a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #11152a 75%),
+        linear-gradient(-45deg, transparent 75%, #11152a 75%);
+      background-size: 18px 18px;
+      background-position: 0 0, 0 9px, 9px -9px, -9px 0px;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 8px;
+      border-radius: 8px;
+      padding: 6px;
       overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     canvas {
@@ -239,203 +400,324 @@
       image-rendering: pixelated;
     }
 
-    .help-list {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 13px;
+    /* Frame Strip */
+    #stripCanvas {
+      max-width: 100%;
+      height: auto;
+      cursor: pointer;
     }
-
-    .tiny {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .status-ok { color: var(--ok); }
-    .status-warn { color: var(--accent-2); }
 
     @media (max-width: 1100px) {
-      body {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .sidebar {
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .bottom-panels {
-        grid-template-columns: 1fr;
-      }
+      body { grid-template-columns: minmax(0, 1fr); }
+      .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+      .bottom-panels { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <h1>Sprite Sheet Viewer</h1>
-    <p class="subtitle">
-      Teste os recortes na escala da primeira fase. Escolha um sheet, ajuste um frame e confira a cena de jogo.
-    </p>
-    <a class="jump-link" href="#gameplayPreview">Ir para a simulação da primeira fase ↓</a>
+    <div class="brand-header">
+      <div class="brand-logo">⚡</div>
+      <div>
+        <h1 class="brand-title">Cosmic Vanguard</h1>
+        <p class="brand-sub">Sprite Studio & Auto Analyzer</p>
+      </div>
+    </div>
 
+    <!-- Navegação de Abas -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tabAuto" onclick="switchTab('auto')">⚡ Analyzer</button>
+      <button class="nav-tab" id="tabCombat" onclick="switchTab('combat')">⚔️ Combate</button>
+      <button class="nav-tab" id="tabManual" onclick="switchTab('manual')">📐 Grid Manual</button>
+    </div>
+
+    <!-- 1. SPRITE SHEET SELECTOR (Comum a todas as abas) -->
     <div class="section">
-      <h2>1) Sprite sheet</h2>
+      <div class="section-title">
+        <span>Folha de Sprites</span>
+        <span class="section-badge" id="sheetBadge">Oficial</span>
+      </div>
       <div class="row row-1">
         <div>
-          <label for="sheetSelect">Sheet pré-carregado</label>
+          <label for="sheetSelect">Personagem / Folha</label>
           <select id="sheetSelect"></select>
         </div>
       </div>
       <div class="row row-1">
         <div>
-          <label for="uploadInput">Ou carregar PNG local</label>
+          <label for="uploadInput">Ou Enviar Arquivo Local (PNG/WEBP)</label>
           <input id="uploadInput" type="file" accept="image/*" />
-        </div>
-      </div>
-      <div class="row row-1">
-        <div>
-          <label for="animationSelect">Animação do atlas usada no jogo</label>
-          <select id="animationSelect"></select>
         </div>
       </div>
       <p class="tiny" id="sheetInfo">—</p>
     </div>
 
-    <div class="section">
-      <h2>2) Configuração do corte</h2>
-      <div class="row">
-        <div>
-          <label for="frameX">X inicial</label>
-          <input id="frameX" type="number" value="0" min="0" step="1" />
+    <!-- ABA 1: AUTO ANALYZER INTELIGENTE -->
+    <div id="panelAuto">
+      <!-- Painel de Configurações de Detecção -->
+      <div class="section">
+        <div class="section-title">
+          <span>Configurações de Detecção</span>
+          <span class="section-badge">IA + CCL</span>
         </div>
-        <div>
-          <label for="frameY">Y inicial</label>
-          <input id="frameY" type="number" value="0" min="0" step="1" />
+        
+        <div class="row">
+          <div>
+            <label for="autoBgType">Fundo</label>
+            <select id="autoBgType">
+              <option value="auto">Auto (Detectar)</option>
+              <option value="transparent">Transparente</option>
+              <option value="solid">Cor Sólida</option>
+            </select>
+          </div>
+          <div>
+            <label for="autoAnchorMode">Pivô / Anchor</label>
+            <select id="autoAnchorMode">
+              <option value="bottom_center">Pés (Bottom-Center)</option>
+              <option value="center">Centro</option>
+              <option value="center_of_mass">Centro de Massa</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="autoAlpha">Limiar Alfa</label>
+            <input id="autoAlpha" type="number" value="8" min="1" max="255" />
+          </div>
+          <div>
+            <label for="autoTolerance">Tolerância Cor</label>
+            <input id="autoTolerance" type="number" value="20" min="1" max="100" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="autoPadding">Padding Seguro (px)</label>
+            <input id="autoPadding" type="number" value="3" min="0" max="20" title="Protege pontas de espadas e cabelos" />
+          </div>
+          <div>
+            <label for="autoMinArea">Área Mínima (px)</label>
+            <input id="autoMinArea" type="number" value="4" min="1" max="100" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="autoMergeX">Distância Fusão X</label>
+            <input id="autoMergeX" type="number" value="6" min="0" max="30" title="Une armas ou faíscas ao corpo" />
+          </div>
+          <div>
+            <label for="autoMergeY">Distância Fusão Y</label>
+            <input id="autoMergeY" type="number" value="6" min="0" max="30" />
+          </div>
+        </div>
+
+        <div class="row row-1">
+          <div>
+            <label for="autoExpectedFrames">Frames Esperados (Opcional)</label>
+            <input id="autoExpectedFrames" type="number" placeholder="Ex.: 4, 6, 8, etc." min="1" />
+          </div>
+        </div>
+
+        <div class="row row-1" style="margin-top: 10px;">
+          <button id="runAutoAnalyzeBtn" class="btn-primary" style="padding: 10px;">
+            ⚡ Analisar Sprite Sheet
+          </button>
         </div>
       </div>
-      <div class="row">
-        <div>
-          <label for="frameW">Largura do frame</label>
-          <input id="frameW" type="number" value="128" min="1" step="any" />
+
+      <!-- Status e Diagnóstico -->
+      <div class="section">
+        <div class="section-title">Status da Análise</div>
+        <div id="analyzerStatusBanner" class="status-banner ok">
+          <span id="analyzerStatusText">Pronto para analisar</span>
+          <span id="analyzerConfidenceText">100%</span>
         </div>
-        <div>
-          <label for="frameH">Altura do frame</label>
-          <input id="frameH" type="number" value="128" min="1" step="1" />
+        <div class="row">
+          <div>
+            <label>Frames Detectados</label>
+            <div id="detectedCountPill" class="pill" style="text-align: center;">0</div>
+          </div>
+          <div>
+            <label>Grid Sugerido</label>
+            <div id="gridInfoPill" class="pill" style="text-align: center;">—</div>
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div>
-          <label for="frameCount">Quantidade de frames</label>
-          <input id="frameCount" type="number" value="4" min="1" step="1" />
-        </div>
-        <div>
-          <label for="columns">Colunas antes de quebrar linha</label>
-          <input id="columns" type="number" value="4" min="1" step="1" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label for="gapX">Espaçamento X</label>
-          <input id="gapX" type="number" value="0" step="1" />
-        </div>
-        <div>
-          <label for="gapY">Espaçamento Y</label>
-          <input id="gapY" type="number" value="0" step="1" />
+        <div id="warningsContainer" style="display: none;">
+          <label style="color: var(--accent-2);">Avisos e Anomalias:</label>
+          <div id="analyzerWarnings" class="warnings-box"></div>
         </div>
       </div>
-      <div class="row">
-        <div>
-          <label for="previewScale">Escala do preview</label>
-          <input id="previewScale" type="number" value="3" min="1" max="10" step="1" />
+
+      <!-- Editor Manual do Frame Selecionado -->
+      <div class="section">
+        <div class="section-title">
+          <span>Frame Selecionado</span>
+          <span class="section-badge" id="selectedFrameBadge">#0</span>
         </div>
-        <div>
-          <label for="fps">FPS</label>
-          <input id="fps" type="number" value="8" min="1" max="60" step="1" />
+        <div class="row">
+          <div>
+            <label for="selFrameX">X</label>
+            <input id="selFrameX" type="number" step="1" />
+          </div>
+          <div>
+            <label for="selFrameY">Y</label>
+            <input id="selFrameY" type="number" step="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="selFrameW">Largura</label>
+            <input id="selFrameW" type="number" step="1" />
+          </div>
+          <div>
+            <label for="selFrameH">Altura</label>
+            <input id="selFrameH" type="number" step="1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="selAnchorX">Pivô X (Solo)</label>
+            <input id="selAnchorX" type="number" step="1" />
+          </div>
+          <div>
+            <label for="selAnchorY">Pivô Y (Solo)</label>
+            <input id="selAnchorY" type="number" step="1" />
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="splitVertBtn" class="btn-warn" title="Divide este frame verticalmente em 2">✁ Dividir Vert.</button>
+          <button id="splitHorizBtn" class="btn-warn" title="Divide este frame horizontalmente em 2">✃ Dividir Horiz.</button>
+        </div>
+        <div class="row">
+          <button id="mergeSelectedBtn" class="btn-primary" title="Une os frames selecionados em um único">⧉ Mesclar Seleção</button>
+          <button id="deleteFrameBtn" class="btn-danger" title="Remove este frame">🗑 Excluir</button>
         </div>
       </div>
-      <div class="row row-3">
-        <button id="fitNaturalBtn" class="btn-warn">Usar tamanho do retângulo</button>
-        <button id="resetBtn">Resetar</button>
-        <button id="toggleBoxesBtn" class="btn-accent">Ocultar caixas</button>
+
+      <!-- Exportação e Presets -->
+      <div class="section">
+        <div class="section-title">Exportar Recortes</div>
+        <div class="row">
+          <button id="exportJsonBtn" class="btn-primary">📥 Metadata JSON</button>
+          <button id="exportSheetBtn" class="btn-ok">📥 Atlas Normalizado</button>
+        </div>
+        <div class="row row-1">
+          <button id="exportFramesBtn">📦 Baixar Frames PNGs</button>
+        </div>
       </div>
     </div>
 
-    <div class="section">
-      <h2>3) Controles da animação</h2>
-      <div class="row row-3">
-        <button id="prevBtn">◀ Frame</button>
-        <button id="playBtn" class="btn-ok">▶ Play</button>
-        <button id="nextBtn">Frame ▶</button>
-      </div>
-      <div class="row row-1">
-        <div>
-          <label for="currentFrame">Frame atual</label>
-          <input id="currentFrame" type="number" value="0" min="0" step="1" />
+    <!-- ABA 2: SIMULAÇÃO DE COMBATE (Cena do Jogo) -->
+    <div id="panelCombat" style="display: none;">
+      <div class="section">
+        <div class="section-title">Simulação de Jogo (Fase 1)</div>
+        <div class="row row-1">
+          <div>
+            <label for="gameplayHero">Herói na Cena</label>
+            <select id="gameplayHero"></select>
+          </div>
         </div>
-      </div>
-      <p class="tiny">Dica: clique e arraste em cima do sprite sheet para marcar um frame manualmente.</p>
-    </div>
-
-    <div class="section">
-      <h2>4) Exportar preset</h2>
-      <div class="row row-1">
-        <div>
-          <label for="presetName">Nome do preset</label>
-          <input id="presetName" type="text" placeholder="Ex.: Solarion Idle" />
+        <div class="row row-1">
+          <div>
+            <label for="gameplayEnemy">Inimigo na Cena</label>
+            <select id="gameplayEnemy"></select>
+          </div>
         </div>
-      </div>
-      <div class="row row-3">
-        <button id="savePresetBtn" class="btn-ok">Salvar no navegador</button>
-        <button id="loadPresetBtn">Carregar</button>
-        <button id="deletePresetBtn" class="btn-danger">Excluir</button>
-      </div>
-      <div class="row row-1">
-        <div>
-          <label for="savedPresets">Presets salvos</label>
-          <select id="savedPresets"></select>
+        <div class="row row-1" style="margin-top: 8px;">
+          <button id="gameplayPlayBtn" class="btn-ok">▶ Simular Combate</button>
         </div>
-      </div>
-      <div class="row row-1">
-        <div>
-          <label for="jsonOutput">JSON atual</label>
-          <textarea id="jsonOutput"></textarea>
-        </div>
-      </div>
-      <div class="row row-3">
-        <button id="copyJsonBtn" class="btn-accent">Copiar JSON</button>
-        <button id="downloadJsonBtn">Baixar JSON</button>
-        <button id="applyJsonBtn">Aplicar JSON do campo</button>
+        <p class="tiny">O herói executa combo, corrida e especial com contato físico direto no chão.</p>
       </div>
     </div>
 
-    <div class="section">
-      <h2>Como usar</h2>
-      <ol class="help-list">
-        <li>Escolha um herói ou inimigo e a animação usada no jogo.</li>
-        <li>Na cena, avance os frames manualmente ou simule o combate.</li>
-        <li>Altere os recortes e confira o sprite no tamanho real do jogo.</li>
-        <li>Salve um preset quando o resultado estiver correto.</li>
-      </ol>
+    <!-- ABA 3: RECORTE MANUAL TRADICIONAL (Preserva 100% da ferramenta clássica) -->
+    <div id="panelManual" style="display: none;">
+      <div class="section">
+        <div class="section-title">Grade Regular Manual</div>
+        <div class="row row-1">
+          <div>
+            <label for="animationSelect">Animação de Destino</label>
+            <select id="animationSelect"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label for="frameX">X Inicial</label><input id="frameX" type="number" value="0" /></div>
+          <div><label for="frameY">Y Inicial</label><input id="frameY" type="number" value="0" /></div>
+        </div>
+        <div class="row">
+          <div><label for="frameW">Largura Frame</label><input id="frameW" type="number" value="400" /></div>
+          <div><label for="frameH">Altura Frame</label><input id="frameH" type="number" value="300" /></div>
+        </div>
+        <div class="row">
+          <div><label for="frameCount">Quantidade</label><input id="frameCount" type="number" value="4" /></div>
+          <div><label for="columns">Colunas</label><input id="columns" type="number" value="4" /></div>
+        </div>
+        <div class="row">
+          <div><label for="gapX">Espaço X</label><input id="gapX" type="number" value="0" /></div>
+          <div><label for="gapY">Espaço Y</label><input id="gapY" type="number" value="0" /></div>
+        </div>
+        <div class="row row-3">
+          <button id="fitNaturalBtn" class="btn-warn">Tamanho Real</button>
+          <button id="resetBtn">Resetar</button>
+          <button id="toggleBoxesBtn" class="btn-primary">Ocultar Caixas</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">JSON Presets</div>
+        <div class="row row-1">
+          <textarea id="jsonOutput" placeholder="JSON de configurações..."></textarea>
+        </div>
+        <div class="row row-3">
+          <button id="copyJsonBtn">Copiar</button>
+          <button id="downloadJsonBtn">Baixar</button>
+          <button id="applyJsonBtn" class="btn-ok">Aplicar</button>
+        </div>
+      </div>
     </div>
   </aside>
 
+  <!-- ÁREA PRINCIPAL -->
   <main class="main">
+    <!-- Barra Superior de Ferramentas -->
     <div class="viewer-toolbar">
-      <span class="pill" id="mousePos">Mouse: x -, y -</span>
+      <span class="pill" id="mousePos">X: -, Y: -</span>
       <span class="pill" id="selectionInfo">Seleção: -</span>
       <span class="pill" id="frameSummary">Frames: 0</span>
-      <span class="pill" id="playStatus">Status: pausado</span>
+      <span class="pill" id="playStatus">Pausado</span>
+      
+      <div class="toolbar-spacer"></div>
+
+      <!-- Seletor de Modo de Debug (ETAPA 17) -->
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <label for="debugViewSelect" style="margin: 0; font-size: 11px;">Visualização:</label>
+        <select id="debugViewSelect" style="width: auto; padding: 4px 8px; font-size: 11px;">
+          <option value="original">Original + Bounding Boxes</option>
+          <option value="mask">Máscara Foreground / Fundo</option>
+          <option value="components">Connected Components (Coloridos)</option>
+          <option value="boxes_only">Apenas Bounding Boxes & Anchors</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 4px;">
+        <button id="toggleAnchorsBtn" class="pill" style="cursor: pointer;" title="Exibir cruzetas dos pés (+)">Pivô: ON</button>
+        <button id="toggleLabelsBtn" class="pill" style="cursor: pointer;" title="Exibir número do frame">Números: ON</button>
+      </div>
     </div>
 
-    <section class="gameplay-card" id="gameplayPreview">
-      <div class="gameplay-controls">
-        <div><label for="gameplayHero">Herói na cena</label><select id="gameplayHero"></select></div>
-        <div><label for="gameplayEnemy">Inimigo na cena</label><select id="gameplayEnemy"></select></div>
-        <button id="gameplayPlayBtn" class="btn-ok">▶ Simular combate</button>
+    <!-- Cartão de Simulação de Combate (Quando aba Combate ativa) -->
+    <section class="gameplay-card" id="gameplayCard" style="display: none;">
+      <div class="canvas-box">
+        <canvas id="gameplayCanvas" width="960" height="540" aria-label="Prévia em escala de jogo"></canvas>
       </div>
-      <div class="canvas-box"><canvas id="gameplayCanvas" width="960" height="540" aria-label="Prévia em escala de jogo"></canvas></div>
-      <p class="tiny" id="gameplayStatus">Cena em escala de jogo. O sprite selecionado usa o recorte acima; o outro usa o atlas do jogo.</p>
+      <p class="tiny" id="gameplayStatus">Prévia da primeira fase com física, escala real de combate e renderização por pés fixos.</p>
     </section>
 
+    <!-- Stage do Sprite Sheet com Overlay Interativo -->
     <div class="viewer-wrap" id="viewerWrap">
       <div class="sheet-stage" id="sheetStage">
         <img id="sheetImage" alt="Sprite sheet" />
@@ -443,24 +725,64 @@
       </div>
     </div>
 
+    <!-- Painéis Inferiores: Animação e Strip -->
     <div class="bottom-panels">
+      <!-- Preview Animado (ETAPA 12) -->
       <div class="preview-card">
-        <h3>Preview animado</h3>
+        <h3>
+          <span>Preview da Animação</span>
+          <span class="section-badge" id="previewFpsBadge">8 FPS</span>
+        </h3>
         <div class="canvas-box">
-          <canvas id="previewCanvas" width="256" height="256"></canvas>
+          <canvas id="previewCanvas" width="280" height="240"></canvas>
+        </div>
+        <div class="row row-3" style="margin-top: 4px;">
+          <button id="prevBtn">◀ Anterior</button>
+          <button id="playBtn" class="btn-ok">▶ Play</button>
+          <button id="nextBtn">Próximo ▶</button>
+        </div>
+        <div class="row">
+          <div>
+            <label for="fps">Velocidade (FPS)</label>
+            <input id="fps" type="number" value="8" min="1" max="60" />
+          </div>
+          <div>
+            <label for="previewScale">Escala Zoom</label>
+            <input id="previewScale" type="number" value="2" min="1" max="6" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="currentFrame">Frame Atual</label>
+            <input id="currentFrame" type="number" value="0" min="0" />
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <button id="toggleNormalizedPreviewBtn" style="font-size: 11px; padding: 7px;">Pivô Estável: ON</button>
+          </div>
         </div>
       </div>
 
+      <!-- Fita de Frames Extraídos (Strip) -->
       <div class="preview-card">
-        <h3>Frames extraídos</h3>
+        <h3>
+          <span>Fita de Frames Extraídos</span>
+          <span class="tiny" style="margin: 0;">Clique em um frame para selecionar</span>
+        </h3>
         <div class="canvas-box">
-          <canvas id="stripCanvas" width="900" height="220"></canvas>
+          <canvas id="stripCanvas" width="900" height="200"></canvas>
         </div>
       </div>
     </div>
   </main>
 
+  <!-- MÓDULO DO ANALISADOR INTELIGENTE (ETAPA 2) -->
+  <script src="src/utils/spriteAnalyzer.js"></script>
+
   <script>
+    /* ============================================================
+       COSMIC VANGUARD - SPRITE STUDIO & INTELLIGENT ANALYZER
+       ============================================================ */
+
     const SHEETS = [
       { id: 'solarion', name: 'Solarion', src: 'assets/sprites/processed/solarion.png' },
       { id: 'night_talon', name: 'Night Talon', src: 'assets/sprites/processed/night_talon.png' },
@@ -476,16 +798,15 @@
     ];
 
     const GAME_ANIMATIONS = [
-      { id: 'idle', label: 'Idle', row: 0, count: 4 },
-      { id: 'walk', label: 'Walk', row: 1, count: 6 },
+      { id: 'idle', label: 'Idle (Espera)', row: 0, count: 4 },
+      { id: 'walk', label: 'Walk (Caminhada)', row: 1, count: 6 },
       { id: 'attack', label: 'Attack / Combo', row: 2, count: 4 },
-      { id: 'jump', label: 'Jump / Takeoff', row: 3, count: 3 },
-      { id: 'dash', label: 'Mobility / Dash / Flight', row: 4, count: 4 },
-      { id: 'hurt', label: 'Hit Reaction', row: 5, count: 2 },
+      { id: 'jump', label: 'Jump / Salto', row: 3, count: 3 },
+      { id: 'dash', label: 'Dash / Mobilidade', row: 4, count: 4 },
+      { id: 'hurt', label: 'Hit Reaction (Dano)', row: 5, count: 2 },
       { id: 'special', label: 'Special Attack', row: 6, count: 6 },
     ];
 
-    // Mesmos retângulos, escalas e FPS usados por drawSheetFrame() em game.js.
     const heroAnimation = (row, count, fps, loop = false) => ({
       x: 0, y: row * 300, w: count * 400, h: 300, count, fps, loop
     });
@@ -509,18 +830,119 @@
       void_tyrant: heroAtlas(.384, [5, 8, 8, 7, 7, 6, 10]),
     };
 
+    // Estado da Aplicação
+    const state = {
+      activeTab: 'auto', // 'auto' | 'combat' | 'manual'
+      imageName: 'solarion',
+      customImageName: null,
+      showBoxes: true,
+      showAnchors: true,
+      showLabels: true,
+      normalizePreview: true,
+      debugView: 'original',
+      playing: false,
+      currentFrame: 0,
+      lastFrameTime: 0,
+      
+      // Auto Analyzer Data
+      analysisResult: null,
+      debugCanvasMask: null,
+      debugCanvasComponents: null,
+      frames: [], // Array de frames ativos [{ id, x, y, width, height, anchorX, anchorY, contentBounds, confidence, warnings }]
+      
+      // Interação do Editor
+      selectedFrameIndices: new Set([0]),
+      dragMode: null, // 'move' | 'resize' | 'create'
+      dragHandle: null, // 'nw','n','ne','e','se','s','sw','w'
+      dragStart: null,
+      dragCurrent: null,
+      activeBoxOriginal: null,
+
+      // Simulação de combate
+      gameplayPlaying: false,
+      gameplayStart: 0,
+      gameplayReq: null,
+    };
+
+    // Elementos DOM
     const el = {
       sheetSelect: document.getElementById('sheetSelect'),
       uploadInput: document.getElementById('uploadInput'),
-      animationSelect: document.getElementById('animationSelect'),
       sheetInfo: document.getElementById('sheetInfo'),
+      sheetBadge: document.getElementById('sheetBadge'),
       sheetImage: document.getElementById('sheetImage'),
+      overlay: document.getElementById('overlay'),
+
+      // Auto Analyzer
+      autoBgType: document.getElementById('autoBgType'),
+      autoAnchorMode: document.getElementById('autoAnchorMode'),
+      autoAlpha: document.getElementById('autoAlpha'),
+      autoTolerance: document.getElementById('autoTolerance'),
+      autoPadding: document.getElementById('autoPadding'),
+      autoMinArea: document.getElementById('autoMinArea'),
+      autoMergeX: document.getElementById('autoMergeX'),
+      autoMergeY: document.getElementById('autoMergeY'),
+      autoExpectedFrames: document.getElementById('autoExpectedFrames'),
+      runAutoAnalyzeBtn: document.getElementById('runAutoAnalyzeBtn'),
+
+      // Status
+      analyzerStatusBanner: document.getElementById('analyzerStatusBanner'),
+      analyzerStatusText: document.getElementById('analyzerStatusText'),
+      analyzerConfidenceText: document.getElementById('analyzerConfidenceText'),
+      detectedCountPill: document.getElementById('detectedCountPill'),
+      gridInfoPill: document.getElementById('gridInfoPill'),
+      warningsContainer: document.getElementById('warningsContainer'),
+      analyzerWarnings: document.getElementById('analyzerWarnings'),
+
+      // Editor Manual
+      selectedFrameBadge: document.getElementById('selectedFrameBadge'),
+      selFrameX: document.getElementById('selFrameX'),
+      selFrameY: document.getElementById('selFrameY'),
+      selFrameW: document.getElementById('selFrameW'),
+      selFrameH: document.getElementById('selFrameH'),
+      selAnchorX: document.getElementById('selAnchorX'),
+      selAnchorY: document.getElementById('selAnchorY'),
+      splitVertBtn: document.getElementById('splitVertBtn'),
+      splitHorizBtn: document.getElementById('splitHorizBtn'),
+      mergeSelectedBtn: document.getElementById('mergeSelectedBtn'),
+      deleteFrameBtn: document.getElementById('deleteFrameBtn'),
+
+      // Exportação
+      exportJsonBtn: document.getElementById('exportJsonBtn'),
+      exportSheetBtn: document.getElementById('exportSheetBtn'),
+      exportFramesBtn: document.getElementById('exportFramesBtn'),
+
+      // Toolbar
+      mousePos: document.getElementById('mousePos'),
+      selectionInfo: document.getElementById('selectionInfo'),
+      frameSummary: document.getElementById('frameSummary'),
+      playStatus: document.getElementById('playStatus'),
+      debugViewSelect: document.getElementById('debugViewSelect'),
+      toggleAnchorsBtn: document.getElementById('toggleAnchorsBtn'),
+      toggleLabelsBtn: document.getElementById('toggleLabelsBtn'),
+
+      // Preview & Strip
+      previewCanvas: document.getElementById('previewCanvas'),
+      stripCanvas: document.getElementById('stripCanvas'),
+      prevBtn: document.getElementById('prevBtn'),
+      playBtn: document.getElementById('playBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      fps: document.getElementById('fps'),
+      previewScale: document.getElementById('previewScale'),
+      currentFrame: document.getElementById('currentFrame'),
+      previewFpsBadge: document.getElementById('previewFpsBadge'),
+      toggleNormalizedPreviewBtn: document.getElementById('toggleNormalizedPreviewBtn'),
+
+      // Combate
+      gameplayCard: document.getElementById('gameplayCard'),
       gameplayHero: document.getElementById('gameplayHero'),
       gameplayEnemy: document.getElementById('gameplayEnemy'),
       gameplayPlayBtn: document.getElementById('gameplayPlayBtn'),
       gameplayCanvas: document.getElementById('gameplayCanvas'),
       gameplayStatus: document.getElementById('gameplayStatus'),
-      overlay: document.getElementById('overlay'),
+
+      // Grid Manual (Legado)
+      animationSelect: document.getElementById('animationSelect'),
       frameX: document.getElementById('frameX'),
       frameY: document.getElementById('frameY'),
       frameW: document.getElementById('frameW'),
@@ -529,18 +951,6 @@
       columns: document.getElementById('columns'),
       gapX: document.getElementById('gapX'),
       gapY: document.getElementById('gapY'),
-      previewScale: document.getElementById('previewScale'),
-      fps: document.getElementById('fps'),
-      currentFrame: document.getElementById('currentFrame'),
-      previewCanvas: document.getElementById('previewCanvas'),
-      stripCanvas: document.getElementById('stripCanvas'),
-      mousePos: document.getElementById('mousePos'),
-      selectionInfo: document.getElementById('selectionInfo'),
-      frameSummary: document.getElementById('frameSummary'),
-      playStatus: document.getElementById('playStatus'),
-      playBtn: document.getElementById('playBtn'),
-      prevBtn: document.getElementById('prevBtn'),
-      nextBtn: document.getElementById('nextBtn'),
       fitNaturalBtn: document.getElementById('fitNaturalBtn'),
       resetBtn: document.getElementById('resetBtn'),
       toggleBoxesBtn: document.getElementById('toggleBoxesBtn'),
@@ -548,72 +958,1006 @@
       copyJsonBtn: document.getElementById('copyJsonBtn'),
       downloadJsonBtn: document.getElementById('downloadJsonBtn'),
       applyJsonBtn: document.getElementById('applyJsonBtn'),
-      presetName: document.getElementById('presetName'),
-      savedPresets: document.getElementById('savedPresets'),
-      savePresetBtn: document.getElementById('savePresetBtn'),
-      loadPresetBtn: document.getElementById('loadPresetBtn'),
-      deletePresetBtn: document.getElementById('deletePresetBtn'),
     };
 
-    const state = {
-      imageName: 'solarion',
-      customImageName: null,
-      showBoxes: true,
-      playing: false,
-      currentFrame: 0,
-      lastFrameTime: 0,
-      dragStart: null,
-      dragCurrent: null,
-      selection: null,
-      animReq: null,
-      gameplayPlaying: false,
-      gameplayStart: 0,
-      gameplayReq: null,
+    // Alternador de Abas
+    window.switchTab = function(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('panelAuto').style.display = tab === 'auto' ? 'block' : 'none';
+      document.getElementById('panelCombat').style.display = tab === 'combat' ? 'block' : 'none';
+      document.getElementById('panelManual').style.display = tab === 'manual' ? 'block' : 'none';
+      document.getElementById('gameplayCard').style.display = tab === 'combat' ? 'block' : 'none';
+
+      if (tab === 'auto') document.getElementById('tabAuto').classList.add('active');
+      if (tab === 'combat') document.getElementById('tabCombat').classList.add('active');
+      if (tab === 'manual') document.getElementById('tabManual').classList.add('active');
+
+      renderOverlay();
+      renderPreview();
+      renderStrip();
     };
 
-    const cachedImages = {};
-    function getGameplayImage(id) {
-      if (!cachedImages[id]) {
-        const sheet = SHEETS.find(item => item.id === id);
-        if (sheet) {
-          const img = new Image();
-          img.onload = () => renderGameplay();
-          img.src = sheet.src;
-          cachedImages[id] = img;
-        }
-      }
-      return cachedImages[id];
-    }
-
-    function populateSheets() {
+    // Preenchimento de Selects
+    function initSelectors() {
       el.sheetSelect.innerHTML = '';
       SHEETS.forEach(sheet => {
-        const option = document.createElement('option');
-        option.value = sheet.id;
-        option.textContent = sheet.name;
-        el.sheetSelect.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = sheet.id;
+        opt.textContent = sheet.name;
+        el.sheetSelect.appendChild(opt);
       });
-      for (const sheet of SHEETS) {
-        const option = document.createElement('option');
-        option.value = sheet.id;
-        option.textContent = sheet.name;
-        (sheet.src.includes('/processed/') ? el.gameplayHero : el.gameplayEnemy).appendChild(option);
-      }
+
+      el.gameplayHero.innerHTML = '';
+      el.gameplayEnemy.innerHTML = '';
+      SHEETS.forEach(sheet => {
+        const opt = document.createElement('option');
+        opt.value = sheet.id;
+        opt.textContent = sheet.name;
+        if (sheet.src.includes('/processed/')) el.gameplayHero.appendChild(opt);
+        else el.gameplayEnemy.appendChild(opt);
+      });
       el.gameplayHero.value = 'solarion';
       el.gameplayEnemy.value = 'shadow_trooper';
-    }
 
-    function populateAnimations() {
       el.animationSelect.innerHTML = '';
       GAME_ANIMATIONS.forEach(anim => {
-        const option = document.createElement('option');
-        option.value = anim.id;
-        option.textContent = anim.label;
-        el.animationSelect.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = anim.id;
+        opt.textContent = anim.label;
+        el.animationSelect.appendChild(opt);
       });
     }
 
-    function applyGameAnimationPreset() {
+    // Carregamento de Sprite Sheet
+    function loadSheet(sheetId) {
+      const sheet = SHEETS.find(s => s.id === sheetId);
+      if (!sheet) return;
+      state.imageName = sheet.id;
+      state.customImageName = null;
+      el.sheetBadge.textContent = 'Oficial';
+      el.sheetImage.onload = () => onImageLoaded();
+      el.sheetImage.src = sheet.src;
+    }
+
+    function onImageLoaded() {
+      resizeOverlay();
+      const file = state.customImageName || el.sheetImage.src.split('/').pop();
+      el.sheetInfo.textContent = `${file} | ${el.sheetImage.naturalWidth} × ${el.sheetImage.naturalHeight}px`;
+
+      // Executa a análise inteligente por padrão na primeira carga
+      runAutoAnalysis();
+    }
+
+    function resizeOverlay() {
+      const rect = el.sheetImage.getBoundingClientRect();
+      el.overlay.width = el.sheetImage.naturalWidth || 800;
+      el.overlay.height = el.sheetImage.naturalHeight || 600;
+      el.overlay.style.width = rect.width + 'px';
+      el.overlay.style.height = rect.height + 'px';
+    }
+
+    // Conversão de Coordenadas com imunidade total a CSS scale e DPR
+    function toImageCoords(evt) {
+      const rect = el.overlay.getBoundingClientRect();
+      const scaleX = el.overlay.width / rect.width;
+      const scaleY = el.overlay.height / rect.height;
+      return {
+        x: Math.max(0, Math.min(el.overlay.width, Math.round((evt.clientX - rect.left) * scaleX))),
+        y: Math.max(0, Math.min(el.overlay.height, Math.round((evt.clientY - rect.top) * scaleY))),
+      };
+    }
+
+    /* ============================================================
+       ETAPA 2 a 11: EXECUÇÃO DO AUTO ANALYZER INTELIGENTE
+       ============================================================ */
+    function runAutoAnalysis() {
+      if (!el.sheetImage.naturalWidth) return;
+
+      const options = {
+        backgroundType: el.autoBgType.value,
+        anchorMode: el.autoAnchorMode.value,
+        alphaThreshold: Number(el.autoAlpha.value) || 8,
+        colorTolerance: Number(el.autoTolerance.value) || 20,
+        padding: Number(el.autoPadding.value) || 3,
+        minComponentArea: Number(el.autoMinArea.value) || 4,
+        mergeGapX: Number(el.autoMergeX.value) || 6,
+        mergeGapY: Number(el.autoMergeY.value) || 6,
+        expectedFrames: el.autoExpectedFrames.value ? Number(el.autoExpectedFrames.value) : null,
+      };
+
+      try {
+        const result = window.SpriteAnalyzer.analyzeSpriteSheet(el.sheetImage, options);
+        state.analysisResult = result;
+        state.frames = result.frames;
+        state.debugCanvasMask = window.SpriteAnalyzer.createDebugMaskCanvas(result);
+        state.debugCanvasComponents = window.SpriteAnalyzer.createDebugComponentsCanvas(result);
+
+        // Atualizar painéis de status
+        updateAnalyzerStatusUI(result);
+
+        // Selecionar primeiro frame se existir
+        state.selectedFrameIndices = new Set(result.frames.length > 0 ? [0] : []);
+        state.currentFrame = 0;
+        updateSelectedFrameInputs();
+
+        // Renderizar views
+        renderOverlay();
+        renderPreview();
+        renderStrip();
+      } catch (err) {
+        console.error('Erro na análise inteligente:', err);
+        el.analyzerStatusBanner.className = 'status-banner danger';
+        el.analyzerStatusText.textContent = 'Erro na análise';
+        el.analyzerConfidenceText.textContent = 'Falha';
+      }
+    }
+
+    function updateAnalyzerStatusUI(result) {
+      el.detectedCountPill.textContent = result.frames.length;
+      if (result.detectedGrid && result.detectedGrid.confidence > 0.4) {
+        el.gridInfoPill.textContent = `${result.detectedGrid.rows}×${result.detectedGrid.columns} (${Math.round(result.detectedGrid.confidence * 100)}%)`;
+      } else {
+        el.gridInfoPill.textContent = 'Não detectado';
+      }
+
+      // Cálculo de confiança global média
+      const avgConfidence = result.frames.length > 0
+        ? result.frames.reduce((acc, f) => acc + f.confidence, 0) / result.frames.length
+        : 1.0;
+      const confPct = Math.round(avgConfidence * 100);
+
+      // Coletar todos os warnings
+      const allWarnings = [];
+      result.frames.forEach(f => {
+        if (f.warnings.length > 0) {
+          allWarnings.push(`Frame #${f.id + 1}: ${f.warnings.join(', ')}`);
+        }
+      });
+
+      if (allWarnings.length === 0) {
+        el.analyzerStatusBanner.className = 'status-banner ok';
+        el.analyzerStatusText.textContent = '✓ Detecção Perfeita';
+        el.analyzerConfidenceText.textContent = `${confPct}%`;
+        el.warningsContainer.style.display = 'none';
+      } else {
+        el.analyzerStatusBanner.className = 'status-banner warn';
+        el.analyzerStatusText.textContent = `⚠ Revisar (${allWarnings.length} alertas)`;
+        el.analyzerConfidenceText.textContent = `${confPct}%`;
+        el.warningsContainer.style.display = 'block';
+        el.analyzerWarnings.innerHTML = allWarnings.map(w => `<div>• ${w}</div>`).join('');
+      }
+
+      el.frameSummary.textContent = `Frames: ${result.frames.length}`;
+    }
+
+    /* ============================================================
+       ETAPA 13, 14, 15: EDITOR MANUAL DE BOUNDING BOXES & INTERAÇÃO
+       ============================================================ */
+    const HANDLE_SIZE = 7;
+
+    function getSelectedFrame() {
+      if (state.selectedFrameIndices.size === 0) return null;
+      const firstIdx = Array.from(state.selectedFrameIndices)[0];
+      return state.frames[firstIdx] || null;
+    }
+
+    function updateSelectedFrameInputs() {
+      const f = getSelectedFrame();
+      if (!f) {
+        el.selectedFrameBadge.textContent = 'Nenhum';
+        el.selFrameX.value = '';
+        el.selFrameY.value = '';
+        el.selFrameW.value = '';
+        el.selFrameH.value = '';
+        el.selAnchorX.value = '';
+        el.selAnchorY.value = '';
+        el.selectionInfo.textContent = 'Seleção: Nenhuma';
+        return;
+      }
+
+      el.selectedFrameBadge.textContent = `#${f.id + 1}`;
+      el.selFrameX.value = Math.round(f.x);
+      el.selFrameY.value = Math.round(f.y);
+      el.selFrameW.value = Math.round(f.width);
+      el.selFrameH.value = Math.round(f.height);
+      el.selAnchorX.value = Math.round(f.anchorX);
+      el.selAnchorY.value = Math.round(f.anchorY);
+      el.selectionInfo.textContent = `Sel: #${f.id + 1} (${Math.round(f.width)}×${Math.round(f.height)}px)`;
+    }
+
+    function applySelectedFrameInputs() {
+      const f = getSelectedFrame();
+      if (!f) return;
+      f.x = Math.max(0, Math.round(Number(el.selFrameX.value) || 0));
+      f.y = Math.max(0, Math.round(Number(el.selFrameY.value) || 0));
+      f.width = Math.max(4, Math.round(Number(el.selFrameW.value) || 4));
+      f.height = Math.max(4, Math.round(Number(el.selFrameH.value) || 4));
+      f.anchorX = Math.round(Number(el.selAnchorX.value) || (f.x + f.width / 2));
+      f.anchorY = Math.round(Number(el.selAnchorY.value) || (f.y + f.height));
+      f.relativeAnchorX = f.anchorX - f.x;
+      f.relativeAnchorY = f.anchorY - f.y;
+
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    }
+
+    // Identificação de Handles de redimensionamento
+    function getBoxHandles(box) {
+      const x = box.x, y = box.y, w = box.width, h = box.height;
+      const cx = x + w / 2, cy = y + h / 2;
+      return [
+        { name: 'nw', x: x, y: y, cursor: 'nwse-resize' },
+        { name: 'n',  x: cx, y: y, cursor: 'ns-resize' },
+        { name: 'ne', x: x + w, y: y, cursor: 'nesw-resize' },
+        { name: 'e',  x: x + w, y: cy, cursor: 'ew-resize' },
+        { name: 'se', x: x + w, y: y + h, cursor: 'nwse-resize' },
+        { name: 's',  x: cx, y: y + h, cursor: 'ns-resize' },
+        { name: 'sw', x: x, y: y + h, cursor: 'nesw-resize' },
+        { name: 'w',  x: x, y: cy, cursor: 'ew-resize' },
+      ];
+    }
+
+    function hitTestHandle(pt, box) {
+      if (!box) return null;
+      const handles = getBoxHandles(box);
+      for (const h of handles) {
+        if (Math.abs(pt.x - h.x) <= HANDLE_SIZE + 2 && Math.abs(pt.y - h.y) <= HANDLE_SIZE + 2) {
+          return h;
+        }
+      }
+      return null;
+    }
+
+    function hitTestBox(pt) {
+      // Testar de trás para frente
+      for (let i = state.frames.length - 1; i >= 0; i--) {
+        const b = state.frames[i];
+        if (pt.x >= b.x && pt.x <= b.x + b.width && pt.y >= b.y && pt.y <= b.y + b.height) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    // Interações de Mouse no Overlay
+    el.overlay.addEventListener('mousemove', (e) => {
+      const pt = toImageCoords(e);
+      el.mousePos.textContent = `X: ${pt.x}, Y: ${pt.y}`;
+
+      if (state.dragMode) {
+        handleDragMove(pt);
+        return;
+      }
+
+      // Alterar cursor conforme hover
+      const sel = getSelectedFrame();
+      const handle = hitTestHandle(pt, sel);
+      if (handle) {
+        el.overlay.style.cursor = handle.cursor;
+      } else {
+        const boxIdx = hitTestBox(pt);
+        if (boxIdx >= 0) {
+          el.overlay.style.cursor = 'move';
+        } else {
+          el.overlay.style.cursor = 'crosshair';
+        }
+      }
+    });
+
+    el.overlay.addEventListener('mousedown', (e) => {
+      const pt = toImageCoords(e);
+      const sel = getSelectedFrame();
+      const handle = hitTestHandle(pt, sel);
+
+      if (handle && sel) {
+        state.dragMode = 'resize';
+        state.dragHandle = handle.name;
+        state.dragStart = pt;
+        state.activeBoxOriginal = { ...sel };
+        return;
+      }
+
+      const boxIdx = hitTestBox(pt);
+      if (boxIdx >= 0) {
+        if (e.shiftKey) {
+          // Multi-seleção com Shift
+          if (state.selectedFrameIndices.has(boxIdx)) {
+            state.selectedFrameIndices.delete(boxIdx);
+          } else {
+            state.selectedFrameIndices.add(boxIdx);
+          }
+        } else {
+          state.selectedFrameIndices = new Set([boxIdx]);
+        }
+        state.dragMode = 'move';
+        state.dragStart = pt;
+        state.activeBoxOriginal = { ...state.frames[boxIdx] };
+        updateSelectedFrameInputs();
+        renderOverlay();
+        renderPreview();
+        return;
+      }
+
+      // Clique no vazio -> Inicia criação de novo frame
+      state.dragMode = 'create';
+      state.dragStart = pt;
+      state.dragCurrent = pt;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!state.dragMode) return;
+
+      if (state.dragMode === 'create' && state.dragStart && state.dragCurrent) {
+        const x = Math.min(state.dragStart.x, state.dragCurrent.x);
+        const y = Math.min(state.dragStart.y, state.dragCurrent.y);
+        const w = Math.abs(state.dragStart.x - state.dragCurrent.x);
+        const h = Math.abs(state.dragStart.y - state.dragCurrent.y);
+
+        if (w >= 10 && h >= 10) {
+          const newId = state.frames.length;
+          const newFrame = {
+            id: newId,
+            x, y, width: w, height: h,
+            contentBounds: { x, y, width: w, height: h },
+            anchorX: Math.round(x + w / 2),
+            anchorY: y + h,
+            relativeAnchorX: Math.round(w / 2),
+            relativeAnchorY: h,
+            pixelCount: w * h,
+            componentsCount: 1,
+            confidence: 1.0,
+            warnings: [],
+          };
+          state.frames.push(newFrame);
+          state.selectedFrameIndices = new Set([newId]);
+          updateSelectedFrameInputs();
+        }
+      }
+
+      state.dragMode = null;
+      state.dragHandle = null;
+      state.dragStart = null;
+      state.dragCurrent = null;
+      state.activeBoxOriginal = null;
+
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    });
+
+    function handleDragMove(pt) {
+      if (state.dragMode === 'move') {
+        const sel = getSelectedFrame();
+        if (!sel || !state.activeBoxOriginal) return;
+        const dx = pt.x - state.dragStart.x;
+        const dy = pt.y - state.dragStart.y;
+        sel.x = Math.max(0, Math.min(el.overlay.width - sel.width, Math.round(state.activeBoxOriginal.x + dx)));
+        sel.y = Math.max(0, Math.min(el.overlay.height - sel.height, Math.round(state.activeBoxOriginal.y + dy)));
+        sel.anchorX = Math.round(sel.x + sel.relativeAnchorX);
+        sel.anchorY = Math.round(sel.y + sel.relativeAnchorY);
+        updateSelectedFrameInputs();
+        renderOverlay();
+      } else if (state.dragMode === 'resize') {
+        const sel = getSelectedFrame();
+        if (!sel || !state.activeBoxOriginal) return;
+        const orig = state.activeBoxOriginal;
+        const dx = pt.x - state.dragStart.x;
+        const dy = pt.y - state.dragStart.y;
+        const hName = state.dragHandle;
+
+        let nx = orig.x, ny = orig.y, nw = orig.width, nh = orig.height;
+
+        if (hName.includes('w')) {
+          nx = Math.min(orig.x + orig.width - 6, orig.x + dx);
+          nw = orig.width - (nx - orig.x);
+        }
+        if (hName.includes('e')) {
+          nw = Math.max(6, orig.width + dx);
+        }
+        if (hName.includes('n')) {
+          ny = Math.min(orig.y + orig.height - 6, orig.y + dy);
+          nh = orig.height - (ny - orig.y);
+        }
+        if (hName.includes('s')) {
+          nh = Math.max(6, orig.height + dy);
+        }
+
+        sel.x = Math.max(0, Math.round(nx));
+        sel.y = Math.max(0, Math.round(ny));
+        sel.width = Math.min(el.overlay.width - sel.x, Math.round(nw));
+        sel.height = Math.min(el.overlay.height - sel.y, Math.round(nh));
+        // Manter anchor nos pés ao redimensionar
+        sel.anchorX = Math.round(sel.x + sel.width / 2);
+        sel.anchorY = Math.round(sel.y + sel.height);
+        sel.relativeAnchorX = Math.round(sel.width / 2);
+        sel.relativeAnchorY = sel.height;
+
+        updateSelectedFrameInputs();
+        renderOverlay();
+      } else if (state.dragMode === 'create') {
+        state.dragCurrent = pt;
+        renderOverlay();
+      }
+    }
+
+    // ETAPA 14: Mesclar Selecionados (Merge)
+    el.mergeSelectedBtn.addEventListener('click', () => {
+      if (state.selectedFrameIndices.size < 2) {
+        alert('Selecione ao menos 2 frames para mesclar (segure Shift e clique nos frames).');
+        return;
+      }
+      const indices = Array.from(state.selectedFrameIndices).sort((a, b) => a - b);
+      const toMerge = indices.map(idx => state.frames[idx]);
+
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const f of toMerge) {
+        if (f.x < minX) minX = f.x;
+        if (f.y < minY) minY = f.y;
+        if (f.x + f.width > maxX) maxX = f.x + f.width;
+        if (f.y + f.height > maxY) maxY = f.y + f.height;
+      }
+
+      const mergedFrame = {
+        id: indices[0],
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+        contentBounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
+        anchorX: Math.round(minX + (maxX - minX) / 2),
+        anchorY: maxY,
+        relativeAnchorX: Math.round((maxX - minX) / 2),
+        relativeAnchorY: maxY - minY,
+        pixelCount: toMerge.reduce((acc, f) => acc + f.pixelCount, 0),
+        componentsCount: toMerge.reduce((acc, f) => acc + f.componentsCount, 0),
+        confidence: 1.0,
+        warnings: [],
+      };
+
+      // Remover os antigos de trás para frente
+      for (let i = indices.length - 1; i >= 0; i--) {
+        state.frames.splice(indices[i], 1);
+      }
+      state.frames.splice(indices[0], 0, mergedFrame);
+      // Re-indexar IDs
+      state.frames.forEach((f, idx) => f.id = idx);
+      state.selectedFrameIndices = new Set([indices[0]]);
+
+      updateSelectedFrameInputs();
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    });
+
+    // ETAPA 15: Dividir Vertical / Horizontal (Split)
+    el.splitVertBtn.addEventListener('click', () => {
+      const sel = getSelectedFrame();
+      if (!sel) return;
+      const idx = sel.id;
+      const halfW = Math.floor(sel.width / 2);
+
+      const f1 = { ...sel, width: halfW, anchorX: Math.round(sel.x + halfW / 2) };
+      const f2 = {
+        ...sel,
+        x: sel.x + halfW,
+        width: sel.width - halfW,
+        anchorX: Math.round(sel.x + halfW + (sel.width - halfW) / 2),
+      };
+
+      state.frames.splice(idx, 1, f1, f2);
+      state.frames.forEach((f, i) => f.id = i);
+      state.selectedFrameIndices = new Set([idx]);
+
+      updateSelectedFrameInputs();
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    });
+
+    el.splitHorizBtn.addEventListener('click', () => {
+      const sel = getSelectedFrame();
+      if (!sel) return;
+      const idx = sel.id;
+      const halfH = Math.floor(sel.height / 2);
+
+      const f1 = { ...sel, height: halfH, anchorY: sel.y + halfH };
+      const f2 = {
+        ...sel,
+        y: sel.y + halfH,
+        height: sel.height - halfH,
+        anchorY: sel.y + sel.height,
+      };
+
+      state.frames.splice(idx, 1, f1, f2);
+      state.frames.forEach((f, i) => f.id = i);
+      state.selectedFrameIndices = new Set([idx]);
+
+      updateSelectedFrameInputs();
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    });
+
+    el.deleteFrameBtn.addEventListener('click', () => {
+      const sel = getSelectedFrame();
+      if (!sel) return;
+      const idx = sel.id;
+      state.frames.splice(idx, 1);
+      state.frames.forEach((f, i) => f.id = i);
+      state.selectedFrameIndices = new Set(state.frames.length > 0 ? [Math.min(idx, state.frames.length - 1)] : []);
+
+      updateSelectedFrameInputs();
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    });
+
+    [el.selFrameX, el.selFrameY, el.selFrameW, el.selFrameH, el.selAnchorX, el.selAnchorY].forEach(inp => {
+      inp.addEventListener('input', applySelectedFrameInputs);
+    });
+
+    /* ============================================================
+       RENDERIZAÇÃO DO OVERLAY (ETAPA 12, 17)
+       ============================================================ */
+    function renderOverlay() {
+      const ctx = el.overlay.getContext('2d');
+      ctx.clearRect(0, 0, el.overlay.width, el.overlay.height);
+      ctx.imageSmoothingEnabled = false;
+
+      // Renderização do Modo Debug se ativo
+      if (state.debugView === 'mask' && state.debugCanvasMask) {
+        ctx.globalAlpha = 0.88;
+        ctx.drawImage(state.debugCanvasMask, 0, 0);
+        ctx.globalAlpha = 1.0;
+      } else if (state.debugView === 'components' && state.debugCanvasComponents) {
+        ctx.globalAlpha = 0.88;
+        ctx.drawImage(state.debugCanvasComponents, 0, 0);
+        ctx.globalAlpha = 1.0;
+      }
+
+      if (!state.showBoxes) return;
+
+      const framesToRender = state.activeTab === 'manual' ? getManualRects() : state.frames;
+
+      // Desenhar cada frame
+      framesToRender.forEach((f, idx) => {
+        const isSelected = state.selectedFrameIndices.has(idx);
+        const hasWarning = f.warnings && f.warnings.length > 0;
+
+        // Bounding Box
+        ctx.lineWidth = isSelected ? 2.5 : 1.5;
+        ctx.strokeStyle = isSelected
+          ? '#ffd166'
+          : hasWarning
+          ? '#ff526c'
+          : '#58b6ff';
+
+        ctx.fillStyle = isSelected
+          ? 'rgba(255, 209, 102, 0.12)'
+          : hasWarning
+          ? 'rgba(255, 82, 108, 0.08)'
+          : 'rgba(88, 182, 255, 0.05)';
+
+        ctx.fillRect(f.x, f.y, f.width, f.height);
+        ctx.strokeRect(f.x, f.y, f.width, f.height);
+
+        // Badge com Número do Frame
+        if (state.showLabels) {
+          const numStr = String(idx + 1).padStart(2, '0');
+          ctx.font = 'bold 11px ui-monospace, Consolas, monospace';
+          const txtW = ctx.measureText(numStr).width;
+          ctx.fillStyle = isSelected ? '#ffd166' : '#14182b';
+          ctx.fillRect(f.x, f.y - 15, txtW + 8, 15);
+          ctx.strokeStyle = isSelected ? '#ffd166' : '#2a3359';
+          ctx.strokeRect(f.x, f.y - 15, txtW + 8, 15);
+          ctx.fillStyle = isSelected ? '#0c0f1d' : '#eef2ff';
+          ctx.fillText(numStr, f.x + 4, f.y - 3);
+        }
+
+        // Pivô / Anchor nos pés (+)
+        if (state.showAnchors && f.anchorX !== undefined && f.anchorY !== undefined) {
+          ctx.strokeStyle = '#ff3366';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(f.anchorX - 5, f.anchorY);
+          ctx.lineTo(f.anchorX + 5, f.anchorY);
+          ctx.moveTo(f.anchorX, f.anchorY - 5);
+          ctx.lineTo(f.anchorX, f.anchorY + 5);
+          ctx.stroke();
+        }
+
+        // Handles de redimensionamento no frame selecionado
+        if (isSelected && state.activeTab !== 'manual') {
+          const handles = getBoxHandles(f);
+          ctx.fillStyle = '#ffd166';
+          ctx.strokeStyle = '#0c0f1d';
+          ctx.lineWidth = 1.5;
+          handles.forEach(h => {
+            ctx.fillRect(h.x - HANDLE_SIZE / 2, h.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+            ctx.strokeRect(h.x - HANDLE_SIZE / 2, h.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+          });
+        }
+      });
+
+      // Retângulo dinâmico durante arraste de criação
+      if (state.dragMode === 'create' && state.dragStart && state.dragCurrent) {
+        const x = Math.min(state.dragStart.x, state.dragCurrent.x);
+        const y = Math.min(state.dragStart.y, state.dragCurrent.y);
+        const w = Math.abs(state.dragStart.x - state.dragCurrent.x);
+        const h = Math.abs(state.dragStart.y - state.dragCurrent.y);
+
+        ctx.strokeStyle = '#4ce08b';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(x, y, w, h);
+        ctx.setLineDash([]);
+      }
+    }
+
+    /* ============================================================
+       PREVIEW ANIMADO (ETAPA 12) & STRIP
+       ============================================================ */
+    function renderPreview() {
+      const canvas = el.previewCanvas;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+
+      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+      if (!frames || frames.length === 0 || !el.sheetImage.naturalWidth) return;
+
+      const currIdx = Math.min(state.currentFrame, frames.length - 1);
+      const f = frames[currIdx];
+      if (!f) return;
+
+      const zoom = Number(el.previewScale.value) || 2;
+
+      if (state.normalizePreview && state.activeTab !== 'manual') {
+        // Alinhamento Estável pelo Pivô no Chão (ETAPA 10, 11)
+        const targetAnchorX = Math.round(canvas.width / 2);
+        const targetAnchorY = Math.round(canvas.height - 25);
+
+        const relAnchorX = f.relativeAnchorX ?? Math.round(f.width / 2);
+        const relAnchorY = f.relativeAnchorY ?? f.height;
+
+        const drawX = targetAnchorX - relAnchorX * zoom;
+        const drawY = targetAnchorY - relAnchorY * zoom;
+
+        ctx.drawImage(
+          el.sheetImage,
+          f.x, f.y, f.width, f.height,
+          drawX, drawY, f.width * zoom, f.height * zoom
+        );
+
+        // Linha do solo e cruzeta do pivô
+        if (state.showAnchors) {
+          ctx.strokeStyle = 'rgba(88, 182, 255, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, targetAnchorY + 0.5);
+          ctx.lineTo(canvas.width, targetAnchorY + 0.5);
+          ctx.stroke();
+
+          ctx.strokeStyle = '#ff3366';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(targetAnchorX - 6, targetAnchorY);
+          ctx.lineTo(targetAnchorX + 6, targetAnchorY);
+          ctx.moveTo(targetAnchorX, targetAnchorY - 6);
+          ctx.lineTo(targetAnchorX, targetAnchorY + 6);
+          ctx.stroke();
+        }
+      } else {
+        // Centralização simples
+        const drawW = f.width * zoom;
+        const drawH = f.height * zoom;
+        const drawX = Math.round((canvas.width - drawW) / 2);
+        const drawY = Math.round((canvas.height - drawH) / 2);
+
+        ctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, drawX, drawY, drawW, drawH);
+      }
+    }
+
+    function renderStrip() {
+      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+      if (!frames || frames.length === 0 || !el.sheetImage.naturalWidth) return;
+
+      const canvas = el.stripCanvas;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+
+      const maxH = Math.max(...frames.map(f => f.height));
+      const scale = Math.min(1.5, 140 / (maxH || 1));
+      const pad = 12;
+
+      let totalW = pad;
+      frames.forEach(f => {
+        totalW += Math.round(f.width * scale) + pad;
+      });
+
+      canvas.width = Math.max(900, totalW);
+      canvas.height = 180;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let curX = pad;
+      frames.forEach((f, idx) => {
+        const dw = Math.round(f.width * scale);
+        const dh = Math.round(f.height * scale);
+        const dy = Math.round(150 - dh);
+
+        const isCurrent = idx === state.currentFrame;
+        const isSelected = state.selectedFrameIndices.has(idx);
+
+        // Fundo e moldura do frame no strip
+        ctx.fillStyle = isCurrent ? 'rgba(76, 224, 139, 0.15)' : 'rgba(255,255,255,0.02)';
+        ctx.fillRect(curX, dy, dw, dh);
+
+        ctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, curX, dy, dw, dh);
+
+        ctx.strokeStyle = isCurrent ? '#4ce08b' : isSelected ? '#ffd166' : '#2a3359';
+        ctx.lineWidth = isCurrent ? 2 : 1;
+        ctx.strokeRect(curX, dy, dw, dh);
+
+        // Legenda com ID e dimensões
+        ctx.fillStyle = isCurrent ? '#4ce08b' : '#9aa7d0';
+        ctx.font = '10px ui-monospace, Consolas, monospace';
+        ctx.fillText(`#${idx + 1} (${f.width}×${f.height})`, curX, 168);
+
+        // Salvar coordenadas para hit-test no strip
+        f._stripX = curX;
+        f._stripW = dw;
+
+        curX += dw + pad;
+      });
+    }
+
+    // Clique no Strip para selecionar frame
+    el.stripCanvas.addEventListener('click', (e) => {
+      const rect = el.stripCanvas.getBoundingClientRect();
+      const clickX = (e.clientX - rect.left) * (el.stripCanvas.width / rect.width);
+      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+
+      for (let i = 0; i < frames.length; i++) {
+        const f = frames[i];
+        if (clickX >= f._stripX && clickX <= f._stripX + f._stripW) {
+          state.currentFrame = i;
+          state.selectedFrameIndices = new Set([i]);
+          el.currentFrame.value = i;
+          updateSelectedFrameInputs();
+          renderOverlay();
+          renderPreview();
+          renderStrip();
+          break;
+        }
+      }
+    });
+
+    // Loop de Animação
+    function animLoop(timestamp) {
+      if (state.playing) {
+        const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+        if (frames.length > 0) {
+          const fps = Math.max(1, Number(el.fps.value) || 8);
+          const interval = 1000 / fps;
+          if (timestamp - state.lastFrameTime >= interval) {
+            state.currentFrame = (state.currentFrame + 1) % frames.length;
+            el.currentFrame.value = state.currentFrame;
+            state.lastFrameTime = timestamp;
+            renderPreview();
+            renderStrip();
+          }
+        }
+      }
+      requestAnimationFrame(animLoop);
+    }
+    requestAnimationFrame(animLoop);
+
+    /* ============================================================
+       ETAPA 20: EXPORTAÇÃO COMPLETA (JSON, ATLAS, INDIVIDUAL PNGS)
+       ============================================================ */
+    el.exportJsonBtn.addEventListener('click', () => {
+      if (!state.analysisResult) return;
+      const json = window.SpriteAnalyzer.exportMetadataJSON(
+        { ...state.analysisResult, frames: state.frames },
+        state.customImageName || state.imageName + '.png'
+      );
+      downloadBlob(new Blob([json], { type: 'application/json' }), `${state.imageName}_metadata.json`);
+    });
+
+    el.exportSheetBtn.addEventListener('click', () => {
+      if (state.frames.length === 0 || !el.sheetImage.naturalWidth) return;
+      // Cria atlas normalizado com frames alinhados por pivô
+      const maxW = Math.max(...state.frames.map(f => f.width));
+      const maxH = Math.max(...state.frames.map(f => f.height));
+      const cols = Math.min(6, state.frames.length);
+      const rows = Math.ceil(state.frames.length / cols);
+
+      const atlasCanvas = document.createElement('canvas');
+      atlasCanvas.width = cols * maxW;
+      atlasCanvas.height = rows * maxH;
+      const actx = atlasCanvas.getContext('2d');
+      actx.imageSmoothingEnabled = false;
+
+      state.frames.forEach((f, idx) => {
+        const c = idx % cols;
+        const r = Math.floor(idx / cols);
+        const cellX = c * maxW;
+        const cellY = r * maxH;
+
+        // Ponto de solo uniforme na base da célula
+        const targetAnchorX = cellX + Math.round(maxW / 2);
+        const targetAnchorY = cellY + Math.round(maxH - 10);
+        const drawX = targetAnchorX - f.relativeAnchorX;
+        const drawY = targetAnchorY - f.relativeAnchorY;
+
+        actx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, drawX, drawY, f.width, f.height);
+      });
+
+      atlasCanvas.toBlob(blob => {
+        downloadBlob(blob, `${state.imageName}_normalized_atlas.png`);
+      });
+    });
+
+    el.exportFramesBtn.addEventListener('click', () => {
+      if (state.frames.length === 0) return;
+      // Baixa os primeiros 8 frames ou gera download sequencial
+      state.frames.forEach((f, idx) => {
+        const frameCanvas = document.createElement('canvas');
+        frameCanvas.width = f.width;
+        frameCanvas.height = f.height;
+        const fctx = frameCanvas.getContext('2d');
+        fctx.imageSmoothingEnabled = false;
+        fctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, 0, 0, f.width, f.height);
+        frameCanvas.toBlob(blob => {
+          downloadBlob(blob, `${state.imageName}_frame_${String(idx + 1).padStart(2, '0')}.png`);
+        });
+      });
+    });
+
+    function downloadBlob(blob, filename) {
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+    }
+
+    /* ============================================================
+       CONTROLES DE ANIMAÇÃO & BOTÕES DE TOOLBAR
+       ============================================================ */
+    el.playBtn.addEventListener('click', () => {
+      state.playing = !state.playing;
+      el.playBtn.textContent = state.playing ? '⏸ Pause' : '▶ Play';
+      el.playBtn.className = state.playing ? 'btn-warn' : 'btn-ok';
+      el.playStatus.textContent = state.playing ? 'Reproduzindo' : 'Pausado';
+    });
+
+    el.prevBtn.addEventListener('click', () => {
+      state.playing = false;
+      el.playBtn.textContent = '▶ Play';
+      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+      state.currentFrame = (state.currentFrame - 1 + frames.length) % frames.length;
+      el.currentFrame.value = state.currentFrame;
+      renderPreview();
+      renderStrip();
+    });
+
+    el.nextBtn.addEventListener('click', () => {
+      state.playing = false;
+      el.playBtn.textContent = '▶ Play';
+      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+      state.currentFrame = (state.currentFrame + 1) % frames.length;
+      el.currentFrame.value = state.currentFrame;
+      renderPreview();
+      renderStrip();
+    });
+
+    el.fps.addEventListener('input', () => {
+      el.previewFpsBadge.textContent = `${el.fps.value} FPS`;
+    });
+
+    el.currentFrame.addEventListener('input', () => {
+      state.currentFrame = Number(el.currentFrame.value) || 0;
+      renderPreview();
+      renderStrip();
+    });
+
+    el.previewScale.addEventListener('input', renderPreview);
+
+    el.toggleAnchorsBtn.addEventListener('click', () => {
+      state.showAnchors = !state.showAnchors;
+      el.toggleAnchorsBtn.textContent = `Pivô: ${state.showAnchors ? 'ON' : 'OFF'}`;
+      renderOverlay();
+      renderPreview();
+    });
+
+    el.toggleLabelsBtn.addEventListener('click', () => {
+      state.showLabels = !state.showLabels;
+      el.toggleLabelsBtn.textContent = `Números: ${state.showLabels ? 'ON' : 'OFF'}`;
+      renderOverlay();
+    });
+
+    el.toggleNormalizedPreviewBtn.addEventListener('click', () => {
+      state.normalizePreview = !state.normalizePreview;
+      el.toggleNormalizedPreviewBtn.textContent = `Pivô Estável: ${state.normalizePreview ? 'ON' : 'OFF'}`;
+      renderPreview();
+    });
+
+    el.debugViewSelect.addEventListener('change', () => {
+      state.debugView = el.debugViewSelect.value;
+      renderOverlay();
+    });
+
+    el.runAutoAnalyzeBtn.addEventListener('click', runAutoAnalysis);
+
+    el.sheetSelect.addEventListener('change', () => {
+      loadSheet(el.sheetSelect.value);
+    });
+
+    el.uploadInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      state.customImageName = file.name;
+      el.sheetBadge.textContent = 'Customizado';
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        el.sheetImage.onload = () => onImageLoaded();
+        el.sheetImage.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    /* ============================================================
+       SUPORTE AO MODO MANUAL CLÁSSICO (Preservado)
+       ============================================================ */
+    function getManualRects() {
+      const x = Number(el.frameX.value) || 0;
+      const y = Number(el.frameY.value) || 0;
+      const w = Math.max(1, Number(el.frameW.value) || 400);
+      const h = Math.max(1, Number(el.frameH.value) || 300);
+      const count = Math.max(1, Number(el.frameCount.value) || 4);
+      const cols = Math.max(1, Number(el.columns.value) || 4);
+      const gapX = Number(el.gapX.value) || 0;
+      const gapY = Number(el.gapY.value) || 0;
+
+      const rects = [];
+      for (let i = 0; i < count; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        rects.push({
+          id: i,
+          x: x + col * (w + gapX),
+          y: y + row * (h + gapY),
+          width: w,
+          height: h,
+          anchorX: x + col * (w + gapX) + w / 2,
+          anchorY: y + row * (h + gapY) + h,
+          relativeAnchorX: w / 2,
+          relativeAnchorY: h,
+          warnings: []
+        });
+      }
+      return rects;
+    }
+
+    [el.frameX, el.frameY, el.frameW, el.frameH, el.frameCount, el.columns, el.gapX, el.gapY].forEach(inp => {
+      inp?.addEventListener('input', () => {
+        if (state.activeTab === 'manual') {
+          renderOverlay();
+          renderPreview();
+          renderStrip();
+        }
+      });
+    });
+
+    el.animationSelect?.addEventListener('change', () => {
       const anim = GAME_ATLAS[state.imageName]?.animations[el.animationSelect.value]
         || GAME_ATLAS.solarion.animations.idle;
       el.frameX.value = anim.x;
@@ -622,658 +1966,116 @@
       el.frameH.value = anim.h;
       el.frameCount.value = anim.count;
       el.columns.value = anim.count;
-      el.gapX.value = 0;
-      el.gapY.value = 0;
       el.fps.value = anim.fps;
-      state.currentFrame = 0;
-      el.currentFrame.value = 0;
-      updateAll();
-    }
+      renderOverlay();
+      renderPreview();
+      renderStrip();
+    });
 
-    function config() {
-      return {
-        sheetId: state.imageName,
-        sheetLabel: el.sheetSelect.options[el.sheetSelect.selectedIndex]?.text || state.customImageName || 'Custom',
-        x: Number(el.frameX.value) || 0,
-        y: Number(el.frameY.value) || 0,
-        width: Math.max(1, Number(el.frameW.value) || 1),
-        height: Math.max(1, Number(el.frameH.value) || 1),
-        count: Math.max(1, Number(el.frameCount.value) || 1),
-        columns: Math.max(1, Number(el.columns.value) || 1),
-        gapX: Number(el.gapX.value) || 0,
-        gapY: Number(el.gapY.value) || 0,
-        scale: Math.max(1, Number(el.previewScale.value) || 1),
-        fps: Math.max(1, Number(el.fps.value) || 1),
-      };
-    }
-
-    function setConfig(cfg) {
-      el.frameX.value = cfg.x ?? 0;
-      el.frameY.value = cfg.y ?? 0;
-      el.frameW.value = cfg.width ?? 128;
-      el.frameH.value = cfg.height ?? 128;
-      el.frameCount.value = cfg.count ?? 4;
-      el.columns.value = cfg.columns ?? 4;
-      el.gapX.value = cfg.gapX ?? 0;
-      el.gapY.value = cfg.gapY ?? 0;
-      el.previewScale.value = cfg.scale ?? 3;
-      el.fps.value = cfg.fps ?? 8;
-      el.currentFrame.value = Math.min(Number(el.currentFrame.value) || 0, Math.max(0, (cfg.count ?? 1) - 1));
-      state.currentFrame = Number(el.currentFrame.value) || 0;
-      updateAll();
-    }
-
-    function resetConfig() {
-      applyGameAnimationPreset();
-      state.selection = null;
-      updateAll();
-    }
-
-    function loadSelectedSheet() {
-      const selected = SHEETS.find(s => s.id === el.sheetSelect.value);
-      if (!selected) return;
-      state.imageName = selected.id;
-      state.customImageName = null;
-      el.sheetImage.onload = () => {
-        if (state.imageName === selected.id) onImageLoaded();
-      };
-      el.sheetImage.removeAttribute('src');
-      el.previewCanvas.getContext('2d').clearRect(0, 0, el.previewCanvas.width, el.previewCanvas.height);
-      el.stripCanvas.getContext('2d').clearRect(0, 0, el.stripCanvas.width, el.stripCanvas.height);
-      el.sheetImage.src = selected.src;
-      if (GAME_ATLAS[selected.id]) applyGameAnimationPreset();
-      if (selected.src.includes('/processed/')) el.gameplayHero.value = selected.id;
-      else el.gameplayEnemy.value = selected.id;
-    }
-
-    function onImageLoaded() {
-      resizeOverlay();
-      const sheet = SHEETS.find(item => item.id === state.imageName);
-      const file = state.customImageName || sheet?.src.split('/').pop() || 'atlas';
-      const kind = state.imageName === 'custom' ? 'PNG enviado' : sheet?.src.includes('/rebuilt/') ? 'sprite sheet novo' : 'atlas reparado';
-      el.sheetInfo.textContent = `Arquivo: ${file} (${kind}) | ${el.sheetImage.naturalWidth} x ${el.sheetImage.naturalHeight}px`;
-      updateAll();
-    }
-
-    function resizeOverlay() {
-      const rect = el.sheetImage.getBoundingClientRect();
-      el.overlay.width = Math.max(1, Math.round(rect.width));
-      el.overlay.height = Math.max(1, Math.round(rect.height));
-      el.overlay.style.width = rect.width + 'px';
-      el.overlay.style.height = rect.height + 'px';
-    }
-
-    function imageScale() {
-      return {
-        sx: el.sheetImage.naturalWidth / el.overlay.width,
-        sy: el.sheetImage.naturalHeight / el.overlay.height,
-      };
-    }
-
-    function toImageCoords(evt) {
-      const rect = el.overlay.getBoundingClientRect();
-      const px = evt.clientX - rect.left;
-      const py = evt.clientY - rect.top;
-      const scale = imageScale();
-      return {
-        x: Math.max(0, Math.round(px * scale.sx)),
-        y: Math.max(0, Math.round(py * scale.sy)),
-      };
-    }
-
-    function toCanvasCoords(ix, iy) {
-      const scale = imageScale();
-      return {
-        x: ix / scale.sx,
-        y: iy / scale.sy,
-      };
-    }
-
-    function getRects() {
-      const c = config();
-      const rects = [];
-      for (let i = 0; i < c.count; i++) {
-        const col = i % c.columns;
-        const row = Math.floor(i / c.columns);
-        rects.push({
-          i,
-          x: c.x + col * (c.width + c.gapX),
-          y: c.y + row * (c.height + c.gapY),
-          w: c.width,
-          h: c.height,
-        });
+    /* ============================================================
+       SIMULADOR DE COMBATE DA FASE 1 (Preservado e Integrado)
+       ============================================================ */
+    const gameplayImages = {};
+    function getGameplayImage(id) {
+      if (!gameplayImages[id]) {
+        const sheet = SHEETS.find(s => s.id === id);
+        if (sheet) {
+          const img = new Image();
+          img.src = sheet.src;
+          img.onload = () => renderGameplayScene();
+          gameplayImages[id] = img;
+        }
       }
-      return rects;
+      return gameplayImages[id];
     }
 
-    function drawOverlay() {
-      const ctx = el.overlay.getContext('2d');
-      ctx.clearRect(0, 0, el.overlay.width, el.overlay.height);
-
-      if (!state.showBoxes) return;
-
-      const rects = getRects();
-      rects.forEach((r, index) => {
-        const p = toCanvasCoords(r.x, r.y);
-        const size = toCanvasCoords(r.w, r.h);
-        ctx.lineWidth = index === state.currentFrame ? 3 : 2;
-        ctx.strokeStyle = index === state.currentFrame ? '#59d98e' : '#ffb703';
-        ctx.strokeRect(p.x + 0.5, p.y + 0.5, size.x, size.y);
-        ctx.fillStyle = index === state.currentFrame ? 'rgba(89,217,142,0.18)' : 'rgba(255,183,3,0.12)';
-        ctx.fillRect(p.x, p.y, size.x, size.y);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Arial';
-        ctx.fillText(String(index), p.x + 4, p.y + 14);
-      });
-
-      if (state.dragStart && state.dragCurrent) {
-        const sx = Math.min(state.dragStart.x, state.dragCurrent.x);
-        const sy = Math.min(state.dragStart.y, state.dragCurrent.y);
-        const sw = Math.abs(state.dragCurrent.x - state.dragStart.x);
-        const sh = Math.abs(state.dragCurrent.y - state.dragStart.y);
-        const p = toCanvasCoords(sx, sy);
-        const size = toCanvasCoords(sw, sh);
-        ctx.strokeStyle = '#79d0ff';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 4]);
-        ctx.strokeRect(p.x + 0.5, p.y + 0.5, size.x, size.y);
-        ctx.setLineDash([]);
-      }
-    }
-
-    function renderPreview() {
-      if (!el.sheetImage.naturalWidth) return;
-      const c = config();
-      const rects = getRects();
-      if (!rects.length) return;
-      state.currentFrame = Math.min(state.currentFrame, rects.length - 1);
-      const rect = rects[state.currentFrame];
-
-      const canvas = el.previewCanvas;
+    function renderGameplayScene() {
+      const canvas = el.gameplayCanvas;
       const ctx = canvas.getContext('2d');
-      const outW = c.width * c.scale;
-      const outH = c.height * c.scale;
-      canvas.width = outW;
-      canvas.height = outH;
-      ctx.clearRect(0, 0, outW, outH);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(el.sheetImage, rect.x, rect.y, rect.w, rect.h, 0, 0, outW, outH);
-    }
 
-    function renderStrip() {
-      if (!el.sheetImage.naturalWidth) return;
-      const c = config();
-      const rects = getRects();
-      const maxRows = Math.ceil(rects.length / Math.max(1, c.columns));
-      const canvas = el.stripCanvas;
-      const gap = 8;
-      const canvasW = (c.width + gap) * Math.max(1, c.columns) + gap;
-      const rowsUsed = Math.max(1, maxRows);
-      const canvasH = (c.height + gap) * rowsUsed + gap;
-      canvas.width = canvasW;
-      canvas.height = canvasH;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvasW, canvasH);
-      ctx.imageSmoothingEnabled = false;
-      rects.forEach((r, idx) => {
-        const col = idx % c.columns;
-        const row = Math.floor(idx / c.columns);
-        const dx = gap + col * (c.width + gap);
-        const dy = gap + row * (c.height + gap);
-        ctx.drawImage(el.sheetImage, r.x, r.y, r.w, r.h, dx, dy, c.width, c.height);
-        ctx.strokeStyle = idx === state.currentFrame ? '#59d98e' : '#3b4572';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(dx + 0.5, dy + 0.5, c.width, c.height);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Arial';
-        ctx.fillText(String(idx), dx + 4, dy + 14);
-      });
-    }
-
-    function gameplayFrame(id, action, elapsed, duration) {
-      const def = GAME_ATLAS[id].animations[action];
-      if (duration && !def.loop) return Math.min(def.count - 1, Math.floor(Math.min(.9999, elapsed / duration) * def.count));
-      return Math.floor(elapsed * def.fps) % def.count;
-    }
-
-    function gameplaySource(id, action, frame) {
-      if (id === state.imageName && action === el.animationSelect.value && state.imageName !== 'custom') {
-        return { image: getGameplayImage(id), rect: getRects()[Math.min(frame, config().count - 1)] };
-      }
-      const def = GAME_ATLAS[id].animations[action];
-      const width = def.w / def.count;
-      return {
-        image: getGameplayImage(id),
-        rect: { x: def.x + frame * width, y: def.y, w: width, h: def.h }
-      };
-    }
-
-    function drawGameplaySprite(ctx, id, action, frame, x, groundY, facing, scaleMul = 1) {
-      const { image, rect } = gameplaySource(id, action, frame);
-      if (!(image?.naturalWidth || image?.width) || !rect) return;
-      const scale = GAME_ATLAS[id].scale * scaleMul;
-      const dw = rect.w * scale;
-      const dh = rect.h * scale;
-      ctx.save();
-      ctx.translate(Math.round(x), Math.round(groundY));
-      ctx.scale(facing, 1);
-      ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, -dw / 2, -dh + Math.round(15 * scale), dw, dh);
-      ctx.restore();
-    }
-
-    function drawGameplayBackground(ctx, camera) {
+      // Fundo estilizado do cenário cósmico
       const g = ctx.createLinearGradient(0, 0, 0, 540);
       g.addColorStop(0, '#071b35');
       g.addColorStop(.55, '#0c3150');
-      g.addColorStop(.56, '#09263d');
       g.addColorStop(1, '#07111e');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, 960, 540);
-      ctx.fillStyle = '#123b58';
-      ctx.fillRect(0, 245, 960, 80);
-      for (let i = -1; i < 8; i++) {
-        const x = i * 170 - (camera * .12) % 170;
-        ctx.fillStyle = '#0b1c2c';
-        ctx.fillRect(x, 150, 100, 115);
-        ctx.fillStyle = '#1a7391';
-        for (let wy = 168; wy < 245; wy += 22) {
-          for (let wx = x + 14; wx < x + 90; wx += 23) {
-            if ((wx + wy + i * 13) % 3 < 2) ctx.fillRect(wx, wy, 8, 5);
-          }
-        }
-      }
-      ctx.strokeStyle = '#213e50';
-      ctx.lineWidth = 8;
-      for (let i = 0; i < 4; i++) {
-        const x = i * 360 + 60 - (camera * .28) % 360;
-        ctx.beginPath(); ctx.moveTo(x, 245); ctx.lineTo(x, 110); ctx.lineTo(x + 120, 110); ctx.stroke();
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(x + 95, 110); ctx.lineTo(x + 95, 200); ctx.stroke();
-        ctx.lineWidth = 8;
-      }
+
+      // Chão do cenário
       ctx.fillStyle = '#142436';
       ctx.fillRect(0, 310, 960, 230);
-      ctx.fillStyle = '#1f3850';
-      for (let i = -2; i < 14; i++) {
-        const x = i * 110 - (camera * .7) % 110;
-        ctx.beginPath(); ctx.moveTo(x, 310); ctx.lineTo(x + 72, 310);
-        ctx.lineTo(x + 132, 540); ctx.lineTo(x + 25, 540); ctx.closePath(); ctx.fill();
-      }
       ctx.strokeStyle = '#4c6d86';
       ctx.lineWidth = 3;
-      ctx.globalAlpha = .45;
       ctx.beginPath(); ctx.moveTo(0, 358); ctx.lineTo(960, 358); ctx.stroke();
-      ctx.globalAlpha = .08;
-      ctx.strokeStyle = '#d9f4ff';
-      for (let y = 350; y <= 500; y += 38) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(960, y); ctx.stroke();
+
+      const elapsed = (performance.now() - state.gameplayStart) / 1000;
+      const heroId = el.gameplayHero.value;
+      const enemyId = el.gameplayEnemy.value;
+
+      const heroImg = getGameplayImage(heroId);
+      const enemyImg = getGameplayImage(enemyId);
+
+      // Sombra dos personagens
+      function drawShadow(x, y, rad) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.beginPath();
+        ctx.ellipse(x, y, rad, rad * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
-      ctx.globalAlpha = 1;
+
+      drawShadow(320, 395, 34);
+      drawShadow(600, 395, 30);
+
+      // Renderizar herói e inimigo com pés alinhados
+      function drawCombatant(img, id, action, elapsed, x, groundY, facing, scaleMul = 1) {
+        const atlas = GAME_ATLAS[id];
+        if (!atlas || !img?.naturalWidth) return;
+        const def = atlas.animations[action];
+        const frame = Math.floor(elapsed * def.fps) % def.count;
+        const sw = def.w / def.count;
+        const sx = def.x + frame * sw;
+        const scale = atlas.scale * scaleMul;
+        const dw = sw * scale;
+        const dh = def.h * scale;
+
+        ctx.save();
+        ctx.translate(x, groundY);
+        ctx.scale(facing, 1);
+        ctx.drawImage(img, sx, def.y, sw, def.h, -dw / 2, -dh + Math.round(15 * scale), dw, dh);
+        ctx.restore();
+      }
+
+      // Animação de herói em ataque e inimigo em guarda/recuo
+      const heroAction = Math.floor(elapsed / 2) % 2 === 0 ? 'attack' : 'walk';
+      const enemyAction = heroAction === 'attack' ? 'hurt' : 'idle';
+
+      drawCombatant(heroImg, heroId, heroAction, elapsed, 320, 395, 1, 1);
+      drawCombatant(enemyImg, enemyId, enemyAction, elapsed, 600, 395, -1, 1);
     }
 
-    function drawGameplayShadow(ctx, x, y, radius, z = 0) {
-      ctx.save();
-      ctx.globalAlpha = Math.max(.08, Math.min(.32, .32 - z / 500));
-      ctx.fillStyle = '#000';
-      ctx.beginPath();
-      ctx.ellipse(x, y, radius, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    function renderGameplay(elapsed = 0) {
-      const canvas = el.gameplayCanvas;
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = false;
-      const hero = el.gameplayHero.value;
-      const enemy = el.gameplayEnemy.value;
-      if (!hero || !enemy) return;
-      const action = el.animationSelect.value;
-      let heroAction = 'idle';
-      let enemyAction = 'idle';
-      let heroIndex = 0;
-      let enemyIndex = 0;
-      let heroX = 320;
-      let enemyX = 625;
-      let heroZ = 0;
-      let enemyZ = 0;
+    el.gameplayPlayBtn.addEventListener('click', () => {
+      state.gameplayPlaying = !state.gameplayPlaying;
+      el.gameplayPlayBtn.textContent = state.gameplayPlaying ? '⏸ Pausar Simulação' : '▶ Simular Combate';
+      el.gameplayPlayBtn.className = state.gameplayPlaying ? 'btn-warn' : 'btn-ok';
       if (state.gameplayPlaying) {
-        const t = elapsed % 12;
-        if (t < 2) {
-          heroAction = enemyAction = 'walk';
-          heroX = 220 + t * 90;
-          enemyX = 730 - t * 65;
-        } else if (t < 3) {
-          heroAction = 'attack'; enemyAction = 'hurt';
-          heroX = 400; enemyX = 600;
-        } else if (t < 4) {
-          heroAction = 'hurt'; enemyAction = 'attack';
-          heroX = 400; enemyX = 600;
-        } else if (t < 5) {
-          heroAction = 'jump'; enemyAction = 'idle';
-          heroZ = Math.sin((t - 4) * Math.PI) * 90;
-        } else if (t < 6) {
-          heroAction = 'dash'; enemyAction = 'hurt';
-          heroX = 320 + (t - 5) * 160;
-        } else if (t < 8) {
-          heroAction = 'special'; enemyAction = 'hurt';
-          heroX = 400; enemyX = 610;
-        } else if (t < 10) {
-          heroAction = 'hurt'; enemyAction = 'special';
-          heroX = 400; enemyX = 610;
+        state.gameplayStart = performance.now();
+        function loop() {
+          if (state.gameplayPlaying) {
+            renderGameplayScene();
+            requestAnimationFrame(loop);
+          }
         }
-        const phaseStart = t < 2 ? 0 : t < 3 ? 2 : t < 4 ? 3 : t < 5 ? 4 : t < 6 ? 5 : t < 8 ? 6 : t < 10 ? 8 : 10;
-        const phaseDuration = t < 2 || (t >= 6 && t < 10) || t >= 10 ? 2 : 1;
-        heroIndex = gameplayFrame(hero, heroAction, t - phaseStart, phaseDuration);
-        enemyIndex = gameplayFrame(enemy, enemyAction, t - phaseStart, phaseDuration);
-      } else {
-        if (hero === state.imageName) {
-          heroAction = action;
-          heroIndex = Math.min(state.currentFrame, GAME_ATLAS[hero].animations[action].count - 1);
-          if (action === 'jump') heroZ = [0, 65, 35][heroIndex] || 0;
-        } else if (enemy === state.imageName) {
-          enemyAction = action;
-          enemyIndex = Math.min(state.currentFrame, GAME_ATLAS[enemy].animations[action].count - 1);
-          if (action === 'jump') enemyZ = [0, 65, 35][enemyIndex] || 0;
-        }
+        requestAnimationFrame(loop);
       }
-      drawGameplayBackground(ctx, state.gameplayPlaying ? elapsed * 28 : 0);
-      drawGameplayShadow(ctx, heroX, 363, 25, heroZ);
-      drawGameplayShadow(ctx, enemyX, 363, 24, enemyZ);
-      drawGameplaySprite(ctx, hero, heroAction, heroIndex, heroX, 363 - heroZ, 1);
-      drawGameplaySprite(ctx, enemy, enemyAction, enemyIndex, enemyX, 354 - enemyZ, -1);
-      el.gameplayStatus.textContent = `Escala real • ${hero}: ${heroAction} ${heroIndex + 1}/${GAME_ATLAS[hero].animations[heroAction].count} • ${enemy}: ${enemyAction} ${enemyIndex + 1}/${GAME_ATLAS[enemy].animations[enemyAction].count}`;
-    }
+    });
 
-    function gameplayLoop(ts) {
-      if (!state.gameplayPlaying) return;
-      if (!state.gameplayStart) state.gameplayStart = ts;
-      renderGameplay((ts - state.gameplayStart) / 1000);
-      state.gameplayReq = requestAnimationFrame(gameplayLoop);
-    }
-
-    function setGameplayPlaying(playing) {
-      state.gameplayPlaying = playing;
-      el.gameplayPlayBtn.textContent = playing ? '⏸ Pausar simulação' : '▶ Simular combate';
-      cancelAnimationFrame(state.gameplayReq);
-      state.gameplayStart = 0;
-      if (playing) state.gameplayReq = requestAnimationFrame(gameplayLoop);
-      else renderGameplay();
-    }
-
-    function refreshJsonOutput() {
-      el.jsonOutput.value = JSON.stringify({
-        name: el.presetName.value || '',
-        ...config(),
-      }, null, 2);
-    }
-
-    function updateStatus() {
-      const c = config();
-      el.currentFrame.max = Math.max(0, c.count - 1);
-      el.selectionInfo.textContent = `Seleção: x ${c.x}, y ${c.y}, w ${c.width}, h ${c.height}`;
-      el.frameSummary.textContent = `Frames: ${c.count} | Colunas: ${c.columns} | Gap: ${c.gapX}/${c.gapY}`;
-      el.playStatus.textContent = state.playing ? `Status: tocando ${c.fps} fps` : 'Status: pausado';
-      refreshJsonOutput();
-    }
-
-    function updateAll() {
-      resizeOverlay();
-      drawOverlay();
-      renderPreview();
-      renderStrip();
-      if (!state.gameplayPlaying) renderGameplay();
-      updateStatus();
-    }
-
-    function animationLoop(ts) {
-      const c = config();
-      if (!state.playing) return;
-      if (!state.lastFrameTime) state.lastFrameTime = ts;
-      const interval = 1000 / c.fps;
-      if (ts - state.lastFrameTime >= interval) {
-        state.currentFrame = (state.currentFrame + 1) % c.count;
-        el.currentFrame.value = state.currentFrame;
-        state.lastFrameTime = ts;
-        updateAll();
-      }
-      state.animReq = requestAnimationFrame(animationLoop);
-    }
-
-    function setPlaying(next) {
-      state.playing = next;
-      el.playBtn.textContent = next ? '⏸ Pause' : '▶ Play';
-      state.lastFrameTime = 0;
-      if (next) {
-        cancelAnimationFrame(state.animReq);
-        state.animReq = requestAnimationFrame(animationLoop);
-      } else {
-        cancelAnimationFrame(state.animReq);
-      }
-      updateStatus();
-    }
-
-    function getStorageKey() {
-      return 'cosmic-vanguard-sprite-presets';
-    }
-
-    function loadPresets() {
-      try {
-        return JSON.parse(localStorage.getItem(getStorageKey()) || '[]');
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function savePresets(list) {
-      localStorage.setItem(getStorageKey(), JSON.stringify(list));
-    }
-
-    function refreshPresetList() {
-      const presets = loadPresets();
-      el.savedPresets.innerHTML = '';
-      if (!presets.length) {
-        const option = document.createElement('option');
-        option.textContent = 'Nenhum preset salvo';
-        option.value = '';
-        el.savedPresets.appendChild(option);
-        return;
-      }
-      presets.forEach((preset, index) => {
-        const option = document.createElement('option');
-        option.value = String(index);
-        option.textContent = `${preset.name || 'Sem nome'} (${preset.sheetLabel || preset.sheetId || 'custom'})`;
-        el.savedPresets.appendChild(option);
-      });
-    }
-
-    function saveCurrentPreset() {
-      const name = el.presetName.value.trim();
-      if (!name) {
-        alert('Digite um nome para o preset.');
-        return;
-      }
-      const presets = loadPresets();
-      presets.push({ name, ...config() });
-      savePresets(presets);
-      refreshPresetList();
-      el.savedPresets.value = String(presets.length - 1);
-    }
-
-    function loadSelectedPreset() {
-      const presets = loadPresets();
-      const idx = Number(el.savedPresets.value);
-      const preset = presets[idx];
-      if (!preset) return;
-      el.presetName.value = preset.name || '';
-      if (preset.sheetId && SHEETS.some(s => s.id === preset.sheetId)) {
-        el.sheetSelect.value = preset.sheetId;
-        loadSelectedSheet();
-      }
-      setConfig(preset);
-    }
-
-    function deleteSelectedPreset() {
-      const presets = loadPresets();
-      const idx = Number(el.savedPresets.value);
-      if (!Number.isInteger(idx) || !presets[idx]) return;
-      presets.splice(idx, 1);
-      savePresets(presets);
-      refreshPresetList();
-    }
-
-    function downloadJson() {
-      const blob = new Blob([el.jsonOutput.value], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${(el.presetName.value || state.imageName || 'sprite-config').replace(/\s+/g, '_').toLowerCase()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function applyJson() {
-      try {
-        const data = JSON.parse(el.jsonOutput.value);
-        if (data.sheetId && SHEETS.some(s => s.id === data.sheetId)) {
-          el.sheetSelect.value = data.sheetId;
-          loadSelectedSheet();
-        }
-        el.presetName.value = data.name || '';
-        setConfig(data);
-      } catch (error) {
-        alert('JSON inválido.');
-      }
-    }
-
-    function wireEvents() {
-      [
-        el.frameX, el.frameY, el.frameW, el.frameH, el.frameCount,
-        el.columns, el.gapX, el.gapY, el.previewScale, el.fps
-      ].forEach(input => input.addEventListener('input', updateAll));
-
-      el.currentFrame.addEventListener('input', () => {
-        state.currentFrame = Math.max(0, Number(el.currentFrame.value) || 0);
-        updateAll();
-      });
-
-      el.sheetSelect.addEventListener('change', loadSelectedSheet);
-      el.animationSelect.addEventListener('change', applyGameAnimationPreset);
-      el.gameplayHero.addEventListener('change', () => {
-        getGameplayImage(el.gameplayHero.value);
-        if (!state.gameplayPlaying) renderGameplay();
-      });
-      el.gameplayEnemy.addEventListener('change', () => {
-        getGameplayImage(el.gameplayEnemy.value);
-        if (!state.gameplayPlaying) renderGameplay();
-      });
-      el.gameplayPlayBtn.addEventListener('click', () => setGameplayPlaying(!state.gameplayPlaying));
-      el.playBtn.addEventListener('click', () => setPlaying(!state.playing));
-      el.prevBtn.addEventListener('click', () => {
-        const c = config();
-        state.currentFrame = (state.currentFrame - 1 + c.count) % c.count;
-        el.currentFrame.value = state.currentFrame;
-        updateAll();
-      });
-      el.nextBtn.addEventListener('click', () => {
-        const c = config();
-        state.currentFrame = (state.currentFrame + 1) % c.count;
-        el.currentFrame.value = state.currentFrame;
-        updateAll();
-      });
-      el.fitNaturalBtn.addEventListener('click', () => {
-        if (!state.selection) return;
-        el.frameX.value = state.selection.x;
-        el.frameY.value = state.selection.y;
-        el.frameW.value = state.selection.w;
-        el.frameH.value = state.selection.h;
-        updateAll();
-      });
-      el.resetBtn.addEventListener('click', resetConfig);
-      el.toggleBoxesBtn.addEventListener('click', () => {
-        state.showBoxes = !state.showBoxes;
-        el.toggleBoxesBtn.textContent = state.showBoxes ? 'Ocultar caixas' : 'Mostrar caixas';
-        drawOverlay();
-      });
-
-      el.copyJsonBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(el.jsonOutput.value);
-          el.copyJsonBtn.textContent = 'Copiado!';
-          setTimeout(() => el.copyJsonBtn.textContent = 'Copiar JSON', 1200);
-        } catch (e) {
-          alert('Não foi possível copiar.');
-        }
-      });
-      el.downloadJsonBtn.addEventListener('click', downloadJson);
-      el.applyJsonBtn.addEventListener('click', applyJson);
-      el.savePresetBtn.addEventListener('click', saveCurrentPreset);
-      el.loadPresetBtn.addEventListener('click', loadSelectedPreset);
-      el.deletePresetBtn.addEventListener('click', deleteSelectedPreset);
-
-      window.addEventListener('resize', updateAll);
-
-      el.uploadInput.addEventListener('change', (evt) => {
-        const file = evt.target.files[0];
-        if (!file) return;
-        state.customImageName = file.name;
-        state.imageName = 'custom';
-        const objectUrl = URL.createObjectURL(file);
-        el.sheetImage.src = objectUrl;
-        el.sheetImage.onload = () => {
-          el.sheetInfo.textContent = `Arquivo: ${file.name} | ${el.sheetImage.naturalWidth} x ${el.sheetImage.naturalHeight}px`;
-          onImageLoaded();
-        };
-      });
-
-      el.overlay.addEventListener('mousemove', (evt) => {
-        if (!el.sheetImage.naturalWidth) return;
-        const pos = toImageCoords(evt);
-        el.mousePos.textContent = `Mouse: x ${pos.x}, y ${pos.y}`;
-        if (state.dragStart) {
-          state.dragCurrent = pos;
-          drawOverlay();
-        }
-      });
-
-      el.overlay.addEventListener('mousedown', (evt) => {
-        if (!el.sheetImage.naturalWidth) return;
-        const pos = toImageCoords(evt);
-        state.dragStart = pos;
-        state.dragCurrent = pos;
-      });
-
-      window.addEventListener('mouseup', () => {
-        if (!state.dragStart || !state.dragCurrent) return;
-        const x = Math.min(state.dragStart.x, state.dragCurrent.x);
-        const y = Math.min(state.dragStart.y, state.dragCurrent.y);
-        const w = Math.max(1, Math.abs(state.dragCurrent.x - state.dragStart.x));
-        const h = Math.max(1, Math.abs(state.dragCurrent.y - state.dragStart.y));
-        state.selection = { x, y, w, h };
-        el.frameX.value = x;
-        el.frameY.value = y;
-        el.frameW.value = w;
-        el.frameH.value = h;
-        state.dragStart = null;
-        state.dragCurrent = null;
-        updateAll();
-      });
-    }
-
-    function init() {
-      populateSheets();
-      populateAnimations();
-      refreshPresetList();
-      wireEvents();
-      el.sheetSelect.value = 'solarion';
-      loadSelectedSheet();
-      el.animationSelect.value = 'idle';
-      applyGameAnimationPreset();
-      getGameplayImage('solarion');
-      getGameplayImage('shadow_trooper');
-    }
-
-    init();
+    // Inicialização da Página
+    initSelectors();
+    loadSheet('solarion');
   </script>
 </body>
 </html>
