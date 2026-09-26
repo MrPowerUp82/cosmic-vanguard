@@ -119,7 +119,7 @@
       }
     },
     armored_brute: {
-      src: 'assets/sprites/enemies/armored_brute.png', scale: .46,
+      src: 'assets/sprites/rebuilt/armored_brute.png', scale: .46,
       animations: {
         idle: enemyAnim(26, 55, 560, 225, 4, 5, true),
         walk: enemyAnim(610, 58, 970, 225, 6, 8, true),
@@ -156,6 +156,14 @@
     },
   };
 
+  // Os sprites reparados usam a mesma grade 320 × 240 dos heróis.
+  for (const sheet of Object.values(ENEMY_SHEETS)) {
+    for (const [row, [action]] of CosmicSpriteRepair.actions.entries()) {
+      const original = sheet.animations[action];
+      sheet.animations[action] = animRow(row, original.count, original.fps, original.loop);
+    }
+  }
+
   const ENEMY_VISUALS = {
     grunt:         { sheet: 'shadow_trooper', scaleMul: 1.00, name: 'SHADOW TROOPER', ranged: false, leap: true, special: 'shockRush' },
     ranger:        { sheet: 'pulse_gunner',   scaleMul: 1.00, name: 'PULSE GUNNER',   ranged: true,  evade: true, special: 'volleyBlast' },
@@ -178,8 +186,11 @@
   const spriteImages = {};
   for (const [id, sheet] of Object.entries({ ...SPRITE_SHEETS, ...ENEMY_SHEETS })) {
     const img = new Image();
-    img.src = sheet.src;
     spriteImages[id] = img;
+    img.onload = () => {
+      spriteImages[id] = CosmicSpriteRepair.build(img, id);
+    };
+    img.src = sheet.src;
   }
 
   const HEROES = {
@@ -1780,7 +1791,7 @@
     const sheet = getSheetDefinition(heroId);
     const img = spriteImages[heroId];
     const def = sheet?.animations?.[action];
-    if (!sheet || !def || !img || !img.complete || !img.naturalWidth) return false;
+    if (!sheet || !def || !img || !(img instanceof HTMLCanvasElement) && (!img.complete || !img.naturalWidth)) return false;
 
     const sw = def.w / def.count;
     const sx = def.x + sw * clamp(frameIndex, 0, def.count - 1);
@@ -1885,7 +1896,7 @@
     const sheet = SPRITE_SHEETS[hero.id];
     const img = spriteImages[hero.id];
     const def = sheet?.animations?.idle;
-    if (sheet && def && img && img.complete && img.naturalWidth) {
+    if (sheet && def && img && (img instanceof HTMLCanvasElement || img.complete && img.naturalWidth)) {
       const sw = def.w / def.count;
       const targetH = 50 * scale;
       const targetW = sw / def.h * targetH;

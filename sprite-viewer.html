@@ -30,7 +30,7 @@
 
     body {
       display: grid;
-      grid-template-columns: 360px 1fr;
+      grid-template-columns: 360px minmax(0, 1fr);
       min-height: 100vh;
     }
 
@@ -43,9 +43,30 @@
 
     .main {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto auto 1fr auto;
       min-height: 100vh;
+      min-width: 0;
     }
+
+    .gameplay-card {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      min-width: 0;
+    }
+
+    .gameplay-controls {
+      display: flex;
+      gap: 10px;
+      align-items: end;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .gameplay-controls > div { min-width: 145px; flex: 1; }
+    .gameplay-controls button { width: auto; min-width: 165px; }
+    #gameplayCanvas { width: 100%; max-width: 960px; height: auto; }
+    #gameplayStatus { margin: 8px 0 0; }
 
     h1 {
       margin: 0 0 8px;
@@ -120,6 +141,7 @@
     .btn-warn { background: #47351a; border-color: #8d692d; }
     .btn-ok { background: #183526; border-color: #2d7f4f; }
     .btn-danger { background: #442024; border-color: #8f3843; }
+    .jump-link { display: block; color: var(--accent); margin: 0 0 18px; }
 
     .viewer-toolbar {
       padding: 14px 18px;
@@ -145,6 +167,7 @@
 
     .viewer-wrap {
       overflow: auto;
+      min-width: 0;
       padding: 18px;
       background:
         linear-gradient(45deg, #14192c 25%, transparent 25%),
@@ -234,7 +257,7 @@
 
     @media (max-width: 1100px) {
       body {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
       .sidebar {
         border-right: 0;
@@ -250,9 +273,9 @@
   <aside class="sidebar">
     <h1>Sprite Sheet Viewer</h1>
     <p class="subtitle">
-      Ferramenta para testar cortes de sprite sheet no navegador. Escolha um sheet, marque um frame com o mouse,
-      ajuste os valores e veja a animação em tempo real.
+      Teste os recortes na escala da primeira fase. Escolha um sheet, ajuste um frame e confira a cena de jogo.
     </p>
+    <a class="jump-link" href="#gameplayPreview">Ir para a simulação da primeira fase ↓</a>
 
     <div class="section">
       <h2>1) Sprite sheet</h2>
@@ -292,7 +315,7 @@
       <div class="row">
         <div>
           <label for="frameW">Largura do frame</label>
-          <input id="frameW" type="number" value="128" min="1" step="1" />
+          <input id="frameW" type="number" value="128" min="1" step="any" />
         </div>
         <div>
           <label for="frameH">Altura do frame</label>
@@ -374,7 +397,7 @@
       <div class="row row-1">
         <div>
           <label for="jsonOutput">JSON atual</label>
-          <textarea id="jsonOutput" readonly></textarea>
+          <textarea id="jsonOutput"></textarea>
         </div>
       </div>
       <div class="row row-3">
@@ -387,11 +410,10 @@
     <div class="section">
       <h2>Como usar</h2>
       <ol class="help-list">
-        <li>Escolha um herói no seletor.</li>
-        <li>Clique e arraste sobre o primeiro frame da animação.</li>
-        <li>Ajuste quantidade de frames, colunas e espaçamentos.</li>
-        <li>Confira as caixas laranja e o preview animado.</li>
-        <li>Salve um preset por animação para reutilizar depois.</li>
+        <li>Escolha um herói ou inimigo e a animação usada no jogo.</li>
+        <li>Na cena, avance os frames manualmente ou simule o combate.</li>
+        <li>Altere os recortes e confira o sprite no tamanho real do jogo.</li>
+        <li>Salve um preset quando o resultado estiver correto.</li>
       </ol>
     </div>
   </aside>
@@ -403,6 +425,16 @@
       <span class="pill" id="frameSummary">Frames: 0</span>
       <span class="pill" id="playStatus">Status: pausado</span>
     </div>
+
+    <section class="gameplay-card" id="gameplayPreview">
+      <div class="gameplay-controls">
+        <div><label for="gameplayHero">Herói na cena</label><select id="gameplayHero"></select></div>
+        <div><label for="gameplayEnemy">Inimigo na cena</label><select id="gameplayEnemy"></select></div>
+        <button id="gameplayPlayBtn" class="btn-ok">▶ Simular combate</button>
+      </div>
+      <div class="canvas-box"><canvas id="gameplayCanvas" width="960" height="540" aria-label="Prévia em escala de jogo"></canvas></div>
+      <p class="tiny" id="gameplayStatus">Cena em escala de jogo. O sprite selecionado usa o recorte acima; o outro usa o atlas do jogo.</p>
+    </section>
 
     <div class="viewer-wrap" id="viewerWrap">
       <div class="sheet-stage" id="sheetStage">
@@ -428,6 +460,7 @@
     </div>
   </main>
 
+  <script src="sprite-repair.js"></script>
   <script>
     const SHEETS = [
       { id: 'solarion', name: 'Solarion', src: 'assets/sprites/processed/solarion.png' },
@@ -438,7 +471,7 @@
       { id: 'emerald_nova', name: 'Emerald Nova', src: 'assets/sprites/processed/emerald_nova.png' },
       { id: 'shadow_trooper', name: 'Shadow Trooper', src: 'assets/sprites/enemies/shadow_trooper.png' },
       { id: 'pulse_gunner', name: 'Pulse Gunner', src: 'assets/sprites/enemies/pulse_gunner.png' },
-      { id: 'armored_brute', name: 'Armored Brute', src: 'assets/sprites/enemies/armored_brute.png' },
+      { id: 'armored_brute', name: 'Armored Brute', src: 'assets/sprites/rebuilt/armored_brute.png' },
       { id: 'rift_assassin', name: 'Rift Assassin', src: 'assets/sprites/enemies/rift_assassin.png' },
       { id: 'void_tyrant', name: 'Void Tyrant', src: 'assets/sprites/enemies/void_tyrant.png' },
     ];
@@ -453,12 +486,90 @@
       { id: 'special', label: 'Special Attack', row: 6, count: 6 },
     ];
 
+    // Mesmos retângulos, escalas e FPS usados por drawSheetFrame() em game.js.
+    const heroAnimation = (row, count, fps, loop = false) => ({
+      x: 0, y: row * 240, w: count * 320, h: 240, count, fps, loop
+    });
+    const heroAtlas = (scale, fps) => ({
+      scale,
+      animations: Object.fromEntries(GAME_ANIMATIONS.map((anim, i) => [
+        anim.id, heroAnimation(anim.row, anim.count, fps[i], i === 0 || i === 1 || i === 4)
+      ]))
+    });
+    const enemyAnimation = (x, y, w, h, count, fps, loop = false) => ({ x, y, w, h, count, fps, loop });
+    const GAME_ATLAS = {
+      solarion: heroAtlas(.49, [5, 9, 9, 7, 11, 7, 9]),
+      night_talon: heroAtlas(.49, [5, 9, 9, 7, 11, 7, 10]),
+      valoria: heroAtlas(.48, [5, 9, 9, 7, 10, 7, 9]),
+      red_velocity: heroAtlas(.49, [6, 12, 13, 9, 16, 8, 13]),
+      abyss_king: heroAtlas(.47, [5, 8, 9, 7, 10, 7, 9]),
+      emerald_nova: heroAtlas(.49, [5, 9, 9, 7, 11, 7, 9]),
+      shadow_trooper: { scale: .42, animations: {
+        idle: enemyAnimation(32, 52, 540, 225, 4, 5, true),
+        walk: enemyAnimation(595, 48, 980, 230, 6, 8, true),
+        attack: enemyAnimation(28, 320, 900, 250, 4, 9),
+        jump: enemyAnimation(1040, 312, 520, 250, 3, 7),
+        dash: enemyAnimation(1040, 312, 520, 250, 3, 7),
+        hurt: enemyAnimation(30, 560, 570, 135, 2, 6),
+        special: enemyAnimation(18, 685, 1590, 220, 6, 11)
+      } },
+      pulse_gunner: { scale: .44, animations: {
+        idle: enemyAnimation(28, 48, 555, 225, 4, 5, true),
+        walk: enemyAnimation(590, 50, 995, 225, 6, 8, true),
+        attack: enemyAnimation(24, 330, 1035, 205, 4, 9),
+        jump: enemyAnimation(1080, 330, 520, 205, 3, 7),
+        dash: enemyAnimation(1080, 330, 520, 205, 3, 7),
+        hurt: enemyAnimation(1120, 565, 450, 155, 2, 6),
+        special: enemyAnimation(40, 750, 1510, 155, 6, 11)
+      } },
+      armored_brute: { scale: .46, animations: {
+        idle: enemyAnimation(26, 55, 560, 225, 4, 5, true),
+        walk: enemyAnimation(610, 58, 970, 225, 6, 8, true),
+        attack: enemyAnimation(24, 334, 960, 270, 4, 8),
+        jump: enemyAnimation(860, 332, 630, 270, 3, 7),
+        dash: enemyAnimation(860, 332, 630, 270, 3, 7),
+        hurt: enemyAnimation(1230, 352, 360, 180, 2, 6),
+        special: enemyAnimation(24, 675, 1585, 230, 6, 10)
+      } },
+      rift_assassin: { scale: .42, animations: {
+        idle: enemyAnimation(12, 48, 565, 225, 4, 5, true),
+        walk: enemyAnimation(600, 50, 1000, 225, 6, 8, true),
+        attack: enemyAnimation(18, 330, 965, 205, 4, 9),
+        jump: enemyAnimation(1020, 330, 580, 205, 3, 7),
+        dash: enemyAnimation(1020, 330, 580, 205, 3, 7),
+        hurt: enemyAnimation(1120, 560, 455, 140, 2, 6),
+        special: enemyAnimation(20, 680, 1600, 230, 6, 11)
+      } },
+      void_tyrant: { scale: .48, animations: {
+        idle: enemyAnimation(26, 44, 565, 230, 4, 5, true),
+        walk: enemyAnimation(600, 46, 1010, 230, 6, 8, true),
+        attack: enemyAnimation(22, 308, 965, 260, 4, 8),
+        jump: enemyAnimation(1015, 308, 585, 260, 3, 7),
+        dash: enemyAnimation(1015, 308, 585, 260, 3, 7),
+        hurt: enemyAnimation(1130, 570, 450, 150, 2, 6),
+        special: enemyAnimation(20, 690, 1600, 220, 6, 10)
+      } }
+    };
+
+    for (const sheet of SHEETS.filter(item => !item.src.includes('/processed/'))) {
+      const atlas = GAME_ATLAS[sheet.id];
+      for (const [row, [action]] of CosmicSpriteRepair.actions.entries()) {
+        const original = atlas.animations[action];
+        atlas.animations[action] = heroAnimation(row, original.count, original.fps, original.loop);
+      }
+    }
+
     const el = {
       sheetSelect: document.getElementById('sheetSelect'),
       uploadInput: document.getElementById('uploadInput'),
       animationSelect: document.getElementById('animationSelect'),
       sheetInfo: document.getElementById('sheetInfo'),
       sheetImage: document.getElementById('sheetImage'),
+      gameplayHero: document.getElementById('gameplayHero'),
+      gameplayEnemy: document.getElementById('gameplayEnemy'),
+      gameplayPlayBtn: document.getElementById('gameplayPlayBtn'),
+      gameplayCanvas: document.getElementById('gameplayCanvas'),
+      gameplayStatus: document.getElementById('gameplayStatus'),
       overlay: document.getElementById('overlay'),
       frameX: document.getElementById('frameX'),
       frameY: document.getElementById('frameY'),
@@ -505,7 +616,36 @@
       dragCurrent: null,
       selection: null,
       animReq: null,
+      gameplayPlaying: false,
+      gameplayStart: 0,
+      gameplayReq: null,
     };
+
+    const repairedAtlases = {};
+    const repairingAtlases = {};
+
+    function getRepairedAtlas(id) {
+      if (repairedAtlases[id]) return Promise.resolve(repairedAtlases[id]);
+      if (repairingAtlases[id]) return repairingAtlases[id];
+      const sheet = SHEETS.find(item => item.id === id);
+      repairingAtlases[id] = new Promise((resolve, reject) => {
+        const source = new Image();
+        source.onload = () => {
+          const repaired = CosmicSpriteRepair.build(source, id);
+          repairedAtlases[id] = repaired;
+          renderGameplay();
+          resolve(repaired);
+        };
+        source.onerror = reject;
+        source.src = sheet.src;
+      });
+      return repairingAtlases[id];
+    }
+
+    function getGameplayImage(id) {
+      if (!repairedAtlases[id]) getRepairedAtlas(id);
+      return repairedAtlases[id];
+    }
 
     function populateSheets() {
       el.sheetSelect.innerHTML = '';
@@ -515,6 +655,14 @@
         option.textContent = sheet.name;
         el.sheetSelect.appendChild(option);
       });
+      for (const sheet of SHEETS) {
+        const option = document.createElement('option');
+        option.value = sheet.id;
+        option.textContent = sheet.name;
+        (sheet.src.includes('/processed/') ? el.gameplayHero : el.gameplayEnemy).appendChild(option);
+      }
+      el.gameplayHero.value = 'solarion';
+      el.gameplayEnemy.value = 'shadow_trooper';
     }
 
     function populateAnimations() {
@@ -528,15 +676,17 @@
     }
 
     function applyGameAnimationPreset() {
-      const anim = GAME_ANIMATIONS.find(a => a.id === el.animationSelect.value) || GAME_ANIMATIONS[0];
-      el.frameX.value = 0;
-      el.frameY.value = anim.row * 240;
-      el.frameW.value = 320;
-      el.frameH.value = 240;
+      const anim = GAME_ATLAS[state.imageName]?.animations[el.animationSelect.value]
+        || GAME_ATLAS.solarion.animations.idle;
+      el.frameX.value = anim.x;
+      el.frameY.value = anim.y;
+      el.frameW.value = anim.w / anim.count;
+      el.frameH.value = anim.h;
       el.frameCount.value = anim.count;
       el.columns.value = anim.count;
       el.gapX.value = 0;
       el.gapY.value = 0;
+      el.fps.value = anim.fps;
       state.currentFrame = 0;
       el.currentFrame.value = 0;
       updateAll();
@@ -576,7 +726,7 @@
     }
 
     function resetConfig() {
-      setConfig({ x: 0, y: 0, width: 128, height: 128, count: 4, columns: 4, gapX: 0, gapY: 0, scale: 3, fps: 8 });
+      applyGameAnimationPreset();
       state.selection = null;
       updateAll();
     }
@@ -586,15 +736,26 @@
       if (!selected) return;
       state.imageName = selected.id;
       state.customImageName = null;
-      el.sheetImage.src = selected.src;
       el.sheetImage.onload = () => {
-        onImageLoaded();
+        if (state.imageName === selected.id) onImageLoaded();
       };
+      el.sheetImage.removeAttribute('src');
+      el.previewCanvas.getContext('2d').clearRect(0, 0, el.previewCanvas.width, el.previewCanvas.height);
+      el.stripCanvas.getContext('2d').clearRect(0, 0, el.stripCanvas.width, el.stripCanvas.height);
+      getRepairedAtlas(selected.id).then(atlas => {
+        if (state.imageName === selected.id) el.sheetImage.src = atlas.toDataURL('image/png');
+      });
+      if (GAME_ATLAS[selected.id]) applyGameAnimationPreset();
+      if (selected.src.includes('/processed/')) el.gameplayHero.value = selected.id;
+      else el.gameplayEnemy.value = selected.id;
     }
 
     function onImageLoaded() {
       resizeOverlay();
-      el.sheetInfo.textContent = `Arquivo: ${el.sheetImage.currentSrc.split('/').pop()} | ${el.sheetImage.naturalWidth} x ${el.sheetImage.naturalHeight}px`;
+      const sheet = SHEETS.find(item => item.id === state.imageName);
+      const file = state.customImageName || sheet?.src.split('/').pop() || 'atlas';
+      const kind = state.imageName === 'custom' ? 'PNG enviado' : sheet?.src.includes('/rebuilt/') ? 'sprite sheet novo' : 'atlas reparado';
+      el.sheetInfo.textContent = `Arquivo: ${file} (${kind}) | ${el.sheetImage.naturalWidth} x ${el.sheetImage.naturalHeight}px`;
       updateAll();
     }
 
@@ -733,6 +894,177 @@
       });
     }
 
+    function gameplayFrame(id, action, elapsed, duration) {
+      const def = GAME_ATLAS[id].animations[action];
+      if (duration && !def.loop) return Math.min(def.count - 1, Math.floor(Math.min(.9999, elapsed / duration) * def.count));
+      return Math.floor(elapsed * def.fps) % def.count;
+    }
+
+    function gameplaySource(id, action, frame) {
+      if (id === state.imageName && action === el.animationSelect.value && state.imageName !== 'custom') {
+        return { image: getGameplayImage(id), rect: getRects()[Math.min(frame, config().count - 1)] };
+      }
+      const def = GAME_ATLAS[id].animations[action];
+      const width = def.w / def.count;
+      return {
+        image: getGameplayImage(id),
+        rect: { x: def.x + frame * width, y: def.y, w: width, h: def.h }
+      };
+    }
+
+    function drawGameplaySprite(ctx, id, action, frame, x, groundY, facing, scaleMul = 1) {
+      const { image, rect } = gameplaySource(id, action, frame);
+      if (!(image?.naturalWidth || image?.width) || !rect) return;
+      const scale = GAME_ATLAS[id].scale * scaleMul;
+      const dw = rect.w * scale;
+      const dh = rect.h * scale;
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(groundY));
+      ctx.scale(facing, 1);
+      ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, -dw / 2, -dh + 5, dw, dh);
+      ctx.restore();
+    }
+
+    function drawGameplayBackground(ctx, camera) {
+      const g = ctx.createLinearGradient(0, 0, 0, 540);
+      g.addColorStop(0, '#071b35');
+      g.addColorStop(.55, '#0c3150');
+      g.addColorStop(.56, '#09263d');
+      g.addColorStop(1, '#07111e');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 960, 540);
+      ctx.fillStyle = '#123b58';
+      ctx.fillRect(0, 245, 960, 80);
+      for (let i = -1; i < 8; i++) {
+        const x = i * 170 - (camera * .12) % 170;
+        ctx.fillStyle = '#0b1c2c';
+        ctx.fillRect(x, 150, 100, 115);
+        ctx.fillStyle = '#1a7391';
+        for (let wy = 168; wy < 245; wy += 22) {
+          for (let wx = x + 14; wx < x + 90; wx += 23) {
+            if ((wx + wy + i * 13) % 3 < 2) ctx.fillRect(wx, wy, 8, 5);
+          }
+        }
+      }
+      ctx.strokeStyle = '#213e50';
+      ctx.lineWidth = 8;
+      for (let i = 0; i < 4; i++) {
+        const x = i * 360 + 60 - (camera * .28) % 360;
+        ctx.beginPath(); ctx.moveTo(x, 245); ctx.lineTo(x, 110); ctx.lineTo(x + 120, 110); ctx.stroke();
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x + 95, 110); ctx.lineTo(x + 95, 200); ctx.stroke();
+        ctx.lineWidth = 8;
+      }
+      ctx.fillStyle = '#142436';
+      ctx.fillRect(0, 310, 960, 230);
+      ctx.fillStyle = '#1f3850';
+      for (let i = -2; i < 14; i++) {
+        const x = i * 110 - (camera * .7) % 110;
+        ctx.beginPath(); ctx.moveTo(x, 310); ctx.lineTo(x + 72, 310);
+        ctx.lineTo(x + 132, 540); ctx.lineTo(x + 25, 540); ctx.closePath(); ctx.fill();
+      }
+      ctx.strokeStyle = '#4c6d86';
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = .45;
+      ctx.beginPath(); ctx.moveTo(0, 358); ctx.lineTo(960, 358); ctx.stroke();
+      ctx.globalAlpha = .08;
+      ctx.strokeStyle = '#d9f4ff';
+      for (let y = 350; y <= 500; y += 38) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(960, y); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawGameplayShadow(ctx, x, y, radius, z = 0) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(.08, Math.min(.32, .32 - z / 500));
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(x, y, radius, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function renderGameplay(elapsed = 0) {
+      const canvas = el.gameplayCanvas;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      const hero = el.gameplayHero.value;
+      const enemy = el.gameplayEnemy.value;
+      if (!hero || !enemy) return;
+      const action = el.animationSelect.value;
+      let heroAction = 'idle';
+      let enemyAction = 'idle';
+      let heroIndex = 0;
+      let enemyIndex = 0;
+      let heroX = 320;
+      let enemyX = 625;
+      let heroZ = 0;
+      let enemyZ = 0;
+      if (state.gameplayPlaying) {
+        const t = elapsed % 12;
+        if (t < 2) {
+          heroAction = enemyAction = 'walk';
+          heroX = 220 + t * 90;
+          enemyX = 730 - t * 65;
+        } else if (t < 3) {
+          heroAction = 'attack'; enemyAction = 'hurt';
+          heroX = 400; enemyX = 600;
+        } else if (t < 4) {
+          heroAction = 'hurt'; enemyAction = 'attack';
+          heroX = 400; enemyX = 600;
+        } else if (t < 5) {
+          heroAction = 'jump'; enemyAction = 'idle';
+          heroZ = Math.sin((t - 4) * Math.PI) * 90;
+        } else if (t < 6) {
+          heroAction = 'dash'; enemyAction = 'hurt';
+          heroX = 320 + (t - 5) * 160;
+        } else if (t < 8) {
+          heroAction = 'special'; enemyAction = 'hurt';
+          heroX = 400; enemyX = 610;
+        } else if (t < 10) {
+          heroAction = 'hurt'; enemyAction = 'special';
+          heroX = 400; enemyX = 610;
+        }
+        const phaseStart = t < 2 ? 0 : t < 3 ? 2 : t < 4 ? 3 : t < 5 ? 4 : t < 6 ? 5 : t < 8 ? 6 : t < 10 ? 8 : 10;
+        const phaseDuration = t < 2 || (t >= 6 && t < 10) || t >= 10 ? 2 : 1;
+        heroIndex = gameplayFrame(hero, heroAction, t - phaseStart, phaseDuration);
+        enemyIndex = gameplayFrame(enemy, enemyAction, t - phaseStart, phaseDuration);
+      } else {
+        if (hero === state.imageName) {
+          heroAction = action;
+          heroIndex = Math.min(state.currentFrame, GAME_ATLAS[hero].animations[action].count - 1);
+          if (action === 'jump') heroZ = [0, 65, 35][heroIndex] || 0;
+        } else if (enemy === state.imageName) {
+          enemyAction = action;
+          enemyIndex = Math.min(state.currentFrame, GAME_ATLAS[enemy].animations[action].count - 1);
+          if (action === 'jump') enemyZ = [0, 65, 35][enemyIndex] || 0;
+        }
+      }
+      drawGameplayBackground(ctx, state.gameplayPlaying ? elapsed * 28 : 0);
+      drawGameplayShadow(ctx, heroX, 363, 25, heroZ);
+      drawGameplayShadow(ctx, enemyX, 363, 24, enemyZ);
+      drawGameplaySprite(ctx, hero, heroAction, heroIndex, heroX, 363 - heroZ, 1);
+      drawGameplaySprite(ctx, enemy, enemyAction, enemyIndex, enemyX, 354 - enemyZ, -1);
+      el.gameplayStatus.textContent = `Escala real • ${hero}: ${heroAction} ${heroIndex + 1}/${GAME_ATLAS[hero].animations[heroAction].count} • ${enemy}: ${enemyAction} ${enemyIndex + 1}/${GAME_ATLAS[enemy].animations[enemyAction].count}`;
+    }
+
+    function gameplayLoop(ts) {
+      if (!state.gameplayPlaying) return;
+      if (!state.gameplayStart) state.gameplayStart = ts;
+      renderGameplay((ts - state.gameplayStart) / 1000);
+      state.gameplayReq = requestAnimationFrame(gameplayLoop);
+    }
+
+    function setGameplayPlaying(playing) {
+      state.gameplayPlaying = playing;
+      el.gameplayPlayBtn.textContent = playing ? '⏸ Pausar simulação' : '▶ Simular combate';
+      cancelAnimationFrame(state.gameplayReq);
+      state.gameplayStart = 0;
+      if (playing) state.gameplayReq = requestAnimationFrame(gameplayLoop);
+      else renderGameplay();
+    }
+
     function refreshJsonOutput() {
       el.jsonOutput.value = JSON.stringify({
         name: el.presetName.value || '',
@@ -754,6 +1086,7 @@
       drawOverlay();
       renderPreview();
       renderStrip();
+      if (!state.gameplayPlaying) renderGameplay();
       updateStatus();
     }
 
@@ -890,6 +1223,15 @@
 
       el.sheetSelect.addEventListener('change', loadSelectedSheet);
       el.animationSelect.addEventListener('change', applyGameAnimationPreset);
+      el.gameplayHero.addEventListener('change', () => {
+        getGameplayImage(el.gameplayHero.value);
+        if (!state.gameplayPlaying) renderGameplay();
+      });
+      el.gameplayEnemy.addEventListener('change', () => {
+        getGameplayImage(el.gameplayEnemy.value);
+        if (!state.gameplayPlaying) renderGameplay();
+      });
+      el.gameplayPlayBtn.addEventListener('click', () => setGameplayPlaying(!state.gameplayPlaying));
       el.playBtn.addEventListener('click', () => setPlaying(!state.playing));
       el.prevBtn.addEventListener('click', () => {
         const c = config();
@@ -991,6 +1333,8 @@
       loadSelectedSheet();
       el.animationSelect.value = 'idle';
       applyGameAnimationPreset();
+      getGameplayImage('solarion');
+      getGameplayImage('shadow_trooper');
     }
 
     init();
