@@ -41,50 +41,50 @@
     sol: 'emerald_nova',
   };
 
-  const SPRITE_CELL_W = 320;
-  const SPRITE_CELL_H = 240;
+  const SPRITE_CELL_W = 400;
+  const SPRITE_CELL_H = 300;
   const animRow = (row, count, fps, loop = false) => ({
     x: 0, y: row * SPRITE_CELL_H, w: count * SPRITE_CELL_W, h: SPRITE_CELL_H, count, fps, loop
   });
 
   const SPRITE_SHEETS = {
     solarion: {
-      src: 'assets/sprites/processed/solarion.png', scale: .49,
+      src: 'assets/sprites/processed/solarion.png', scale: .392,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,9,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,11,true), hurt: animRow(5,2,7), special: animRow(6,6,9)
       }
     },
     night_talon: {
-      src: 'assets/sprites/processed/night_talon.png', scale: .49,
+      src: 'assets/sprites/processed/night_talon.png', scale: .392,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,9,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,11,true), hurt: animRow(5,2,7), special: animRow(6,6,10)
       }
     },
     valoria: {
-      src: 'assets/sprites/processed/valoria.png', scale: .48,
+      src: 'assets/sprites/processed/valoria.png', scale: .384,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,9,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,10,true), hurt: animRow(5,2,7), special: animRow(6,6,9)
       }
     },
     red_velocity: {
-      src: 'assets/sprites/processed/red_velocity.png', scale: .49,
+      src: 'assets/sprites/processed/red_velocity.png', scale: .392,
       animations: {
         idle: animRow(0,4,6,true), walk: animRow(1,6,12,true), attack: animRow(2,4,13),
         jump: animRow(3,3,9), dash: animRow(4,4,16,true), hurt: animRow(5,2,8), special: animRow(6,6,13)
       }
     },
     abyss_king: {
-      src: 'assets/sprites/processed/abyss_king.png', scale: .47,
+      src: 'assets/sprites/processed/abyss_king.png', scale: .376,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,10,true), hurt: animRow(5,2,7), special: animRow(6,6,9)
       }
     },
     emerald_nova: {
-      src: 'assets/sprites/processed/emerald_nova.png', scale: .49,
+      src: 'assets/sprites/processed/emerald_nova.png', scale: .392,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,9,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,11,true), hurt: animRow(5,2,7), special: animRow(6,6,9)
@@ -92,77 +92,43 @@
     },
   };
 
-  const enemyAnim = (x, y, w, h, count, fps, loop = false) => ({ x, y, w, h, count, fps, loop });
   const ENEMY_SHEETS = {
     shadow_trooper: {
-      src: 'assets/sprites/enemies/shadow_trooper.png', scale: .42,
+      src: 'assets/sprites/enemies/shadow_trooper.png', scale: .336,
       animations: {
-        idle: enemyAnim(32, 52, 540, 225, 4, 5, true),
-        walk: enemyAnim(595, 48, 980, 230, 6, 8, true),
-        attack: enemyAnim(28, 320, 900, 250, 4, 9),
-        jump: enemyAnim(1040, 312, 520, 250, 3, 7),
-        dash: enemyAnim(1040, 312, 520, 250, 3, 7),
-        hurt: enemyAnim(30, 560, 570, 135, 2, 6),
-        special: enemyAnim(18, 685, 1590, 220, 6, 11),
+        idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
+        jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,11)
       }
     },
     pulse_gunner: {
-      src: 'assets/sprites/enemies/pulse_gunner.png', scale: .44,
+      src: 'assets/sprites/enemies/pulse_gunner.png', scale: .352,
       animations: {
-        idle: enemyAnim(28, 48, 555, 225, 4, 5, true),
-        walk: enemyAnim(590, 50, 995, 225, 6, 8, true),
-        attack: enemyAnim(24, 330, 1035, 205, 4, 9),
-        jump: enemyAnim(1080, 330, 520, 205, 3, 7),
-        dash: enemyAnim(1080, 330, 520, 205, 3, 7),
-        hurt: enemyAnim(1120, 565, 450, 155, 2, 6),
-        special: enemyAnim(40, 750, 1510, 155, 6, 11),
+        idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
+        jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,11)
       }
     },
     armored_brute: {
-      src: 'assets/sprites/rebuilt/armored_brute.png', scale: .46,
+      src: 'assets/sprites/enemies/armored_brute.png', scale: .368,
       animations: {
-        idle: enemyAnim(26, 55, 560, 225, 4, 5, true),
-        walk: enemyAnim(610, 58, 970, 225, 6, 8, true),
-        attack: enemyAnim(24, 334, 960, 270, 4, 8),
-        jump: enemyAnim(860, 332, 630, 270, 3, 7),
-        dash: enemyAnim(860, 332, 630, 270, 3, 7),
-        hurt: enemyAnim(1230, 352, 360, 180, 2, 6),
-        special: enemyAnim(24, 675, 1585, 230, 6, 10),
+        idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,8),
+        jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,10)
       }
     },
     rift_assassin: {
-      src: 'assets/sprites/enemies/rift_assassin.png', scale: .42,
+      src: 'assets/sprites/enemies/rift_assassin.png', scale: .336,
       animations: {
-        idle: enemyAnim(12, 48, 565, 225, 4, 5, true),
-        walk: enemyAnim(600, 50, 1000, 225, 6, 8, true),
-        attack: enemyAnim(18, 330, 965, 205, 4, 9),
-        jump: enemyAnim(1020, 330, 580, 205, 3, 7),
-        dash: enemyAnim(1020, 330, 580, 205, 3, 7),
-        hurt: enemyAnim(1120, 560, 455, 140, 2, 6),
-        special: enemyAnim(20, 680, 1600, 230, 6, 11),
+        idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
+        jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,11)
       }
     },
     void_tyrant: {
-      src: 'assets/sprites/enemies/void_tyrant.png', scale: .48,
+      src: 'assets/sprites/enemies/void_tyrant.png', scale: .384,
       animations: {
-        idle: enemyAnim(26, 44, 565, 230, 4, 5, true),
-        walk: enemyAnim(600, 46, 1010, 230, 6, 8, true),
-        attack: enemyAnim(22, 308, 965, 260, 4, 8),
-        jump: enemyAnim(1015, 308, 585, 260, 3, 7),
-        dash: enemyAnim(1015, 308, 585, 260, 3, 7),
-        hurt: enemyAnim(1130, 570, 450, 150, 2, 6),
-        special: enemyAnim(20, 690, 1600, 220, 6, 10),
+        idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,8),
+        jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,10)
       }
     },
   };
-
-  // Os sprites reparados usam a mesma grade 320 × 240 dos heróis.
-  for (const sheet of Object.values(ENEMY_SHEETS)) {
-    for (const [row, [action]] of CosmicSpriteRepair.actions.entries()) {
-      const original = sheet.animations[action];
-      sheet.animations[action] = animRow(row, original.count, original.fps, original.loop);
-    }
-  }
 
   const ENEMY_VISUALS = {
     grunt:         { sheet: 'shadow_trooper', scaleMul: 1.00, name: 'SHADOW TROOPER', ranged: false, leap: true, special: 'shockRush' },
@@ -186,11 +152,8 @@
   const spriteImages = {};
   for (const [id, sheet] of Object.entries({ ...SPRITE_SHEETS, ...ENEMY_SHEETS })) {
     const img = new Image();
-    spriteImages[id] = img;
-    img.onload = () => {
-      spriteImages[id] = CosmicSpriteRepair.build(img, id);
-    };
     img.src = sheet.src;
+    spriteImages[id] = img;
   }
 
   const HEROES = {
@@ -1791,7 +1754,7 @@
     const sheet = getSheetDefinition(heroId);
     const img = spriteImages[heroId];
     const def = sheet?.animations?.[action];
-    if (!sheet || !def || !img || !(img instanceof HTMLCanvasElement) && (!img.complete || !img.naturalWidth)) return false;
+    if (!sheet || !def || !img || (img instanceof HTMLImageElement && (!img.complete || !img.naturalWidth))) return false;
 
     const sw = def.w / def.count;
     const sx = def.x + sw * clamp(frameIndex, 0, def.count - 1);
@@ -1803,7 +1766,7 @@
     ctx.save();
     ctx.translate(Math.round(x), Math.round(groundY));
     ctx.scale(facing, 1);
-    ctx.drawImage(img, sx, def.y, sw, sh, -dw / 2, -dh + 5, dw, dh);
+    ctx.drawImage(img, sx, def.y, sw, sh, -dw / 2, -dh + Math.round(15 * scale), dw, dh);
     ctx.restore();
     return true;
   }

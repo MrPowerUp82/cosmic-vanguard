@@ -460,7 +460,6 @@
     </div>
   </main>
 
-  <script src="sprite-repair.js"></script>
   <script>
     const SHEETS = [
       { id: 'solarion', name: 'Solarion', src: 'assets/sprites/processed/solarion.png' },
@@ -471,7 +470,7 @@
       { id: 'emerald_nova', name: 'Emerald Nova', src: 'assets/sprites/processed/emerald_nova.png' },
       { id: 'shadow_trooper', name: 'Shadow Trooper', src: 'assets/sprites/enemies/shadow_trooper.png' },
       { id: 'pulse_gunner', name: 'Pulse Gunner', src: 'assets/sprites/enemies/pulse_gunner.png' },
-      { id: 'armored_brute', name: 'Armored Brute', src: 'assets/sprites/rebuilt/armored_brute.png' },
+      { id: 'armored_brute', name: 'Armored Brute', src: 'assets/sprites/enemies/armored_brute.png' },
       { id: 'rift_assassin', name: 'Rift Assassin', src: 'assets/sprites/enemies/rift_assassin.png' },
       { id: 'void_tyrant', name: 'Void Tyrant', src: 'assets/sprites/enemies/void_tyrant.png' },
     ];
@@ -488,7 +487,7 @@
 
     // Mesmos retângulos, escalas e FPS usados por drawSheetFrame() em game.js.
     const heroAnimation = (row, count, fps, loop = false) => ({
-      x: 0, y: row * 240, w: count * 320, h: 240, count, fps, loop
+      x: 0, y: row * 300, w: count * 400, h: 300, count, fps, loop
     });
     const heroAtlas = (scale, fps) => ({
       scale,
@@ -496,68 +495,19 @@
         anim.id, heroAnimation(anim.row, anim.count, fps[i], i === 0 || i === 1 || i === 4)
       ]))
     });
-    const enemyAnimation = (x, y, w, h, count, fps, loop = false) => ({ x, y, w, h, count, fps, loop });
     const GAME_ATLAS = {
-      solarion: heroAtlas(.49, [5, 9, 9, 7, 11, 7, 9]),
-      night_talon: heroAtlas(.49, [5, 9, 9, 7, 11, 7, 10]),
-      valoria: heroAtlas(.48, [5, 9, 9, 7, 10, 7, 9]),
-      red_velocity: heroAtlas(.49, [6, 12, 13, 9, 16, 8, 13]),
-      abyss_king: heroAtlas(.47, [5, 8, 9, 7, 10, 7, 9]),
-      emerald_nova: heroAtlas(.49, [5, 9, 9, 7, 11, 7, 9]),
-      shadow_trooper: { scale: .42, animations: {
-        idle: enemyAnimation(32, 52, 540, 225, 4, 5, true),
-        walk: enemyAnimation(595, 48, 980, 230, 6, 8, true),
-        attack: enemyAnimation(28, 320, 900, 250, 4, 9),
-        jump: enemyAnimation(1040, 312, 520, 250, 3, 7),
-        dash: enemyAnimation(1040, 312, 520, 250, 3, 7),
-        hurt: enemyAnimation(30, 560, 570, 135, 2, 6),
-        special: enemyAnimation(18, 685, 1590, 220, 6, 11)
-      } },
-      pulse_gunner: { scale: .44, animations: {
-        idle: enemyAnimation(28, 48, 555, 225, 4, 5, true),
-        walk: enemyAnimation(590, 50, 995, 225, 6, 8, true),
-        attack: enemyAnimation(24, 330, 1035, 205, 4, 9),
-        jump: enemyAnimation(1080, 330, 520, 205, 3, 7),
-        dash: enemyAnimation(1080, 330, 520, 205, 3, 7),
-        hurt: enemyAnimation(1120, 565, 450, 155, 2, 6),
-        special: enemyAnimation(40, 750, 1510, 155, 6, 11)
-      } },
-      armored_brute: { scale: .46, animations: {
-        idle: enemyAnimation(26, 55, 560, 225, 4, 5, true),
-        walk: enemyAnimation(610, 58, 970, 225, 6, 8, true),
-        attack: enemyAnimation(24, 334, 960, 270, 4, 8),
-        jump: enemyAnimation(860, 332, 630, 270, 3, 7),
-        dash: enemyAnimation(860, 332, 630, 270, 3, 7),
-        hurt: enemyAnimation(1230, 352, 360, 180, 2, 6),
-        special: enemyAnimation(24, 675, 1585, 230, 6, 10)
-      } },
-      rift_assassin: { scale: .42, animations: {
-        idle: enemyAnimation(12, 48, 565, 225, 4, 5, true),
-        walk: enemyAnimation(600, 50, 1000, 225, 6, 8, true),
-        attack: enemyAnimation(18, 330, 965, 205, 4, 9),
-        jump: enemyAnimation(1020, 330, 580, 205, 3, 7),
-        dash: enemyAnimation(1020, 330, 580, 205, 3, 7),
-        hurt: enemyAnimation(1120, 560, 455, 140, 2, 6),
-        special: enemyAnimation(20, 680, 1600, 230, 6, 11)
-      } },
-      void_tyrant: { scale: .48, animations: {
-        idle: enemyAnimation(26, 44, 565, 230, 4, 5, true),
-        walk: enemyAnimation(600, 46, 1010, 230, 6, 8, true),
-        attack: enemyAnimation(22, 308, 965, 260, 4, 8),
-        jump: enemyAnimation(1015, 308, 585, 260, 3, 7),
-        dash: enemyAnimation(1015, 308, 585, 260, 3, 7),
-        hurt: enemyAnimation(1130, 570, 450, 150, 2, 6),
-        special: enemyAnimation(20, 690, 1600, 220, 6, 10)
-      } }
+      solarion: heroAtlas(.392, [5, 9, 9, 7, 11, 7, 9]),
+      night_talon: heroAtlas(.392, [5, 9, 9, 7, 11, 7, 10]),
+      valoria: heroAtlas(.384, [5, 9, 9, 7, 10, 7, 9]),
+      red_velocity: heroAtlas(.392, [6, 12, 13, 9, 16, 8, 13]),
+      abyss_king: heroAtlas(.376, [5, 8, 9, 7, 10, 7, 9]),
+      emerald_nova: heroAtlas(.392, [5, 9, 9, 7, 11, 7, 9]),
+      shadow_trooper: heroAtlas(.336, [5, 8, 9, 7, 7, 6, 11]),
+      pulse_gunner: heroAtlas(.352, [5, 8, 9, 7, 7, 6, 11]),
+      armored_brute: heroAtlas(.368, [5, 8, 8, 7, 7, 6, 10]),
+      rift_assassin: heroAtlas(.336, [5, 8, 9, 7, 7, 6, 11]),
+      void_tyrant: heroAtlas(.384, [5, 8, 8, 7, 7, 6, 10]),
     };
-
-    for (const sheet of SHEETS.filter(item => !item.src.includes('/processed/'))) {
-      const atlas = GAME_ATLAS[sheet.id];
-      for (const [row, [action]] of CosmicSpriteRepair.actions.entries()) {
-        const original = atlas.animations[action];
-        atlas.animations[action] = heroAnimation(row, original.count, original.fps, original.loop);
-      }
-    }
 
     const el = {
       sheetSelect: document.getElementById('sheetSelect'),
@@ -621,30 +571,18 @@
       gameplayReq: null,
     };
 
-    const repairedAtlases = {};
-    const repairingAtlases = {};
-
-    function getRepairedAtlas(id) {
-      if (repairedAtlases[id]) return Promise.resolve(repairedAtlases[id]);
-      if (repairingAtlases[id]) return repairingAtlases[id];
-      const sheet = SHEETS.find(item => item.id === id);
-      repairingAtlases[id] = new Promise((resolve, reject) => {
-        const source = new Image();
-        source.onload = () => {
-          const repaired = CosmicSpriteRepair.build(source, id);
-          repairedAtlases[id] = repaired;
-          renderGameplay();
-          resolve(repaired);
-        };
-        source.onerror = reject;
-        source.src = sheet.src;
-      });
-      return repairingAtlases[id];
-    }
-
+    const cachedImages = {};
     function getGameplayImage(id) {
-      if (!repairedAtlases[id]) getRepairedAtlas(id);
-      return repairedAtlases[id];
+      if (!cachedImages[id]) {
+        const sheet = SHEETS.find(item => item.id === id);
+        if (sheet) {
+          const img = new Image();
+          img.onload = () => renderGameplay();
+          img.src = sheet.src;
+          cachedImages[id] = img;
+        }
+      }
+      return cachedImages[id];
     }
 
     function populateSheets() {
@@ -742,9 +680,7 @@
       el.sheetImage.removeAttribute('src');
       el.previewCanvas.getContext('2d').clearRect(0, 0, el.previewCanvas.width, el.previewCanvas.height);
       el.stripCanvas.getContext('2d').clearRect(0, 0, el.stripCanvas.width, el.stripCanvas.height);
-      getRepairedAtlas(selected.id).then(atlas => {
-        if (state.imageName === selected.id) el.sheetImage.src = atlas.toDataURL('image/png');
-      });
+      el.sheetImage.src = selected.src;
       if (GAME_ATLAS[selected.id]) applyGameAnimationPreset();
       if (selected.src.includes('/processed/')) el.gameplayHero.value = selected.id;
       else el.gameplayEnemy.value = selected.id;
@@ -921,7 +857,7 @@
       ctx.save();
       ctx.translate(Math.round(x), Math.round(groundY));
       ctx.scale(facing, 1);
-      ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, -dw / 2, -dh + 5, dw, dh);
+      ctx.drawImage(image, rect.x, rect.y, rect.w, rect.h, -dw / 2, -dh + Math.round(15 * scale), dw, dh);
       ctx.restore();
     }
 
