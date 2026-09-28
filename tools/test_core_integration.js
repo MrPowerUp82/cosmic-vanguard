@@ -104,4 +104,60 @@ function startSoloStage() {
   assert(CV.game().time > t0, 'partida nova começa sem hitstop herdado');
 }
 
+{
+  const h = createHarness();
+  const CV = h.window.CV;
+  const seen = [];
+  const names = ['stageStart', 'waveStart', 'hit', 'kill', 'playerDamaged', 'heroSwitch', 'waveClear', 'stageClear'];
+  for (const name of names) CV.on(name, data => seen.push({ name, data }));
+  const count = name => seen.filter(ev => ev.name === name).length;
+
+  h.press('Enter');
+  h.press('Enter');
+  assert.equal(count('stageStart'), 1, 'stageStart');
+  assert.equal(seen[0].data.stage.id, 'harbor');
+
+  const game = CV.game();
+  const p = game.players[0];
+
+  p.x = game.stage.waves[0].x - 400;
+  h.step(2);
+  assert.equal(count('waveStart'), 1, 'waveStart');
+  assert(game.enemies.length > 0);
+
+  const target = game.enemies[0];
+  target.x = p.x + 40;
+  target.y = p.y;
+  target.hp = 1;
+  p.facing = 1;
+  h.press('KeyJ');
+  h.step(30);
+  assert(count('hit') >= 1, 'hit');
+  assert(count('kill') >= 1, 'kill');
+  assert.equal(seen.find(ev => ev.name === 'kill').data.enemy, target);
+
+  p.invuln = 0;
+  game.projectiles.push({ x: p.x, y: p.y, vx: 0, vy: 0, damage: 5, color: '#fff', width: 10, height: 10, life: 1, owner: 'enemy', pierce: false, explosive: false, hit: new Set() });
+  h.step(1);
+  assert.equal(count('playerDamaged'), 1, 'playerDamaged');
+  assert.equal(seen.find(ev => ev.name === 'playerDamaged').data.dmg, 5);
+
+  h.step(40); // sai do hurtTimer
+  h.press('KeyE');
+  assert.equal(count('heroSwitch'), 1, 'heroSwitch');
+  assert.equal(seen.find(ev => ev.name === 'heroSwitch').data.from, 'solarion');
+
+  // Limpa todas as ondas marcando inimigos como mortos e avançando o herói.
+  for (let guard = 0; guard < 20 && !game.cleared; guard++) {
+    for (const e of game.enemies) e.dead = true;
+    h.step(1);
+    const next = game.stage.waves[game.currentWave + 1];
+    if (next) p.x = Math.min(next.x - 400, game.stage.width - 120);
+    h.step(2);
+  }
+  assert.equal(count('waveClear'), game.stage.waves.length, 'waveClear em toda onda');
+  assert.equal(count('stageClear'), 1, 'stageClear');
+  assert.equal(seen.find(ev => ev.name === 'stageClear').data.stage.id, 'harbor');
+}
+
 console.log('Núcleo integrado: agendador pausa, retoma e descarta com a partida OK.');

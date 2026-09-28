@@ -8,7 +8,8 @@
   const W = canvas.width;
   const H = canvas.height;
   const SAVE_PREFIX = 'cosmic_vanguard_save_';
-  const { createScheduler, createTimeControl } = window.CV_CORE;
+  const { createScheduler, createTimeControl, createEventBus } = window.CV_CORE;
+  const events = createEventBus();
   const keys = Object.create(null);
   const pressed = new Set();
   const SOLO_CONTROLS = {
@@ -350,6 +351,7 @@
     }
     game = createGame(stage);
     state = 'stage';
+    events.emit('stageStart', { stage });
     beep(280, .07, 'square', .025);
     setTimeout(() => beep(440, .07, 'square', .02), 70);
   }
@@ -427,6 +429,7 @@
     let idx = list.indexOf(p.heroId);
     idx = (idx + dir + list.length) % list.length;
     const next = HEROES[list[idx]];
+    const fromId = p.heroId;
     const hpRatio = Math.max(0.05, p.hp / p.maxHp);
     const enRatio = p.energy / p.maxEnergy;
     p.heroId = next.id;
@@ -450,6 +453,7 @@
     floatingText(p.x, p.y - 25, next.name, next.primary);
     beep(600, .06, 'square', .03);
     beep(880, .08, 'triangle', .02);
+    events.emit('heroSwitch', { player: p, from: fromId, to: next.id });
   }
 
   function makeEnemy(type, x, y, options = {}) {
@@ -510,6 +514,7 @@
       game.bossName = wave.boss;
       beep(92, .3, 'sawtooth', .035);
       setTimeout(() => beep(72, .3, 'sawtooth', .025), 100);
+      events.emit('waveStart', { index, wave });
       return;
     }
 
@@ -518,6 +523,7 @@
       const py = 28 + (i * 47) % 135;
       game.enemies.push(makeEnemy(type, px, py));
     });
+    events.emit('waveStart', { index, wave });
   }
 
   function bossPreset(name, final = false) {
@@ -1285,6 +1291,7 @@
     floatingText(e.x, e.y - 42, Math.round(dmg).toString(), '#fff1b2', .52);
     game.combo++;
     game.comboTimer = 1.25;
+    events.emit('hit', { target: e, dmg, knock });
     if (e.hp <= 0) killEnemy(e);
   }
 
@@ -1302,6 +1309,7 @@
     screenShake = Math.max(screenShake, e.boss ? 14 : 5);
     flash = Math.max(flash, e.boss ? .38 : .08);
     beep(e.boss ? 58 : 74, e.boss ? .22 : .07, 'sawtooth', e.boss ? .04 : .025);
+    events.emit('kill', { enemy: e, points });
   }
 
   function damagePlayer(p, dmg, knock) {
@@ -1315,6 +1323,7 @@
     floatingText(p.x, p.y - 46, `-${Math.round(dmg)}`, '#ff8d9b');
     screenShake = 7;
     beep(66, .08, 'square', .035);
+    events.emit('playerDamaged', { player: p, dmg });
   }
 
   function updateStageFlow() {
@@ -1328,6 +1337,7 @@
       if (!alive) {
         game.activeWave = false;
         game.lockX = null;
+        events.emit('waveClear', { index: game.currentWave });
         if (game.currentWave === game.stage.waves.length - 1) completeStage();
         else game.notice = { text: 'ÁREA LIMPA', sub: 'Avance para o próximo setor', timer: 1.25 };
       }
@@ -1346,6 +1356,7 @@
     if (st.id === 'void') save.campaignWon = true;
     save.highScore = Math.max(save.highScore || 0, game.score);
     persistSave();
+    events.emit('stageClear', { stage: st, score: game.score });
     game.scheduler.schedule(.9, () => {
       state = 'stageclear';
       game.stageEndTimer = 0;
@@ -2143,6 +2154,8 @@
 
   // Ponte para os módulos de gameplay (combat.js, progression.js, variety.js).
   window.CV = {
+    on: events.on,
+    emit: events.emit,
     game: () => game,
     state: () => state,
     save: () => save,
