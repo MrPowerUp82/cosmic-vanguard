@@ -5,3 +5,14 @@ graphify-out/
 __pycache__/
 *.py[cod]
 .superpowers/
+
+# Native build products and packages
+native/build-*/
+native/dist/
+native/platforms/switch/build/
+native/platforms/switch/romfs/
+native/platforms/switch/*.nro
+native/platforms/switch/*.nacp
+native/platforms/switch/*.elf
+native/title-test.bmp
+native/stage-test.bmp
