@@ -1,0 +1,6 @@
+# Saída gerada pelo graphify (grafo de conhecimento local)
+graphify-out/
+
+# Python
+__pycache__/
+*.py[cod]
