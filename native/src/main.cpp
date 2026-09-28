@@ -35,6 +35,7 @@ SDL_Renderer* renderer=nullptr;
 TTF_Font* font=nullptr;
 std::array<SDL_Texture*,11> sprite{};
 std::array<SDL_Texture*,4> backgrounds{};
+SDL_Texture* titleBanner=nullptr;
 std::array<const char*,11> spriteNames{{"solarion","night_talon","valoria","red_velocity","abyss_king","emerald_nova","shadow_trooper","pulse_gunner","armored_brute","rift_assassin","void_tyrant"}};
 std::string assetRoot;
 std::array<SDL_GameController*,2> pads{};
@@ -129,11 +130,26 @@ void render(const Game& game) {
       text("ENTER: MAPA",480,319,20,{200,229,255,255},true);
     }
   } else if(game.screen==Screen::Title) {
-    backdrop(0,0); rect(0,0,W,H,{4,8,24,175});
-    text("COSMIC VANGUARD",480,112,52,{255,215,104,255},true);
-    text("BEAT 'EM UP NATIVO",480,183,21,{212,231,255,255},true);
-    for(int i=0;i<3;i++) { int x=220+i*185; rect(x,283,160,80,i+1==game.selectedSlot?SDL_Color{25,76,117,240}:SDL_Color{13,27,54,220}); text("SLOT "+std::to_string(i+1),x+80,301,22,{248,250,255,255},true); }
-    text("SETAS: ESCOLHER SLOT  |  ENTER: JOGAR",480,429,20,{226,235,255,255},true);
+    if(titleBanner) {
+      SDL_Rect src{0,0,
+#if defined(COSMIC_PSP)
+        480,192
+#else
+        960,384
+#endif
+      };
+      SDL_Rect dst{0,0,960,384}; SDL_RenderCopy(renderer,titleBanner,&src,&dst);
+    } else backdrop(0,0);
+    rect(0,375,960,165,{3,7,19,255});
+    rect(0,353,960,22,{3,7,19,185});
+    text("SELECIONE UM SLOT",50,380,16,{157,186,217,255});
+    for(int i=0;i<3;i++) {
+      int x=50+i*305;
+      rect(x,410,270,67,i+1==game.selectedSlot?SDL_Color{25,76,117,240}:SDL_Color{13,27,54,220});
+      text("SLOT "+std::to_string(i+1),x+16,424,21,{248,250,255,255});
+      text("ENTER / A: JOGAR",x+16,452,13,{183,211,235,255});
+    }
+    text("SETAS / DIRECIONAL: ESCOLHER SLOT",480,499,18,{226,235,255,255},true);
   } else if(game.screen==Screen::Map) {
     backdrop(0,0); rect(0,0,W,H,{5,10,26,190});
     text("MAPA DE OPERACOES",480,34,35,{255,216,105,255},true);
@@ -294,6 +310,7 @@ int main(int argc,char** argv) {
 #endif
   for(int i=0;i<11;i++) sprite[i]=image(std::string(spriteNames[i])+".png");
   for(int i=0;i<4;i++) backgrounds[i]=image(std::string(i==0?"harbor":i==1?"metro":i==2?"sky":"void")+".jpg");
+  titleBanner=image("title.jpg");
   font=TTF_OpenFont((assetRoot+"DejaVuSans-Bold.ttf").c_str(),20);
   if(!font) std::fprintf(stderr,"Font: %s\n",TTF_GetError());
   Game game;
@@ -336,6 +353,7 @@ int main(int argc,char** argv) {
   for(auto* pad:pads) if(pad) SDL_GameControllerClose(pad);
   for(auto* t:sprite) if(t) SDL_DestroyTexture(t);
   for(auto* t:backgrounds) if(t) SDL_DestroyTexture(t);
+  if(titleBanner) SDL_DestroyTexture(titleBanner);
   SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window); TTF_Quit(); IMG_Quit(); SDL_Quit();
 #if defined(__SWITCH__)
   romfsExit();

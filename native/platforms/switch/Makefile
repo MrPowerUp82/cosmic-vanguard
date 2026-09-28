@@ -11,7 +11,7 @@ INCLUDES := ../../include
 ROMFS := romfs
 APP_TITLE := Cosmic Vanguard
 APP_AUTHOR := MrPowerUp82
-APP_VERSION := 0.1.0
+APP_VERSION := 0.1.1
 ARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 CFLAGS := -Wall -Wextra -O2 -ffunction-sections $(ARCH) `$(PREFIX)pkg-config --cflags sdl2 SDL2_image SDL2_ttf`
 CFLAGS += $(INCLUDE) -D__SWITCH__

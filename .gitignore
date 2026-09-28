@@ -16,3 +16,4 @@ native/platforms/switch/*.nacp
 native/platforms/switch/*.elf
 native/title-test.bmp
 native/stage-test.bmp
+native/*-preview.bmp
