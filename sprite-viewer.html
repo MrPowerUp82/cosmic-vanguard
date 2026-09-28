@@ -35,7 +35,8 @@
     body {
       display: grid;
       grid-template-columns: 380px minmax(0, 1fr);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
 
     /* Scrollbars */
@@ -145,6 +146,26 @@
       color: var(--accent);
     }
 
+    details.section > summary {
+      cursor: pointer;
+      list-style: none;
+      margin: 0;
+    }
+    details.section > summary::-webkit-details-marker { display: none; }
+    details.section > summary::after { content: '▸'; color: var(--muted); }
+    details.section[open] > summary::after { content: '▾'; }
+    details.section[open] > summary { margin-bottom: 10px; }
+
+    .steps {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .steps li { margin-bottom: 3px; }
+    .steps b { color: var(--accent-2); }
+
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -173,11 +194,27 @@
       font-family: inherit;
     }
     input[type="number"] { font-family: var(--font-mono); }
+    input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      accent-color: var(--accent);
+    }
     textarea {
       min-height: 80px;
       resize: vertical;
       font-family: var(--font-mono);
       font-size: 11px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text);
+      margin: 0 0 8px;
+      cursor: pointer;
+      font-weight: 500;
     }
 
     button {
@@ -198,6 +235,12 @@
     button:active {
       transform: translateY(1px);
     }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: none;
+      border-color: var(--line);
+    }
 
     .btn-primary {
       background: linear-gradient(135deg, #1c5285, #1d6fa5);
@@ -208,6 +251,19 @@
     .btn-ok { background: #16422d; border-color: #2e8b5c; color: #7cfbc0; }
     .btn-warn { background: #4a3615; border-color: #9c732a; color: #ffdb7d; }
     .btn-danger { background: #471d24; border-color: #943441; color: #ff919d; }
+
+    kbd {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      background: #0d1122;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    button kbd { opacity: 0.7; }
 
     .tiny {
       font-size: 11px;
@@ -258,26 +314,27 @@
 
     /* Main Area Layout */
     .main {
-      display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
       min-width: 0;
+      overflow-y: auto;
     }
+    .main > * { flex: none; }
+    .main > .viewer-wrap { flex: 1 1 auto; min-height: 360px; }
 
     /* Top Toolbar */
     .viewer-toolbar {
-      padding: 10px 16px;
+      padding: 8px 16px;
       border-bottom: 1px solid var(--line);
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
       background: rgba(14, 17, 31, 0.95);
-      position: sticky;
-      top: 0;
       z-index: 10;
-      backdrop-filter: blur(8px);
     }
+    .viewer-toolbar button { width: auto; }
     .pill {
       padding: 5px 9px;
       border-radius: 6px;
@@ -288,7 +345,11 @@
       font-family: var(--font-mono);
     }
     .pill strong { color: var(--text); }
+    .pill.on { color: var(--accent); border-color: #3b88c7; }
     .toolbar-spacer { flex: 1; }
+    .btn-group { display: flex; gap: 4px; align-items: center; }
+    .btn-group button { padding: 5px 9px; font-size: 12px; }
+    #zoomLabel { min-width: 58px; text-align: center; }
 
     /* Gameplay Combat Card */
     .gameplay-card {
@@ -297,22 +358,15 @@
       background: var(--panel);
       min-width: 0;
     }
-    .gameplay-controls {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .gameplay-controls > div { min-width: 140px; flex: 1; }
-    .gameplay-controls button { width: auto; min-width: 160px; }
     #gameplayCanvas { width: 100%; max-width: 960px; height: auto; border-radius: 8px; }
 
-    /* Canvas Stage */
+    /* Canvas Stage (viewport com zoom/pan) */
     .viewer-wrap {
-      overflow: auto;
+      position: relative;
+      overflow: hidden;
       min-width: 0;
-      padding: 16px;
+      min-height: 0;
+      user-select: none;
       background:
         linear-gradient(45deg, #101426 25%, transparent 25%),
         linear-gradient(-45deg, #101426 25%, transparent 25%),
@@ -320,41 +374,77 @@
         linear-gradient(-45deg, transparent 75%, #101426 75%);
       background-size: 24px 24px;
       background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
-      position: relative;
+      background-color: #0a0d1a;
     }
 
-    .sheet-stage {
-      position: relative;
-      display: inline-block;
-      min-width: 400px;
-      min-height: 240px;
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      background: rgba(0,0,0,0.4);
-    }
-
-    #sheetImage {
-      display: block;
-      max-width: none;
-      image-rendering: pixelated;
-    }
+    #sheetImage { display: none; }
 
     #overlay {
       position: absolute;
       inset: 0;
-      pointer-events: auto;
+      width: 100%;
+      height: 100%;
       cursor: crosshair;
+      touch-action: none;
     }
+
+    #loupe {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 168px;
+      height: 168px;
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      background: #070912;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+      pointer-events: none;
+      display: none;
+    }
+
+    .viewer-hint {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      max-width: calc(100% - 24px);
+      background: rgba(12, 15, 29, 0.88);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      pointer-events: none;
+      line-height: 1.8;
+    }
+    .viewer-hint b { color: var(--text); font-weight: 600; }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      background: rgba(20, 24, 43, 0.95);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .toast.show { opacity: 1; }
 
     /* Bottom Panels */
     .bottom-panels {
       border-top: 1px solid var(--line);
-      padding: 14px 16px;
+      padding: 12px 16px;
       display: grid;
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 340px minmax(0, 1fr);
       gap: 16px;
       background: var(--panel);
+      min-width: 0;
     }
 
     .preview-card {
@@ -365,6 +455,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      min-width: 0;
     }
     .preview-card h3 {
       margin: 0;
@@ -376,6 +467,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     .canvas-box {
@@ -394,6 +486,7 @@
       align-items: center;
       justify-content: center;
     }
+    .strip-box { justify-content: flex-start; }
 
     canvas {
       display: block;
@@ -402,14 +495,45 @@
 
     /* Frame Strip */
     #stripCanvas {
-      max-width: 100%;
-      height: auto;
+      height: 180px;
       cursor: pointer;
+      flex: none;
     }
 
+    /* Help modal */
+    .help-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .help-modal.open { display: flex; }
+    .help-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 22px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+    .help-card h2 { margin: 0 0 12px; font-size: 16px; }
+    .help-card h4 { margin: 14px 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .help-card table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .help-card td { padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .help-card td:first-child { width: 42%; white-space: nowrap; }
+
     @media (max-width: 1100px) {
-      body { grid-template-columns: minmax(0, 1fr); }
+      body { grid-template-columns: minmax(0, 1fr); height: auto; overflow: auto; }
       .sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+      .main { height: auto; overflow: visible; }
+      .main > .viewer-wrap { flex-basis: 70vh; }
       .bottom-panels { grid-template-columns: 1fr; }
     }
   </style>
@@ -427,9 +551,9 @@
 
     <!-- Navegação de Abas -->
     <div class="nav-tabs">
-      <button class="nav-tab active" id="tabAuto" onclick="switchTab('auto')">⚡ Analyzer</button>
+      <button class="nav-tab active" id="tabAuto" onclick="switchTab('auto')">✂ Recortes</button>
+      <button class="nav-tab" id="tabManual" onclick="switchTab('manual')">📐 Grade</button>
       <button class="nav-tab" id="tabCombat" onclick="switchTab('combat')">⚔️ Combate</button>
-      <button class="nav-tab" id="tabManual" onclick="switchTab('manual')">📐 Grid Manual</button>
     </div>
 
     <!-- 1. SPRITE SHEET SELECTOR (Comum a todas as abas) -->
@@ -453,15 +577,26 @@
       <p class="tiny" id="sheetInfo">—</p>
     </div>
 
-    <!-- ABA 1: AUTO ANALYZER INTELIGENTE -->
-    <div id="panelAuto">
+    <!-- ABA 1: RECORTES (Auto Analyzer + Editor) -->
+    <div id="panelAuto" style="display: flex; flex-direction: column; gap: 14px;">
+      <details class="section" open id="howtoBox">
+        <summary class="section-title"><span>Como recortar</span></summary>
+        <ol class="steps">
+          <li>Clique em <b>Analisar</b> para detectar os sprites automaticamente.</li>
+          <li>Faltou algum? <b>Arraste um retângulo</b> em volta dele — a caixa encaixa sozinha no desenho.</li>
+          <li>Ajuste: arraste as <b>alças amarelas</b>, o <b>pivô vermelho</b> (pés) ou use as <kbd>setas</kbd>.</li>
+          <li>Use <b>Duplicar →</b> (<kbd>Ctrl+D</kbd>) para criar o próximo frame de uma sequência.</li>
+          <li><b>Roda do mouse</b> dá zoom, <kbd>Espaço</kbd>+arrastar move a vista. <kbd>?</kbd> mostra todos os atalhos.</li>
+        </ol>
+      </details>
+
       <!-- Painel de Configurações de Detecção -->
       <div class="section">
         <div class="section-title">
-          <span>Configurações de Detecção</span>
+          <span>Detecção Automática</span>
           <span class="section-badge">IA + CCL</span>
         </div>
-        
+
         <div class="row">
           <div>
             <label for="autoBgType">Fundo</label>
@@ -483,45 +618,47 @@
 
         <div class="row">
           <div>
-            <label for="autoAlpha">Limiar Alfa</label>
-            <input id="autoAlpha" type="number" value="8" min="1" max="255" />
+            <label for="autoPadding">Margem (px)</label>
+            <input id="autoPadding" type="number" value="3" min="0" max="20" title="Espaço extra em volta do desenho. Protege pontas de espadas e cabelos." />
           </div>
           <div>
-            <label for="autoTolerance">Tolerância Cor</label>
-            <input id="autoTolerance" type="number" value="20" min="1" max="100" />
+            <label for="autoExpectedFrames">Frames Esperados</label>
+            <input id="autoExpectedFrames" type="number" placeholder="Opcional" min="1" />
           </div>
         </div>
 
-        <div class="row">
-          <div>
-            <label for="autoPadding">Padding Seguro (px)</label>
-            <input id="autoPadding" type="number" value="3" min="0" max="20" title="Protege pontas de espadas e cabelos" />
+        <details style="margin-bottom: 8px;">
+          <summary class="tiny" style="cursor: pointer; margin: 0 0 8px;">Opções avançadas</summary>
+          <div class="row">
+            <div>
+              <label for="autoAlpha">Limiar Alfa</label>
+              <input id="autoAlpha" type="number" value="8" min="1" max="255" />
+            </div>
+            <div>
+              <label for="autoTolerance">Tolerância Cor</label>
+              <input id="autoTolerance" type="number" value="20" min="1" max="100" />
+            </div>
           </div>
-          <div>
-            <label for="autoMinArea">Área Mínima (px)</label>
-            <input id="autoMinArea" type="number" value="4" min="1" max="100" />
+          <div class="row">
+            <div>
+              <label for="autoMinArea">Área Mínima (px)</label>
+              <input id="autoMinArea" type="number" value="4" min="1" max="100" />
+            </div>
+            <div></div>
           </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label for="autoMergeX">Distância Fusão X</label>
-            <input id="autoMergeX" type="number" value="6" min="0" max="30" title="Une armas ou faíscas ao corpo" />
+          <div class="row">
+            <div>
+              <label for="autoMergeX">Distância Fusão X</label>
+              <input id="autoMergeX" type="number" value="6" min="0" max="30" title="Une armas ou faíscas ao corpo" />
+            </div>
+            <div>
+              <label for="autoMergeY">Distância Fusão Y</label>
+              <input id="autoMergeY" type="number" value="6" min="0" max="30" />
+            </div>
           </div>
-          <div>
-            <label for="autoMergeY">Distância Fusão Y</label>
-            <input id="autoMergeY" type="number" value="6" min="0" max="30" />
-          </div>
-        </div>
+        </details>
 
         <div class="row row-1">
-          <div>
-            <label for="autoExpectedFrames">Frames Esperados (Opcional)</label>
-            <input id="autoExpectedFrames" type="number" placeholder="Ex.: 4, 6, 8, etc." min="1" />
-          </div>
-        </div>
-
-        <div class="row row-1" style="margin-top: 10px;">
           <button id="runAutoAnalyzeBtn" class="btn-primary" style="padding: 10px;">
             ⚡ Analisar Sprite Sheet
           </button>
@@ -537,7 +674,7 @@
         </div>
         <div class="row">
           <div>
-            <label>Frames Detectados</label>
+            <label>Frames</label>
             <div id="detectedCountPill" class="pill" style="text-align: center;">0</div>
           </div>
           <div>
@@ -546,17 +683,23 @@
           </div>
         </div>
         <div id="warningsContainer" style="display: none;">
-          <label style="color: var(--accent-2);">Avisos e Anomalias:</label>
+          <label style="color: var(--accent-2);">Avisos (clique para ir ao frame):</label>
           <div id="analyzerWarnings" class="warnings-box"></div>
         </div>
       </div>
 
-      <!-- Editor Manual do Frame Selecionado -->
+      <!-- Editor do Frame Selecionado -->
       <div class="section">
         <div class="section-title">
           <span>Frame Selecionado</span>
           <span class="section-badge" id="selectedFrameBadge">#0</span>
         </div>
+
+        <label class="check-row" title="Ao desenhar um retângulo, a caixa encolhe até o desenho (segure Alt para desativar)">
+          <input type="checkbox" id="autoTrimOnDraw" checked />
+          Encaixar no desenho ao criar (<kbd>Alt</kbd> ignora)
+        </label>
+
         <div class="row">
           <div>
             <label for="selFrameX">X</label>
@@ -587,14 +730,39 @@
             <input id="selAnchorY" type="number" step="1" />
           </div>
         </div>
+        <div class="row">
+          <div>
+            <label for="snapStep" title="Arredonda posição e tamanho para múltiplos deste valor ao arrastar">Snap (px)</label>
+            <input id="snapStep" type="number" value="1" min="1" max="256" />
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <button id="sameSizeBtn" title="Deixa todos os frames selecionados com o tamanho do primeiro (mantém os pés)">▣ Mesmo Tamanho</button>
+          </div>
+        </div>
 
+        <div class="row">
+          <button id="trimBtn" class="btn-ok" title="Encolhe a caixa até os pixels do desenho (T)">✂ Encaixar <kbd>T</kbd></button>
+          <button id="duplicateBtn" class="btn-primary" title="Cria uma cópia logo à direita (Ctrl+D)">⎘ Duplicar → <kbd>Ctrl+D</kbd></button>
+        </div>
+        <div class="row">
+          <button id="moveEarlierBtn" title="Move este frame para antes na ordem da animação ([)">◀ Ordem <kbd>[</kbd></button>
+          <button id="moveLaterBtn" title="Move este frame para depois na ordem da animação (])">Ordem ▶ <kbd>]</kbd></button>
+        </div>
         <div class="row">
           <button id="splitVertBtn" class="btn-warn" title="Divide este frame verticalmente em 2">✁ Dividir Vert.</button>
           <button id="splitHorizBtn" class="btn-warn" title="Divide este frame horizontalmente em 2">✃ Dividir Horiz.</button>
         </div>
         <div class="row">
-          <button id="mergeSelectedBtn" class="btn-primary" title="Une os frames selecionados em um único">⧉ Mesclar Seleção</button>
-          <button id="deleteFrameBtn" class="btn-danger" title="Remove este frame">🗑 Excluir</button>
+          <button id="mergeSelectedBtn" title="Une os frames selecionados em um único (Shift+clique para selecionar vários)">⧉ Mesclar</button>
+          <button id="deleteFrameBtn" class="btn-danger" title="Remove os frames selecionados (Delete)">🗑 Excluir <kbd>Del</kbd></button>
+        </div>
+        <div class="row">
+          <button id="sortFramesBtn" title="Reordena todos os frames por linha, da esquerda para a direita">⇅ Ordenar por Posição</button>
+          <button id="clearFramesBtn" title="Remove todos os recortes para começar do zero">⌫ Limpar Tudo</button>
+        </div>
+        <div class="row">
+          <button id="undoBtn" title="Desfazer (Ctrl+Z)">↶ Desfazer</button>
+          <button id="redoBtn" title="Refazer (Ctrl+Y)">↷ Refazer</button>
         </div>
       </div>
 
@@ -606,8 +774,9 @@
           <button id="exportSheetBtn" class="btn-ok">📥 Atlas Normalizado</button>
         </div>
         <div class="row row-1">
-          <button id="exportFramesBtn">📦 Baixar Frames PNGs</button>
+          <button id="exportFramesBtn">📦 Baixar Frames (.zip)</button>
         </div>
+        <p class="tiny">Suas edições são salvas automaticamente neste navegador, por folha.</p>
       </div>
     </div>
 
@@ -634,13 +803,14 @@
       </div>
     </div>
 
-    <!-- ABA 3: RECORTE MANUAL TRADICIONAL (Preserva 100% da ferramenta clássica) -->
-    <div id="panelManual" style="display: none;">
+    <!-- ABA 3: GRADE REGULAR -->
+    <div id="panelManual" style="display: none; flex-direction: column; gap: 14px;">
       <div class="section">
-        <div class="section-title">Grade Regular Manual</div>
+        <div class="section-title">Grade Regular</div>
+        <p class="tiny" style="margin: 0 0 10px;">Dica: <b style="color: var(--text);">arraste na imagem</b> sobre o primeiro frame para definir X, Y, largura e altura de uma vez.</p>
         <div class="row row-1">
           <div>
-            <label for="animationSelect">Animação de Destino</label>
+            <label for="animationSelect">Carregar Animação do Atlas</label>
             <select id="animationSelect"></select>
           </div>
         </div>
@@ -661,9 +831,13 @@
           <div><label for="gapY">Espaço Y</label><input id="gapY" type="number" value="0" /></div>
         </div>
         <div class="row row-3">
-          <button id="fitNaturalBtn" class="btn-warn">Tamanho Real</button>
+          <button id="fitNaturalBtn" class="btn-warn">Zoom 100%</button>
           <button id="resetBtn">Resetar</button>
           <button id="toggleBoxesBtn" class="btn-primary">Ocultar Caixas</button>
+        </div>
+        <div class="row">
+          <button id="gridToFramesBtn" class="btn-ok" title="Copia as células da grade para a aba Recortes, onde podem ser editadas uma a uma">➜ Usar como Recortes</button>
+          <button id="gridToFramesTrimBtn" class="btn-ok" title="Copia as células e encaixa cada uma no desenho">➜ Usar + Encaixar</button>
         </div>
       </div>
 
@@ -689,23 +863,29 @@
       <span class="pill" id="selectionInfo">Seleção: -</span>
       <span class="pill" id="frameSummary">Frames: 0</span>
       <span class="pill" id="playStatus">Pausado</span>
-      
+
       <div class="toolbar-spacer"></div>
 
-      <!-- Seletor de Modo de Debug (ETAPA 17) -->
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <label for="debugViewSelect" style="margin: 0; font-size: 11px;">Visualização:</label>
-        <select id="debugViewSelect" style="width: auto; padding: 4px 8px; font-size: 11px;">
-          <option value="original">Original + Bounding Boxes</option>
-          <option value="mask">Máscara Foreground / Fundo</option>
-          <option value="components">Connected Components (Coloridos)</option>
-          <option value="boxes_only">Apenas Bounding Boxes & Anchors</option>
-        </select>
+      <div class="btn-group">
+        <button id="zoomOutBtn" class="pill" title="Diminuir zoom (-)">−</button>
+        <button id="zoomLabel" class="pill" title="Clique para ajustar à tela (0)">100%</button>
+        <button id="zoomInBtn" class="pill" title="Aumentar zoom (+)">+</button>
+        <button id="zoomFitBtn" class="pill" title="Ajustar à tela (0)">Ajustar</button>
+        <button id="zoomSelBtn" class="pill" title="Zoom no frame selecionado (F)">Frame</button>
       </div>
 
-      <div style="display: flex; gap: 4px;">
-        <button id="toggleAnchorsBtn" class="pill" style="cursor: pointer;" title="Exibir cruzetas dos pés (+)">Pivô: ON</button>
-        <button id="toggleLabelsBtn" class="pill" style="cursor: pointer;" title="Exibir número do frame">Números: ON</button>
+      <select id="debugViewSelect" style="width: auto; padding: 4px 8px; font-size: 11px;" title="Modo de visualização">
+        <option value="original">Original + Caixas</option>
+        <option value="mask">Máscara Foreground / Fundo</option>
+        <option value="components">Connected Components</option>
+        <option value="boxes_only">Imagem Esmaecida + Caixas</option>
+      </select>
+
+      <div class="btn-group">
+        <button id="toggleAnchorsBtn" class="pill on" title="Exibir cruzetas dos pés (+)">Pivô</button>
+        <button id="toggleLabelsBtn" class="pill on" title="Exibir número do frame">Números</button>
+        <button id="toggleLoupeBtn" class="pill on" title="Lupa de precisão no canto (L)">Lupa</button>
+        <button id="helpBtn" class="pill" title="Atalhos de teclado (?)">?</button>
       </div>
     </div>
 
@@ -717,12 +897,13 @@
       <p class="tiny" id="gameplayStatus">Prévia da primeira fase com física, escala real de combate e renderização por pés fixos.</p>
     </section>
 
-    <!-- Stage do Sprite Sheet com Overlay Interativo -->
+    <!-- Viewport do Sprite Sheet (zoom/pan) -->
     <div class="viewer-wrap" id="viewerWrap">
-      <div class="sheet-stage" id="sheetStage">
-        <img id="sheetImage" alt="Sprite sheet" />
-        <canvas id="overlay"></canvas>
-      </div>
+      <img id="sheetImage" alt="Sprite sheet" />
+      <canvas id="overlay"></canvas>
+      <canvas id="loupe" width="168" height="168"></canvas>
+      <div class="viewer-hint" id="viewerHint"></div>
+      <div class="toast" id="toast"></div>
     </div>
 
     <!-- Painéis Inferiores: Animação e Strip -->
@@ -734,46 +915,84 @@
           <span class="section-badge" id="previewFpsBadge">8 FPS</span>
         </h3>
         <div class="canvas-box">
-          <canvas id="previewCanvas" width="280" height="240"></canvas>
+          <canvas id="previewCanvas" width="280" height="200"></canvas>
         </div>
-        <div class="row row-3" style="margin-top: 4px;">
-          <button id="prevBtn">◀ Anterior</button>
-          <button id="playBtn" class="btn-ok">▶ Play</button>
-          <button id="nextBtn">Próximo ▶</button>
+        <div class="row row-3" style="margin: 0;">
+          <button id="prevBtn" title="Frame anterior (,)">◀</button>
+          <button id="playBtn" class="btn-ok" title="Play / Pause (P)">▶ Play</button>
+          <button id="nextBtn" title="Próximo frame (.)">▶</button>
         </div>
-        <div class="row">
+        <div class="row row-3" style="margin: 0;">
           <div>
-            <label for="fps">Velocidade (FPS)</label>
+            <label for="fps">FPS</label>
             <input id="fps" type="number" value="8" min="1" max="60" />
           </div>
           <div>
-            <label for="previewScale">Escala Zoom</label>
-            <input id="previewScale" type="number" value="2" min="1" max="6" />
+            <label for="previewScale">Zoom</label>
+            <input id="previewScale" type="number" value="0.5" min="0.1" max="6" step="0.1" />
           </div>
-        </div>
-        <div class="row">
           <div>
-            <label for="currentFrame">Frame Atual</label>
+            <label for="currentFrame">Frame</label>
             <input id="currentFrame" type="number" value="0" min="0" />
           </div>
-          <div style="display: flex; align-items: flex-end;">
-            <button id="toggleNormalizedPreviewBtn" style="font-size: 11px; padding: 7px;">Pivô Estável: ON</button>
-          </div>
+        </div>
+        <div class="row row-1" style="margin: 0;">
+          <button id="toggleNormalizedPreviewBtn" style="font-size: 11px; padding: 6px;">Pivô Estável: ON</button>
         </div>
       </div>
 
       <!-- Fita de Frames Extraídos (Strip) -->
       <div class="preview-card">
         <h3>
-          <span>Fita de Frames Extraídos</span>
-          <span class="tiny" style="margin: 0;">Clique em um frame para selecionar</span>
+          <span>Fita de Frames</span>
+          <span class="tiny" style="margin: 0; text-transform: none; letter-spacing: 0;">Clique seleciona · Shift+clique soma · Duplo clique dá zoom</span>
         </h3>
-        <div class="canvas-box">
-          <canvas id="stripCanvas" width="900" height="200"></canvas>
+        <div class="canvas-box strip-box">
+          <canvas id="stripCanvas" width="900" height="180"></canvas>
         </div>
       </div>
     </div>
   </main>
+
+  <!-- Atalhos -->
+  <div class="help-modal" id="helpModal">
+    <div class="help-card">
+      <h2>⌨ Atalhos do Editor de Recortes</h2>
+      <h4>Vista</h4>
+      <table>
+        <tr><td>Roda do mouse</td><td>Zoom na posição do cursor</td></tr>
+        <tr><td><kbd>Espaço</kbd> + arrastar · botão do meio</td><td>Mover a vista (pan)</td></tr>
+        <tr><td><kbd>Shift</kbd> + roda</td><td>Rolar horizontalmente</td></tr>
+        <tr><td><kbd>0</kbd> · <kbd>1</kbd> · <kbd>F</kbd></td><td>Ajustar à tela · Zoom 100% · Zoom no frame selecionado</td></tr>
+        <tr><td><kbd>+</kbd> / <kbd>-</kbd></td><td>Aumentar / diminuir zoom</td></tr>
+        <tr><td><kbd>L</kbd></td><td>Liga/desliga a lupa de precisão</td></tr>
+      </table>
+      <h4>Recortes</h4>
+      <table>
+        <tr><td>Arrastar no vazio</td><td>Criar novo recorte (encaixa no desenho; <kbd>Alt</kbd> ignora)</td></tr>
+        <tr><td><kbd>Shift</kbd> + arrastar no vazio</td><td>Selecionar vários com um retângulo</td></tr>
+        <tr><td><kbd>Shift</kbd> + clique</td><td>Adicionar/remover da seleção</td></tr>
+        <tr><td>Arrastar caixa · alças · cruz vermelha</td><td>Mover · redimensionar · mover o pivô (pés)</td></tr>
+        <tr><td>Duplo clique na caixa</td><td>Zoom no frame</td></tr>
+        <tr><td><kbd>Setas</kbd> (<kbd>Shift</kbd> = 10px)</td><td>Mover seleção</td></tr>
+        <tr><td><kbd>Alt</kbd> + <kbd>Setas</kbd></td><td>Redimensionar (largura / altura)</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Encaixar caixa no desenho</td></tr>
+        <tr><td><kbd>Ctrl+D</kbd></td><td>Duplicar à direita (próximo frame)</td></tr>
+        <tr><td><kbd>Delete</kbd></td><td>Excluir seleção</td></tr>
+        <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>Mudar ordem na animação</td></tr>
+        <tr><td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td><td>Selecionar próximo / anterior</td></tr>
+        <tr><td><kbd>Ctrl+A</kbd> · <kbd>Esc</kbd></td><td>Selecionar tudo · limpar seleção</td></tr>
+        <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>Desfazer / refazer</td></tr>
+      </table>
+      <h4>Animação</h4>
+      <table>
+        <tr><td><kbd>P</kbd> · <kbd>,</kbd> / <kbd>.</kbd></td><td>Play/pause · frame anterior / próximo</td></tr>
+      </table>
+      <div class="row row-1" style="margin-top: 14px;">
+        <button id="helpCloseBtn" class="btn-primary">Entendi</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MÓDULO DO ANALISADOR INTELIGENTE (ETAPA 2) -->
   <script src="assets/sprites/processed/atlas.js"></script>
@@ -840,144 +1059,190 @@
       showBoxes: true,
       showAnchors: true,
       showLabels: true,
+      showLoupe: true,
       normalizePreview: true,
       debugView: 'original',
       playing: false,
       currentFrame: 0,
       lastFrameTime: 0,
-      
+
       // Auto Analyzer Data
       analysisResult: null,
       debugCanvasMask: null,
       debugCanvasComponents: null,
-      frames: [], // Array de frames ativos [{ id, x, y, width, height, anchorX, anchorY, contentBounds, confidence, warnings }]
-      
-      // Interação do Editor
-      selectedFrameIndices: new Set([0]),
-      dragMode: null, // 'move' | 'resize' | 'create'
-      dragHandle: null, // 'nw','n','ne','e','se','s','sw','w'
-      dragStart: null,
-      dragCurrent: null,
-      activeBoxOriginal: null,
+      alphaMask: null,
+      frames: [], // [{ id, x, y, width, height, anchorX, anchorY, relativeAnchorX, relativeAnchorY, contentBounds, confidence, warnings }]
+
+      // Seleção
+      selectedFrameIndices: new Set(),
+      primaryIndex: -1,
+
+      // Viewport
+      view: { zoom: 1, panX: 0, panY: 0 },
+      hover: null, // último ponteiro sobre o canvas
+      spaceDown: false,
+      drag: null,
+
+      // Desfazer / refazer
+      history: [],
+      future: [],
+
+      // Hit-test da fita
+      stripHits: [],
 
       // Simulação de combate
       gameplayPlaying: false,
       gameplayStart: 0,
-      gameplayReq: null,
     };
 
     // Elementos DOM
+    const $ = (id) => document.getElementById(id);
     const el = {
-      sheetSelect: document.getElementById('sheetSelect'),
-      uploadInput: document.getElementById('uploadInput'),
-      sheetInfo: document.getElementById('sheetInfo'),
-      sheetBadge: document.getElementById('sheetBadge'),
-      sheetImage: document.getElementById('sheetImage'),
-      overlay: document.getElementById('overlay'),
+      sheetSelect: $('sheetSelect'),
+      uploadInput: $('uploadInput'),
+      sheetInfo: $('sheetInfo'),
+      sheetBadge: $('sheetBadge'),
+      sheetImage: $('sheetImage'),
+      overlay: $('overlay'),
+      loupe: $('loupe'),
+      viewerWrap: $('viewerWrap'),
+      viewerHint: $('viewerHint'),
+      toast: $('toast'),
 
       // Auto Analyzer
-      autoBgType: document.getElementById('autoBgType'),
-      autoAnchorMode: document.getElementById('autoAnchorMode'),
-      autoAlpha: document.getElementById('autoAlpha'),
-      autoTolerance: document.getElementById('autoTolerance'),
-      autoPadding: document.getElementById('autoPadding'),
-      autoMinArea: document.getElementById('autoMinArea'),
-      autoMergeX: document.getElementById('autoMergeX'),
-      autoMergeY: document.getElementById('autoMergeY'),
-      autoExpectedFrames: document.getElementById('autoExpectedFrames'),
-      runAutoAnalyzeBtn: document.getElementById('runAutoAnalyzeBtn'),
+      autoBgType: $('autoBgType'),
+      autoAnchorMode: $('autoAnchorMode'),
+      autoAlpha: $('autoAlpha'),
+      autoTolerance: $('autoTolerance'),
+      autoPadding: $('autoPadding'),
+      autoMinArea: $('autoMinArea'),
+      autoMergeX: $('autoMergeX'),
+      autoMergeY: $('autoMergeY'),
+      autoExpectedFrames: $('autoExpectedFrames'),
+      runAutoAnalyzeBtn: $('runAutoAnalyzeBtn'),
 
       // Status
-      analyzerStatusBanner: document.getElementById('analyzerStatusBanner'),
-      analyzerStatusText: document.getElementById('analyzerStatusText'),
-      analyzerConfidenceText: document.getElementById('analyzerConfidenceText'),
-      detectedCountPill: document.getElementById('detectedCountPill'),
-      gridInfoPill: document.getElementById('gridInfoPill'),
-      warningsContainer: document.getElementById('warningsContainer'),
-      analyzerWarnings: document.getElementById('analyzerWarnings'),
+      analyzerStatusBanner: $('analyzerStatusBanner'),
+      analyzerStatusText: $('analyzerStatusText'),
+      analyzerConfidenceText: $('analyzerConfidenceText'),
+      detectedCountPill: $('detectedCountPill'),
+      gridInfoPill: $('gridInfoPill'),
+      warningsContainer: $('warningsContainer'),
+      analyzerWarnings: $('analyzerWarnings'),
 
-      // Editor Manual
-      selectedFrameBadge: document.getElementById('selectedFrameBadge'),
-      selFrameX: document.getElementById('selFrameX'),
-      selFrameY: document.getElementById('selFrameY'),
-      selFrameW: document.getElementById('selFrameW'),
-      selFrameH: document.getElementById('selFrameH'),
-      selAnchorX: document.getElementById('selAnchorX'),
-      selAnchorY: document.getElementById('selAnchorY'),
-      splitVertBtn: document.getElementById('splitVertBtn'),
-      splitHorizBtn: document.getElementById('splitHorizBtn'),
-      mergeSelectedBtn: document.getElementById('mergeSelectedBtn'),
-      deleteFrameBtn: document.getElementById('deleteFrameBtn'),
+      // Editor
+      autoTrimOnDraw: $('autoTrimOnDraw'),
+      selectedFrameBadge: $('selectedFrameBadge'),
+      selFrameX: $('selFrameX'),
+      selFrameY: $('selFrameY'),
+      selFrameW: $('selFrameW'),
+      selFrameH: $('selFrameH'),
+      selAnchorX: $('selAnchorX'),
+      selAnchorY: $('selAnchorY'),
+      snapStep: $('snapStep'),
+      sameSizeBtn: $('sameSizeBtn'),
+      trimBtn: $('trimBtn'),
+      duplicateBtn: $('duplicateBtn'),
+      moveEarlierBtn: $('moveEarlierBtn'),
+      moveLaterBtn: $('moveLaterBtn'),
+      splitVertBtn: $('splitVertBtn'),
+      splitHorizBtn: $('splitHorizBtn'),
+      mergeSelectedBtn: $('mergeSelectedBtn'),
+      deleteFrameBtn: $('deleteFrameBtn'),
+      sortFramesBtn: $('sortFramesBtn'),
+      clearFramesBtn: $('clearFramesBtn'),
+      undoBtn: $('undoBtn'),
+      redoBtn: $('redoBtn'),
 
       // Exportação
-      exportJsonBtn: document.getElementById('exportJsonBtn'),
-      exportSheetBtn: document.getElementById('exportSheetBtn'),
-      exportFramesBtn: document.getElementById('exportFramesBtn'),
+      exportJsonBtn: $('exportJsonBtn'),
+      exportSheetBtn: $('exportSheetBtn'),
+      exportFramesBtn: $('exportFramesBtn'),
 
       // Toolbar
-      mousePos: document.getElementById('mousePos'),
-      selectionInfo: document.getElementById('selectionInfo'),
-      frameSummary: document.getElementById('frameSummary'),
-      playStatus: document.getElementById('playStatus'),
-      debugViewSelect: document.getElementById('debugViewSelect'),
-      toggleAnchorsBtn: document.getElementById('toggleAnchorsBtn'),
-      toggleLabelsBtn: document.getElementById('toggleLabelsBtn'),
+      mousePos: $('mousePos'),
+      selectionInfo: $('selectionInfo'),
+      frameSummary: $('frameSummary'),
+      playStatus: $('playStatus'),
+      debugViewSelect: $('debugViewSelect'),
+      toggleAnchorsBtn: $('toggleAnchorsBtn'),
+      toggleLabelsBtn: $('toggleLabelsBtn'),
+      toggleLoupeBtn: $('toggleLoupeBtn'),
+      helpBtn: $('helpBtn'),
+      helpModal: $('helpModal'),
+      helpCloseBtn: $('helpCloseBtn'),
+      zoomOutBtn: $('zoomOutBtn'),
+      zoomInBtn: $('zoomInBtn'),
+      zoomLabel: $('zoomLabel'),
+      zoomFitBtn: $('zoomFitBtn'),
+      zoomSelBtn: $('zoomSelBtn'),
 
       // Preview & Strip
-      previewCanvas: document.getElementById('previewCanvas'),
-      stripCanvas: document.getElementById('stripCanvas'),
-      prevBtn: document.getElementById('prevBtn'),
-      playBtn: document.getElementById('playBtn'),
-      nextBtn: document.getElementById('nextBtn'),
-      fps: document.getElementById('fps'),
-      previewScale: document.getElementById('previewScale'),
-      currentFrame: document.getElementById('currentFrame'),
-      previewFpsBadge: document.getElementById('previewFpsBadge'),
-      toggleNormalizedPreviewBtn: document.getElementById('toggleNormalizedPreviewBtn'),
+      previewCanvas: $('previewCanvas'),
+      stripCanvas: $('stripCanvas'),
+      prevBtn: $('prevBtn'),
+      playBtn: $('playBtn'),
+      nextBtn: $('nextBtn'),
+      fps: $('fps'),
+      previewScale: $('previewScale'),
+      currentFrame: $('currentFrame'),
+      previewFpsBadge: $('previewFpsBadge'),
+      toggleNormalizedPreviewBtn: $('toggleNormalizedPreviewBtn'),
 
       // Combate
-      gameplayCard: document.getElementById('gameplayCard'),
-      gameplayHero: document.getElementById('gameplayHero'),
-      gameplayEnemy: document.getElementById('gameplayEnemy'),
-      gameplayPlayBtn: document.getElementById('gameplayPlayBtn'),
-      gameplayCanvas: document.getElementById('gameplayCanvas'),
-      gameplayStatus: document.getElementById('gameplayStatus'),
+      gameplayCard: $('gameplayCard'),
+      gameplayHero: $('gameplayHero'),
+      gameplayEnemy: $('gameplayEnemy'),
+      gameplayPlayBtn: $('gameplayPlayBtn'),
+      gameplayCanvas: $('gameplayCanvas'),
+      gameplayStatus: $('gameplayStatus'),
 
-      // Grid Manual (Legado)
-      animationSelect: document.getElementById('animationSelect'),
-      frameX: document.getElementById('frameX'),
-      frameY: document.getElementById('frameY'),
-      frameW: document.getElementById('frameW'),
-      frameH: document.getElementById('frameH'),
-      frameCount: document.getElementById('frameCount'),
-      columns: document.getElementById('columns'),
-      gapX: document.getElementById('gapX'),
-      gapY: document.getElementById('gapY'),
-      fitNaturalBtn: document.getElementById('fitNaturalBtn'),
-      resetBtn: document.getElementById('resetBtn'),
-      toggleBoxesBtn: document.getElementById('toggleBoxesBtn'),
-      jsonOutput: document.getElementById('jsonOutput'),
-      copyJsonBtn: document.getElementById('copyJsonBtn'),
-      downloadJsonBtn: document.getElementById('downloadJsonBtn'),
-      applyJsonBtn: document.getElementById('applyJsonBtn'),
+      // Grade
+      animationSelect: $('animationSelect'),
+      frameX: $('frameX'),
+      frameY: $('frameY'),
+      frameW: $('frameW'),
+      frameH: $('frameH'),
+      frameCount: $('frameCount'),
+      columns: $('columns'),
+      gapX: $('gapX'),
+      gapY: $('gapY'),
+      fitNaturalBtn: $('fitNaturalBtn'),
+      resetBtn: $('resetBtn'),
+      toggleBoxesBtn: $('toggleBoxesBtn'),
+      gridToFramesBtn: $('gridToFramesBtn'),
+      gridToFramesTrimBtn: $('gridToFramesTrimBtn'),
+      jsonOutput: $('jsonOutput'),
+      copyJsonBtn: $('copyJsonBtn'),
+      downloadJsonBtn: $('downloadJsonBtn'),
+      applyJsonBtn: $('applyJsonBtn'),
     };
+
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const imgW = () => el.sheetImage.naturalWidth || 0;
+    const imgH = () => el.sheetImage.naturalHeight || 0;
+    const activeFrames = () => (state.activeTab === 'manual' ? getManualRects() : state.frames);
 
     // Alternador de Abas
     window.switchTab = function(tab) {
       state.activeTab = tab;
       document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-      document.getElementById('panelAuto').style.display = tab === 'auto' ? 'block' : 'none';
-      document.getElementById('panelCombat').style.display = tab === 'combat' ? 'block' : 'none';
-      document.getElementById('panelManual').style.display = tab === 'manual' ? 'block' : 'none';
-      document.getElementById('gameplayCard').style.display = tab === 'combat' ? 'block' : 'none';
+      $('panelAuto').style.display = tab === 'auto' ? 'flex' : 'none';
+      $('panelCombat').style.display = tab === 'combat' ? 'block' : 'none';
+      $('panelManual').style.display = tab === 'manual' ? 'flex' : 'none';
+      el.gameplayCard.style.display = tab === 'combat' ? 'block' : 'none';
 
-      if (tab === 'auto') document.getElementById('tabAuto').classList.add('active');
-      if (tab === 'combat') document.getElementById('tabCombat').classList.add('active');
-      if (tab === 'manual') document.getElementById('tabManual').classList.add('active');
+      if (tab === 'auto') $('tabAuto').classList.add('active');
+      if (tab === 'combat') $('tabCombat').classList.add('active');
+      if (tab === 'manual') {
+        $('tabManual').classList.add('active');
+        updateManualJson();
+      }
 
-      renderOverlay();
-      renderPreview();
-      renderStrip();
+      state.currentFrame = 0;
+      updateHint();
+      // O layout muda de altura ao abrir/fechar o cartão de combate
+      requestAnimationFrame(() => { resizeOverlay(); renderAll(); });
     };
 
     // Preenchimento de Selects
@@ -1023,169 +1288,479 @@
     }
 
     function onImageLoaded() {
-      resizeOverlay();
+      state.alphaMask = null;
+      state.history = [];
+      state.future = [];
       const file = state.customImageName || el.sheetImage.src.split('/').pop();
-      el.sheetInfo.textContent = `${file} | ${el.sheetImage.naturalWidth} × ${el.sheetImage.naturalHeight}px`;
+      el.sheetInfo.textContent = `${file} | ${imgW()} × ${imgH()}px`;
 
-      // Executa a análise inteligente por padrão na primeira carga
-      runAutoAnalysis();
+      resizeOverlay();
+      fitView();
+
+      const saved = loadSavedEdits();
+      runAutoAnalysis({ record: false, restoredFrames: saved });
+      if (saved) {
+        el.sheetBadge.textContent = 'Edição salva';
+        showToast(`${saved.length} recortes salvos restaurados — "Analisar" recomeça do zero`);
+      }
     }
 
+    /* ============================================================
+       VIEWPORT: ZOOM / PAN
+       ============================================================ */
     function resizeOverlay() {
-      const rect = el.sheetImage.getBoundingClientRect();
-      el.overlay.width = el.sheetImage.naturalWidth || 800;
-      el.overlay.height = el.sheetImage.naturalHeight || 600;
-      el.overlay.style.width = rect.width + 'px';
-      el.overlay.style.height = rect.height + 'px';
+      const dpr = window.devicePixelRatio || 1;
+      const r = el.viewerWrap.getBoundingClientRect();
+      el.overlay.width = Math.max(1, Math.round(r.width * dpr));
+      el.overlay.height = Math.max(1, Math.round(r.height * dpr));
+      el.loupe.width = Math.round(168 * dpr);
+      el.loupe.height = Math.round(168 * dpr);
+      requestRender();
     }
 
-    // Conversão de Coordenadas com imunidade total a CSS scale e DPR
-    function toImageCoords(evt) {
-      const rect = el.overlay.getBoundingClientRect();
-      const scaleX = el.overlay.width / rect.width;
-      const scaleY = el.overlay.height / rect.height;
+    function viewportSize() {
+      const r = el.viewerWrap.getBoundingClientRect();
+      return { w: r.width, h: r.height };
+    }
+
+    function updateZoomLabel() {
+      el.zoomLabel.textContent = `${Math.round(state.view.zoom * 100)}%`;
+    }
+
+    function setZoomAt(zoom, sx, sy) {
+      const v = state.view;
+      const z = clamp(zoom, 0.05, 24);
+      const ix = (sx - v.panX) / v.zoom;
+      const iy = (sy - v.panY) / v.zoom;
+      v.zoom = z;
+      v.panX = sx - ix * z;
+      v.panY = sy - iy * z;
+      updateZoomLabel();
+      requestRender();
+    }
+
+    function zoomBy(factor) {
+      const { w, h } = viewportSize();
+      setZoomAt(state.view.zoom * factor, w / 2, h / 2);
+    }
+
+    function zoomToRect(x, y, w, h, margin = 60, maxZoom = 6) {
+      const vp = viewportSize();
+      if (!w || !h || !vp.w) return;
+      const z = clamp(Math.min((vp.w - margin * 2) / w, (vp.h - margin * 2) / h), 0.05, maxZoom);
+      state.view.zoom = z;
+      state.view.panX = vp.w / 2 - (x + w / 2) * z;
+      state.view.panY = vp.h / 2 - (y + h / 2) * z;
+      updateZoomLabel();
+      requestRender();
+    }
+
+    function fitView() {
+      if (!imgW()) return;
+      zoomToRect(0, 0, imgW(), imgH(), 16, 4);
+    }
+
+    function zoomToSelection() {
+      const sel = selectedFrames();
+      if (sel.length === 0) return fitView();
+      const b = boundsOf(sel);
+      zoomToRect(b.x, b.y, b.width, b.height, 70, 4);
+    }
+
+    // Converte evento de mouse em coordenadas de tela (sx, sy) e de imagem (x, y)
+    function getPointer(evt) {
+      const r = el.overlay.getBoundingClientRect();
+      const v = state.view;
+      const sx = evt.clientX - r.left;
+      const sy = evt.clientY - r.top;
+      const fx = (sx - v.panX) / v.zoom;
+      const fy = (sy - v.panY) / v.zoom;
       return {
-        x: Math.max(0, Math.min(el.overlay.width, Math.round((evt.clientX - rect.left) * scaleX))),
-        y: Math.max(0, Math.min(el.overlay.height, Math.round((evt.clientY - rect.top) * scaleY))),
+        sx, sy, fx, fy,
+        x: clamp(Math.round(fx), 0, imgW()),
+        y: clamp(Math.round(fy), 0, imgH()),
+        inside: fx >= 0 && fy >= 0 && fx < imgW() && fy < imgH(),
       };
     }
+
+    const toSX = (x) => state.view.panX + x * state.view.zoom;
+    const toSY = (y) => state.view.panY + y * state.view.zoom;
 
     /* ============================================================
        ETAPA 2 a 11: EXECUÇÃO DO AUTO ANALYZER INTELIGENTE
        ============================================================ */
-    function runAutoAnalysis() {
-      if (!el.sheetImage.naturalWidth) return;
-
-      const options = {
+    function readAnalyzerOptions() {
+      return {
         backgroundType: el.autoBgType.value,
         anchorMode: el.autoAnchorMode.value,
         alphaThreshold: Number(el.autoAlpha.value) || 8,
         colorTolerance: Number(el.autoTolerance.value) || 20,
-        padding: Number(el.autoPadding.value) || 3,
+        padding: Number(el.autoPadding.value) || 0,
         minComponentArea: Number(el.autoMinArea.value) || 4,
         mergeGapX: Number(el.autoMergeX.value) || 6,
         mergeGapY: Number(el.autoMergeY.value) || 6,
         expectedFrames: el.autoExpectedFrames.value ? Number(el.autoExpectedFrames.value) : null,
       };
+    }
+
+    function runAutoAnalysis({ record = true, restoredFrames = null } = {}) {
+      if (!imgW()) return;
+      const before = snapshot();
 
       try {
-        const result = window.SpriteAnalyzer.analyzeSpriteSheet(el.sheetImage, options);
+        const result = window.SpriteAnalyzer.analyzeSpriteSheet(el.sheetImage, readAnalyzerOptions());
         state.analysisResult = result;
-        state.frames = result.frames;
         state.debugCanvasMask = window.SpriteAnalyzer.createDebugMaskCanvas(result);
         state.debugCanvasComponents = window.SpriteAnalyzer.createDebugComponentsCanvas(result);
-
-        // Atualizar painéis de status
-        updateAnalyzerStatusUI(result);
-
-        // Selecionar primeiro frame se existir
-        state.selectedFrameIndices = new Set(result.frames.length > 0 ? [0] : []);
-        state.currentFrame = 0;
-        updateSelectedFrameInputs();
-
-        // Renderizar views
-        renderOverlay();
-        renderPreview();
-        renderStrip();
+        state.frames = (restoredFrames || result.frames).map(normalizeFrame);
       } catch (err) {
         console.error('Erro na análise inteligente:', err);
+        state.analysisResult = null;
+        state.frames = (restoredFrames || []).map(normalizeFrame);
         el.analyzerStatusBanner.className = 'status-banner danger';
         el.analyzerStatusText.textContent = 'Erro na análise';
         el.analyzerConfidenceText.textContent = 'Falha';
       }
+
+      reindex();
+      setSelection(state.frames.length > 0 ? [0] : []);
+      state.currentFrame = 0;
+      if (record) recordChange(before);
+      renderAll();
     }
 
-    function updateAnalyzerStatusUI(result) {
-      el.detectedCountPill.textContent = result.frames.length;
+    function updateAnalyzerStatusUI() {
+      const result = state.analysisResult;
+      const frames = state.frames;
+      el.detectedCountPill.textContent = frames.length;
+      el.frameSummary.textContent = `Frames: ${frames.length}`;
+      if (!result) return;
+
       if (result.detectedGrid && result.detectedGrid.confidence > 0.4) {
         el.gridInfoPill.textContent = `${result.detectedGrid.rows}×${result.detectedGrid.columns} (${Math.round(result.detectedGrid.confidence * 100)}%)`;
       } else {
         el.gridInfoPill.textContent = 'Não detectado';
       }
 
-      // Cálculo de confiança global média
-      const avgConfidence = result.frames.length > 0
-        ? result.frames.reduce((acc, f) => acc + f.confidence, 0) / result.frames.length
+      const avgConfidence = frames.length > 0
+        ? frames.reduce((acc, f) => acc + (f.confidence ?? 1), 0) / frames.length
         : 1.0;
       const confPct = Math.round(avgConfidence * 100);
+      el.analyzerConfidenceText.textContent = `${confPct}%`;
 
-      // Coletar todos os warnings
-      const allWarnings = [];
-      result.frames.forEach(f => {
-        if (f.warnings.length > 0) {
-          allWarnings.push(`Frame #${f.id + 1}: ${f.warnings.join(', ')}`);
-        }
-      });
-
-      if (allWarnings.length === 0) {
+      const warned = frames.filter(f => f.warnings && f.warnings.length > 0);
+      if (warned.length === 0) {
         el.analyzerStatusBanner.className = 'status-banner ok';
-        el.analyzerStatusText.textContent = '✓ Detecção Perfeita';
-        el.analyzerConfidenceText.textContent = `${confPct}%`;
+        el.analyzerStatusText.textContent = frames.length ? '✓ Tudo certo' : 'Nenhum frame';
         el.warningsContainer.style.display = 'none';
       } else {
         el.analyzerStatusBanner.className = 'status-banner warn';
-        el.analyzerStatusText.textContent = `⚠ Revisar (${allWarnings.length} alertas)`;
-        el.analyzerConfidenceText.textContent = `${confPct}%`;
+        el.analyzerStatusText.textContent = `⚠ Revisar (${warned.length} alertas)`;
         el.warningsContainer.style.display = 'block';
-        el.analyzerWarnings.innerHTML = allWarnings.map(w => `<div>• ${w}</div>`).join('');
+        el.analyzerWarnings.innerHTML = warned
+          .map(f => `<div data-frame="${f.id}" style="cursor:pointer">• Frame #${f.id + 1}: ${f.warnings.join(', ')}</div>`)
+          .join('');
       }
+    }
 
-      el.frameSummary.textContent = `Frames: ${result.frames.length}`;
+    el.analyzerWarnings.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-frame]');
+      if (!row) return;
+      const idx = Number(row.dataset.frame);
+      setSelection([idx]);
+      state.currentFrame = idx;
+      zoomToSelection();
+      renderAll();
+    });
+
+    /* ============================================================
+       MODELO DE FRAMES: NORMALIZAÇÃO, SELEÇÃO, HISTÓRICO
+       ============================================================ */
+    function normalizeFrame(f) {
+      const frame = {
+        id: f.id ?? 0,
+        x: Math.round(f.x),
+        y: Math.round(f.y),
+        width: Math.max(1, Math.round(f.width)),
+        height: Math.max(1, Math.round(f.height)),
+        contentBounds: f.contentBounds || { x: f.x, y: f.y, width: f.width, height: f.height },
+        anchorX: Math.round(f.anchorX ?? (f.x + f.width / 2)),
+        anchorY: Math.round(f.anchorY ?? (f.y + f.height)),
+        pixelCount: f.pixelCount ?? 0,
+        componentsCount: f.componentsCount ?? 1,
+        confidence: f.confidence ?? 1,
+        warnings: Array.isArray(f.warnings) ? f.warnings.slice() : [],
+      };
+      syncAnchor(frame);
+      return frame;
+    }
+
+    function syncAnchor(f) {
+      f.relativeAnchorX = f.anchorX - f.x;
+      f.relativeAnchorY = f.anchorY - f.y;
+    }
+
+    function reindex() {
+      state.frames.forEach((f, i) => { f.id = i; });
+    }
+
+    function setSelection(indices, primary) {
+      state.selectedFrameIndices = new Set(indices.filter(i => i >= 0 && i < state.frames.length));
+      if (primary !== undefined && state.selectedFrameIndices.has(primary)) {
+        state.primaryIndex = primary;
+      } else {
+        state.primaryIndex = state.selectedFrameIndices.size ? Array.from(state.selectedFrameIndices)[0] : -1;
+      }
+    }
+
+    function selectedIndices() {
+      return Array.from(state.selectedFrameIndices).filter(i => i < state.frames.length).sort((a, b) => a - b);
+    }
+
+    function selectedFrames() {
+      return selectedIndices().map(i => state.frames[i]);
+    }
+
+    function getSelectedFrame() {
+      if (state.primaryIndex < 0 || !state.selectedFrameIndices.has(state.primaryIndex)) return null;
+      return state.frames[state.primaryIndex] || null;
+    }
+
+    function boundsOf(frames) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const f of frames) {
+        minX = Math.min(minX, f.x);
+        minY = Math.min(minY, f.y);
+        maxX = Math.max(maxX, f.x + f.width);
+        maxY = Math.max(maxY, f.y + f.height);
+      }
+      return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+    }
+
+    function snapshot() {
+      return JSON.stringify(state.frames);
+    }
+
+    function recordChange(before) {
+      if (before === snapshot()) return false;
+      state.history.push(before);
+      if (state.history.length > 150) state.history.shift();
+      state.future = [];
+      scheduleSave();
+      return true;
+    }
+
+    function restore(json) {
+      state.frames = JSON.parse(json);
+      reindex();
+      const keep = selectedIndices().filter(i => i < state.frames.length);
+      setSelection(keep.length ? keep : (state.frames.length ? [0] : []), state.primaryIndex);
+      state.currentFrame = Math.min(state.currentFrame, Math.max(0, state.frames.length - 1));
+      scheduleSave();
+      renderAll();
+    }
+
+    function undo() {
+      if (!state.history.length) return;
+      state.future.push(snapshot());
+      restore(state.history.pop());
+      showToast('Desfeito');
+    }
+
+    function redo() {
+      if (!state.future.length) return;
+      state.history.push(snapshot());
+      restore(state.future.pop());
+      showToast('Refeito');
+    }
+
+    // Executa uma edição com suporte a desfazer
+    function edit(fn) {
+      if (state.activeTab === 'manual') return;
+      const before = snapshot();
+      fn();
+      reindex();
+      recordChange(before);
+      renderAll();
     }
 
     /* ============================================================
-       ETAPA 13, 14, 15: EDITOR MANUAL DE BOUNDING BOXES & INTERAÇÃO
+       SALVAMENTO AUTOMÁTICO (por folha, neste navegador)
        ============================================================ */
-    const HANDLE_SIZE = 7;
+    let saveTimer = null;
+    function storageKey() {
+      return `cv-sprite-edits:${state.customImageName || state.imageName}`;
+    }
 
-    function getSelectedFrame() {
-      if (state.selectedFrameIndices.size === 0) return null;
-      const firstIdx = Array.from(state.selectedFrameIndices)[0];
-      return state.frames[firstIdx] || null;
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        try {
+          localStorage.setItem(storageKey(), JSON.stringify({
+            w: imgW(), h: imgH(), frames: state.frames,
+          }));
+        } catch (e) { /* armazenamento indisponível: segue sem salvar */ }
+      }, 300);
+    }
+
+    function loadSavedEdits() {
+      try {
+        const raw = localStorage.getItem(storageKey());
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (data.w !== imgW() || data.h !== imgH() || !Array.isArray(data.frames)) return null;
+        return data.frames;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    /* ============================================================
+       ENCAIXE NO CONTEÚDO (trim)
+       ============================================================ */
+    function getContentMask() {
+      const W = imgW(), H = imgH();
+      const r = state.analysisResult;
+      if (r && r._mask && r.imageWidth === W && r.imageHeight === H) return r._mask;
+      if (!state.alphaMask) {
+        const c = document.createElement('canvas');
+        c.width = W;
+        c.height = H;
+        const cx = c.getContext('2d', { willReadFrequently: true });
+        cx.drawImage(el.sheetImage, 0, 0);
+        const data = cx.getImageData(0, 0, W, H).data;
+        const threshold = Number(el.autoAlpha.value) || 8;
+        const mask = new Uint8Array(W * H);
+        for (let i = 0; i < W * H; i++) mask[i] = data[i * 4 + 3] > threshold ? 1 : 0;
+        state.alphaMask = mask;
+      }
+      return state.alphaMask;
+    }
+
+    // Encolhe a caixa até os pixels do desenho dentro dela. Retorna false se estiver vazia.
+    function trimFrame(f) {
+      const W = imgW(), H = imgH();
+      const mask = getContentMask();
+      const x0 = clamp(f.x, 0, W), y0 = clamp(f.y, 0, H);
+      const x1 = clamp(f.x + f.width, 0, W), y1 = clamp(f.y + f.height, 0, H);
+      let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1;
+      let count = 0, sumX = 0, sumY = 0;
+      for (let y = y0; y < y1; y++) {
+        const row = y * W;
+        for (let x = x0; x < x1; x++) {
+          if (mask[row + x]) {
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+            count++; sumX += x; sumY += y;
+          }
+        }
+      }
+      if (count === 0) return false;
+
+      const pad = Math.max(0, Number(el.autoPadding.value) || 0);
+      const cb = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+      f.x = Math.max(0, minX - pad);
+      f.y = Math.max(0, minY - pad);
+      f.width = Math.min(W, maxX + 1 + pad) - f.x;
+      f.height = Math.min(H, maxY + 1 + pad) - f.y;
+      f.contentBounds = cb;
+      f.pixelCount = count;
+
+      const mode = el.autoAnchorMode.value;
+      if (mode === 'center') {
+        f.anchorX = Math.round(cb.x + cb.width / 2);
+        f.anchorY = Math.round(cb.y + cb.height / 2);
+      } else if (mode === 'center_of_mass') {
+        f.anchorX = Math.round(sumX / count);
+        f.anchorY = Math.round(sumY / count);
+      } else {
+        f.anchorX = Math.round(cb.x + cb.width / 2);
+        f.anchorY = cb.y + cb.height;
+      }
+      syncAnchor(f);
+      f.confidence = 1;
+      f.warnings = [];
+      return true;
+    }
+
+    /* ============================================================
+       ETAPA 13, 14, 15: EDITOR DE BOUNDING BOXES & INTERAÇÃO
+       ============================================================ */
+    const HANDLE_PX = 9;   // tamanho da alça na tela
+    const ANCHOR_PX = 9;   // raio de clique do pivô na tela
+
+    function snapStep() {
+      return Math.max(1, Math.round(Number(el.snapStep.value) || 1));
+    }
+    function snapV(v) {
+      const s = snapStep();
+      return s > 1 ? Math.round(v / s) * s : Math.round(v);
     }
 
     function updateSelectedFrameInputs() {
       const f = getSelectedFrame();
+      const n = state.selectedFrameIndices.size;
+      const inputs = [el.selFrameX, el.selFrameY, el.selFrameW, el.selFrameH, el.selAnchorX, el.selAnchorY];
       if (!f) {
         el.selectedFrameBadge.textContent = 'Nenhum';
-        el.selFrameX.value = '';
-        el.selFrameY.value = '';
-        el.selFrameW.value = '';
-        el.selFrameH.value = '';
-        el.selAnchorX.value = '';
-        el.selAnchorY.value = '';
-        el.selectionInfo.textContent = 'Seleção: Nenhuma';
+        inputs.forEach(i => { i.value = ''; });
+        el.selectionInfo.textContent = 'Seleção: nenhuma';
         return;
       }
 
-      el.selectedFrameBadge.textContent = `#${f.id + 1}`;
+      el.selectedFrameBadge.textContent = n > 1 ? `#${f.id + 1} (+${n - 1})` : `#${f.id + 1}`;
       el.selFrameX.value = Math.round(f.x);
       el.selFrameY.value = Math.round(f.y);
       el.selFrameW.value = Math.round(f.width);
       el.selFrameH.value = Math.round(f.height);
       el.selAnchorX.value = Math.round(f.anchorX);
       el.selAnchorY.value = Math.round(f.anchorY);
-      el.selectionInfo.textContent = `Sel: #${f.id + 1} (${Math.round(f.width)}×${Math.round(f.height)}px)`;
+      el.selectionInfo.textContent = n > 1
+        ? `Sel: ${n} frames`
+        : `Sel: #${f.id + 1} (${Math.round(f.width)}×${Math.round(f.height)}px)`;
     }
 
+    function updateEditorButtons() {
+      const n = state.selectedFrameIndices.size;
+      const has = n > 0;
+      [el.trimBtn, el.duplicateBtn, el.deleteFrameBtn, el.splitVertBtn, el.splitHorizBtn,
+       el.moveEarlierBtn, el.moveLaterBtn].forEach(b => { b.disabled = !has; });
+      el.mergeSelectedBtn.disabled = n < 2;
+      el.sameSizeBtn.disabled = n < 2;
+      el.undoBtn.disabled = state.history.length === 0;
+      el.redoBtn.disabled = state.future.length === 0;
+      el.clearFramesBtn.disabled = state.frames.length === 0;
+    }
+
+    // Snapshot tirado quando o campo ganha foco; registrado ao sair dele
+    let inputBefore = null;
     function applySelectedFrameInputs() {
       const f = getSelectedFrame();
       if (!f) return;
-      f.x = Math.max(0, Math.round(Number(el.selFrameX.value) || 0));
-      f.y = Math.max(0, Math.round(Number(el.selFrameY.value) || 0));
-      f.width = Math.max(4, Math.round(Number(el.selFrameW.value) || 4));
-      f.height = Math.max(4, Math.round(Number(el.selFrameH.value) || 4));
-      f.anchorX = Math.round(Number(el.selAnchorX.value) || (f.x + f.width / 2));
-      f.anchorY = Math.round(Number(el.selAnchorY.value) || (f.y + f.height));
-      f.relativeAnchorX = f.anchorX - f.x;
-      f.relativeAnchorY = f.anchorY - f.y;
-
-      renderOverlay();
-      renderPreview();
-      renderStrip();
+      const num = (inp, fallback) => (inp.value === '' ? fallback : Math.round(Number(inp.value)));
+      f.x = clamp(num(el.selFrameX, f.x), 0, imgW() - 1);
+      f.y = clamp(num(el.selFrameY, f.y), 0, imgH() - 1);
+      f.width = clamp(num(el.selFrameW, f.width), 1, imgW() - f.x);
+      f.height = clamp(num(el.selFrameH, f.height), 1, imgH() - f.y);
+      f.anchorX = num(el.selAnchorX, f.anchorX);
+      f.anchorY = num(el.selAnchorY, f.anchorY);
+      syncAnchor(f);
+      renderAll({ skipInputs: true });
     }
 
-    // Identificação de Handles de redimensionamento
+    [el.selFrameX, el.selFrameY, el.selFrameW, el.selFrameH, el.selAnchorX, el.selAnchorY].forEach(inp => {
+      inp.addEventListener('focus', () => { inputBefore = snapshot(); });
+      inp.addEventListener('input', applySelectedFrameInputs);
+      inp.addEventListener('change', () => {
+        if (inputBefore) recordChange(inputBefore);
+        inputBefore = snapshot();
+        renderAll();
+      });
+    });
+
+    // Handles de redimensionamento (em coordenadas de imagem)
     function getBoxHandles(box) {
       const x = box.x, y = box.y, w = box.width, h = box.height;
       const cx = x + w / 2, cy = y + h / 2;
@@ -1201,401 +1776,821 @@
       ];
     }
 
-    function hitTestHandle(pt, box) {
+    function hitTestHandle(p, box) {
       if (!box) return null;
-      const handles = getBoxHandles(box);
-      for (const h of handles) {
-        if (Math.abs(pt.x - h.x) <= HANDLE_SIZE + 2 && Math.abs(pt.y - h.y) <= HANDLE_SIZE + 2) {
-          return h;
-        }
+      for (const h of getBoxHandles(box)) {
+        if (Math.abs(p.sx - toSX(h.x)) <= HANDLE_PX && Math.abs(p.sy - toSY(h.y)) <= HANDLE_PX) return h;
       }
       return null;
     }
 
-    function hitTestBox(pt) {
-      // Testar de trás para frente
-      for (let i = state.frames.length - 1; i >= 0; i--) {
-        const b = state.frames[i];
-        if (pt.x >= b.x && pt.x <= b.x + b.width && pt.y >= b.y && pt.y <= b.y + b.height) {
-          return i;
-        }
-      }
-      return -1;
+    function hitTestAnchor(p, box) {
+      if (!box || !state.showAnchors) return false;
+      return Math.hypot(p.sx - toSX(box.anchorX), p.sy - toSY(box.anchorY)) <= ANCHOR_PX;
     }
 
-    // Interações de Mouse no Overlay
-    el.overlay.addEventListener('mousemove', (e) => {
-      const pt = toImageCoords(e);
-      el.mousePos.textContent = `X: ${pt.x}, Y: ${pt.y}`;
-
-      if (state.dragMode) {
-        handleDragMove(pt);
-        return;
-      }
-
-      // Alterar cursor conforme hover
-      const sel = getSelectedFrame();
-      const handle = hitTestHandle(pt, sel);
-      if (handle) {
-        el.overlay.style.cursor = handle.cursor;
-      } else {
-        const boxIdx = hitTestBox(pt);
-        if (boxIdx >= 0) {
-          el.overlay.style.cursor = 'move';
-        } else {
-          el.overlay.style.cursor = 'crosshair';
+    function hitTestBox(p) {
+      // Prioriza a menor caixa sob o cursor (útil quando há sobreposição)
+      let best = -1, bestArea = Infinity;
+      state.frames.forEach((b, i) => {
+        if (p.fx >= b.x && p.fx <= b.x + b.width && p.fy >= b.y && p.fy <= b.y + b.height) {
+          const area = b.width * b.height;
+          if (area < bestArea) { best = i; bestArea = area; }
         }
-      }
-    });
+      });
+      return best;
+    }
 
+    function hoverCursor(p) {
+      if (state.spaceDown) return 'grab';
+      if (state.activeTab === 'manual') return 'crosshair';
+      const sel = getSelectedFrame();
+      if (hitTestAnchor(p, sel)) return 'move';
+      const handle = hitTestHandle(p, sel);
+      if (handle) return handle.cursor;
+      if (hitTestBox(p) >= 0) return 'move';
+      return 'crosshair';
+    }
+
+    // ---- Mouse no viewport ----
     el.overlay.addEventListener('mousedown', (e) => {
-      const pt = toImageCoords(e);
-      const sel = getSelectedFrame();
-      const handle = hitTestHandle(pt, sel);
+      if (!imgW()) return;
+      const p = getPointer(e);
 
-      if (handle && sel) {
-        state.dragMode = 'resize';
-        state.dragHandle = handle.name;
-        state.dragStart = pt;
-        state.activeBoxOriginal = { ...sel };
+      if (e.button === 1 || (e.button === 0 && state.spaceDown)) {
+        e.preventDefault();
+        state.drag = { mode: 'pan', sx: p.sx, sy: p.sy, panX: state.view.panX, panY: state.view.panY };
+        el.overlay.style.cursor = 'grabbing';
+        return;
+      }
+      if (e.button !== 0) return;
+
+      if (state.activeTab === 'manual') {
+        state.drag = { mode: 'gridcell', start: p, current: p };
         return;
       }
 
-      const boxIdx = hitTestBox(pt);
+      const before = snapshot();
+      const primary = getSelectedFrame();
+
+      if (hitTestAnchor(p, primary)) {
+        state.drag = { mode: 'anchor', before };
+        return;
+      }
+
+      const handle = hitTestHandle(p, primary);
+      if (handle) {
+        state.drag = { mode: 'resize', handle: handle.name, start: p, orig: { ...primary }, before };
+        return;
+      }
+
+      const boxIdx = hitTestBox(p);
       if (boxIdx >= 0) {
-        if (e.shiftKey) {
-          // Multi-seleção com Shift
-          if (state.selectedFrameIndices.has(boxIdx)) {
-            state.selectedFrameIndices.delete(boxIdx);
-          } else {
-            state.selectedFrameIndices.add(boxIdx);
-          }
+        if (e.shiftKey || e.ctrlKey || e.metaKey) {
+          const next = new Set(state.selectedFrameIndices);
+          if (next.has(boxIdx)) next.delete(boxIdx); else next.add(boxIdx);
+          setSelection(Array.from(next), next.has(boxIdx) ? boxIdx : undefined);
+          if (!next.has(boxIdx)) { renderAll(); return; }
+        } else if (!state.selectedFrameIndices.has(boxIdx)) {
+          setSelection([boxIdx]);
         } else {
-          state.selectedFrameIndices = new Set([boxIdx]);
+          state.primaryIndex = boxIdx;
         }
-        state.dragMode = 'move';
-        state.dragStart = pt;
-        state.activeBoxOriginal = { ...state.frames[boxIdx] };
-        updateSelectedFrameInputs();
-        renderOverlay();
-        renderPreview();
+        state.currentFrame = boxIdx;
+        const origs = new Map(selectedIndices().map(i => [i, { ...state.frames[i] }]));
+        state.drag = { mode: 'move', start: p, origs, before };
+        renderAll();
         return;
       }
 
-      // Clique no vazio -> Inicia criação de novo frame
-      state.dragMode = 'create';
-      state.dragStart = pt;
-      state.dragCurrent = pt;
+      state.drag = { mode: e.shiftKey ? 'marquee' : 'create', start: p, current: p, before };
     });
 
-    window.addEventListener('mouseup', () => {
-      if (!state.dragMode) return;
+    window.addEventListener('mousemove', (e) => {
+      const p = getPointer(e);
+      const overCanvas = e.target === el.overlay;
+      if (overCanvas || state.drag) {
+        el.mousePos.textContent = p.inside ? `X: ${Math.floor(p.fx)}, Y: ${Math.floor(p.fy)}` : 'X: -, Y: -';
+      }
 
-      if (state.dragMode === 'create' && state.dragStart && state.dragCurrent) {
-        const x = Math.min(state.dragStart.x, state.dragCurrent.x);
-        const y = Math.min(state.dragStart.y, state.dragCurrent.y);
-        const w = Math.abs(state.dragStart.x - state.dragCurrent.x);
-        const h = Math.abs(state.dragStart.y - state.dragCurrent.y);
+      if (state.drag) {
+        handleDragMove(p, e);
+        state.hover = p;
+        requestRender();
+        return;
+      }
 
-        if (w >= 10 && h >= 10) {
-          const newId = state.frames.length;
-          const newFrame = {
-            id: newId,
-            x, y, width: w, height: h,
-            contentBounds: { x, y, width: w, height: h },
-            anchorX: Math.round(x + w / 2),
-            anchorY: y + h,
-            relativeAnchorX: Math.round(w / 2),
-            relativeAnchorY: h,
-            pixelCount: w * h,
-            componentsCount: 1,
-            confidence: 1.0,
-            warnings: [],
-          };
-          state.frames.push(newFrame);
-          state.selectedFrameIndices = new Set([newId]);
-          updateSelectedFrameInputs();
+      if (overCanvas) {
+        state.hover = p;
+        el.overlay.style.cursor = hoverCursor(p);
+        requestRender();
+      }
+    });
+
+    el.overlay.addEventListener('mouseleave', () => {
+      if (state.drag) return;
+      state.hover = null;
+      el.mousePos.textContent = 'X: -, Y: -';
+      requestRender();
+    });
+
+    el.overlay.addEventListener('dblclick', (e) => {
+      const p = getPointer(e);
+      if (state.activeTab === 'manual') return;
+      const idx = hitTestBox(p);
+      if (idx >= 0) {
+        setSelection([idx]);
+        state.currentFrame = idx;
+        zoomToSelection();
+        renderAll();
+      } else {
+        fitView();
+      }
+    });
+
+    el.overlay.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    window.addEventListener('mouseup', (e) => {
+      const drag = state.drag;
+      if (!drag) return;
+      state.drag = null;
+      el.overlay.style.cursor = state.hover ? hoverCursor(state.hover) : 'crosshair';
+
+      if (drag.mode === 'pan') return;
+
+      if (drag.mode === 'create' || drag.mode === 'gridcell' || drag.mode === 'marquee') {
+        const a = drag.start, b = drag.current;
+        const screenW = Math.abs(a.sx - b.sx), screenH = Math.abs(a.sy - b.sy);
+        const x = snapV(Math.min(a.fx, b.fx)), y = snapV(Math.min(a.fy, b.fy));
+        const x2 = snapV(Math.max(a.fx, b.fx)), y2 = snapV(Math.max(a.fy, b.fy));
+        const rx = clamp(x, 0, imgW()), ry = clamp(y, 0, imgH());
+        const rw = clamp(x2, 0, imgW()) - rx, rh = clamp(y2, 0, imgH()) - ry;
+        const isClick = screenW < 4 && screenH < 4;
+
+        if (drag.mode === 'marquee') {
+          const hits = [];
+          state.frames.forEach((f, i) => {
+            const inter = f.x < rx + rw && f.x + f.width > rx && f.y < ry + rh && f.y + f.height > ry;
+            if (inter) hits.push(i);
+          });
+          setSelection(Array.from(new Set([...selectedIndices(), ...hits])));
+        } else if (drag.mode === 'gridcell') {
+          if (!isClick && rw >= 2 && rh >= 2) {
+            el.frameX.value = rx;
+            el.frameY.value = ry;
+            el.frameW.value = rw;
+            el.frameH.value = rh;
+            updateManualJson();
+          }
+        } else if (isClick || rw < 2 || rh < 2) {
+          setSelection([]);
+        } else {
+          const f = normalizeFrame({ x: rx, y: ry, width: rw, height: rh });
+          const wantsTrim = el.autoTrimOnDraw.checked && !e.altKey;
+          if (wantsTrim && !trimFrame(f)) {
+            showToast('Nenhum desenho dentro da área — recorte mantido como desenhado');
+          }
+          state.frames.push(f);
+          reindex();
+          setSelection([f.id]);
+          state.currentFrame = f.id;
         }
       }
 
-      state.dragMode = null;
-      state.dragHandle = null;
-      state.dragStart = null;
-      state.dragCurrent = null;
-      state.activeBoxOriginal = null;
-
-      renderOverlay();
-      renderPreview();
-      renderStrip();
+      if (drag.before !== undefined) recordChange(drag.before);
+      renderAll();
     });
 
-    function handleDragMove(pt) {
-      if (state.dragMode === 'move') {
-        const sel = getSelectedFrame();
-        if (!sel || !state.activeBoxOriginal) return;
-        const dx = pt.x - state.dragStart.x;
-        const dy = pt.y - state.dragStart.y;
-        sel.x = Math.max(0, Math.min(el.overlay.width - sel.width, Math.round(state.activeBoxOriginal.x + dx)));
-        sel.y = Math.max(0, Math.min(el.overlay.height - sel.height, Math.round(state.activeBoxOriginal.y + dy)));
-        sel.anchorX = Math.round(sel.x + sel.relativeAnchorX);
-        sel.anchorY = Math.round(sel.y + sel.relativeAnchorY);
+    function handleDragMove(p) {
+      const drag = state.drag;
+      const W = imgW(), H = imgH();
+
+      if (drag.mode === 'pan') {
+        state.view.panX = drag.panX + (p.sx - drag.sx);
+        state.view.panY = drag.panY + (p.sy - drag.sy);
+        return;
+      }
+
+      if (drag.mode === 'move') {
+        const primaryOrig = drag.origs.get(state.primaryIndex) || drag.origs.values().next().value;
+        let dx = snapV(primaryOrig.x + (p.fx - drag.start.fx)) - primaryOrig.x;
+        let dy = snapV(primaryOrig.y + (p.fy - drag.start.fy)) - primaryOrig.y;
+        const group = boundsOf(Array.from(drag.origs.values()));
+        dx = clamp(dx, -group.x, W - (group.x + group.width));
+        dy = clamp(dy, -group.y, H - (group.y + group.height));
+        drag.origs.forEach((o, i) => {
+          const f = state.frames[i];
+          f.x = o.x + dx;
+          f.y = o.y + dy;
+          f.anchorX = o.anchorX + dx;
+          f.anchorY = o.anchorY + dy;
+          syncAnchor(f);
+        });
         updateSelectedFrameInputs();
-        renderOverlay();
-      } else if (state.dragMode === 'resize') {
+        return;
+      }
+
+      if (drag.mode === 'resize') {
         const sel = getSelectedFrame();
-        if (!sel || !state.activeBoxOriginal) return;
-        const orig = state.activeBoxOriginal;
-        const dx = pt.x - state.dragStart.x;
-        const dy = pt.y - state.dragStart.y;
-        const hName = state.dragHandle;
-
-        let nx = orig.x, ny = orig.y, nw = orig.width, nh = orig.height;
-
-        if (hName.includes('w')) {
-          nx = Math.min(orig.x + orig.width - 6, orig.x + dx);
-          nw = orig.width - (nx - orig.x);
-        }
-        if (hName.includes('e')) {
-          nw = Math.max(6, orig.width + dx);
-        }
-        if (hName.includes('n')) {
-          ny = Math.min(orig.y + orig.height - 6, orig.y + dy);
-          nh = orig.height - (ny - orig.y);
-        }
-        if (hName.includes('s')) {
-          nh = Math.max(6, orig.height + dy);
-        }
-
-        sel.x = Math.max(0, Math.round(nx));
-        sel.y = Math.max(0, Math.round(ny));
-        sel.width = Math.min(el.overlay.width - sel.x, Math.round(nw));
-        sel.height = Math.min(el.overlay.height - sel.y, Math.round(nh));
-        // Manter anchor nos pés ao redimensionar
-        sel.anchorX = Math.round(sel.x + sel.width / 2);
-        sel.anchorY = Math.round(sel.y + sel.height);
-        sel.relativeAnchorX = Math.round(sel.width / 2);
-        sel.relativeAnchorY = sel.height;
-
+        if (!sel) return;
+        const o = drag.orig;
+        const dx = p.fx - drag.start.fx;
+        const dy = p.fy - drag.start.fy;
+        let l = o.x, t = o.y, r = o.x + o.width, b = o.y + o.height;
+        if (drag.handle.includes('w')) l = clamp(snapV(o.x + dx), 0, r - 1);
+        if (drag.handle.includes('e')) r = clamp(snapV(o.x + o.width + dx), l + 1, W);
+        if (drag.handle.includes('n')) t = clamp(snapV(o.y + dy), 0, b - 1);
+        if (drag.handle.includes('s')) b = clamp(snapV(o.y + o.height + dy), t + 1, H);
+        sel.x = l; sel.y = t; sel.width = r - l; sel.height = b - t;
+        // O pivô permanece onde estava (pés fixos), apenas limitado à caixa
+        sel.anchorX = clamp(o.anchorX, l, r);
+        sel.anchorY = clamp(o.anchorY, t, b);
+        syncAnchor(sel);
         updateSelectedFrameInputs();
-        renderOverlay();
-      } else if (state.dragMode === 'create') {
-        state.dragCurrent = pt;
-        renderOverlay();
+        return;
+      }
+
+      if (drag.mode === 'anchor') {
+        const sel = getSelectedFrame();
+        if (!sel) return;
+        sel.anchorX = clamp(Math.round(p.fx), sel.x, sel.x + sel.width);
+        sel.anchorY = clamp(Math.round(p.fy), sel.y, sel.y + sel.height);
+        syncAnchor(sel);
+        updateSelectedFrameInputs();
+        return;
+      }
+
+      // create / marquee / gridcell
+      drag.current = p;
+    }
+
+    // Roda do mouse: zoom no cursor (Shift = rolar horizontal)
+    el.overlay.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.shiftKey && !e.ctrlKey) {
+        state.view.panX -= (e.deltaY || e.deltaX);
+        requestRender();
+        return;
+      }
+      const p = getPointer(e);
+      const factor = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015));
+      setZoomAt(state.view.zoom * factor, p.sx, p.sy);
+    }, { passive: false });
+
+    /* ============================================================
+       OPERAÇÕES DE EDIÇÃO
+       ============================================================ */
+    function trimSelected() {
+      if (!state.selectedFrameIndices.size) return;
+      let failed = 0;
+      edit(() => {
+        selectedFrames().forEach(f => { if (!trimFrame(f)) failed++; });
+      });
+      showToast(failed ? `${failed} frame(s) sem desenho dentro da caixa` : 'Caixas encaixadas no desenho');
+    }
+
+    function duplicateSelected() {
+      const idxs = selectedIndices();
+      if (!idxs.length) return;
+      edit(() => {
+        const group = boundsOf(idxs.map(i => state.frames[i]));
+        let dx = group.width, dy = 0;
+        if (group.x + group.width + dx > imgW()) { dx = 0; dy = group.height; }
+        if (group.y + group.height + dy > imgH()) { dy = 0; }
+        const copies = idxs.map(i => {
+          const f = JSON.parse(JSON.stringify(state.frames[i]));
+          f.x += dx; f.y += dy;
+          f.anchorX += dx; f.anchorY += dy;
+          if (f.contentBounds) { f.contentBounds.x += dx; f.contentBounds.y += dy; }
+          syncAnchor(f);
+          return f;
+        });
+        const insertAt = idxs[idxs.length - 1] + 1;
+        state.frames.splice(insertAt, 0, ...copies);
+        const newIdx = copies.map((_, k) => insertAt + k);
+        setSelection(newIdx);
+        state.currentFrame = newIdx[0];
+      });
+      scrollIntoViewIfNeeded();
+    }
+
+    function deleteSelected() {
+      const idxs = selectedIndices();
+      if (!idxs.length) return;
+      edit(() => {
+        for (let k = idxs.length - 1; k >= 0; k--) state.frames.splice(idxs[k], 1);
+        const next = Math.min(idxs[0], state.frames.length - 1);
+        setSelection(next >= 0 ? [next] : []);
+        state.currentFrame = Math.max(0, next);
+      });
+    }
+
+    function nudgeSelected(dx, dy, resize) {
+      const idxs = selectedIndices();
+      if (!idxs.length) return;
+      edit(() => {
+        const W = imgW(), H = imgH();
+        if (resize) {
+          idxs.forEach(i => {
+            const f = state.frames[i];
+            f.width = clamp(f.width + dx, 1, W - f.x);
+            f.height = clamp(f.height + dy, 1, H - f.y);
+            f.anchorX = clamp(f.anchorX, f.x, f.x + f.width);
+            f.anchorY = clamp(f.anchorY, f.y, f.y + f.height);
+            syncAnchor(f);
+          });
+          return;
+        }
+        const group = boundsOf(idxs.map(i => state.frames[i]));
+        dx = clamp(dx, -group.x, W - (group.x + group.width));
+        dy = clamp(dy, -group.y, H - (group.y + group.height));
+        idxs.forEach(i => {
+          const f = state.frames[i];
+          f.x += dx; f.y += dy;
+          f.anchorX += dx; f.anchorY += dy;
+          syncAnchor(f);
+        });
+      });
+    }
+
+    function moveInOrder(dir) {
+      const i = state.primaryIndex;
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= state.frames.length) return;
+      edit(() => {
+        const [f] = state.frames.splice(i, 1);
+        state.frames.splice(j, 0, f);
+        setSelection([j]);
+        state.currentFrame = j;
+      });
+    }
+
+    function sortByPosition() {
+      if (state.frames.length < 2) return;
+      edit(() => {
+        const avgH = state.frames.reduce((a, f) => a + f.height, 0) / state.frames.length;
+        const byY = state.frames.slice().sort((a, b) => (a.y + a.height / 2) - (b.y + b.height / 2));
+        const rows = [];
+        byY.forEach(f => {
+          const cy = f.y + f.height / 2;
+          const row = rows.find(r => Math.abs(r.cy - cy) < avgH * 0.5);
+          if (row) row.items.push(f); else rows.push({ cy, items: [f] });
+        });
+        state.frames = rows.flatMap(r => r.items.sort((a, b) => a.x - b.x));
+        setSelection(state.frames.length ? [0] : []);
+        state.currentFrame = 0;
+      });
+      showToast('Frames reordenados por linha');
+    }
+
+    function selectRelative(dir) {
+      if (!state.frames.length) return;
+      const base = state.primaryIndex < 0 ? (dir > 0 ? -1 : 0) : state.primaryIndex;
+      const next = (base + dir + state.frames.length) % state.frames.length;
+      setSelection([next]);
+      state.currentFrame = next;
+      scrollIntoViewIfNeeded();
+      renderAll();
+    }
+
+    // Move a vista se o frame selecionado estiver fora da tela
+    function scrollIntoViewIfNeeded() {
+      const sel = selectedFrames();
+      if (!sel.length) return;
+      const b = boundsOf(sel);
+      const vp = viewportSize();
+      const x1 = toSX(b.x), y1 = toSY(b.y);
+      const x2 = toSX(b.x + b.width), y2 = toSY(b.y + b.height);
+      if (x1 < 0 || y1 < 0 || x2 > vp.w || y2 > vp.h) {
+        state.view.panX += vp.w / 2 - (x1 + x2) / 2;
+        state.view.panY += vp.h / 2 - (y1 + y2) / 2;
+        requestRender();
       }
     }
+
+    el.trimBtn.addEventListener('click', trimSelected);
+    el.duplicateBtn.addEventListener('click', duplicateSelected);
+    el.deleteFrameBtn.addEventListener('click', deleteSelected);
+    el.moveEarlierBtn.addEventListener('click', () => moveInOrder(-1));
+    el.moveLaterBtn.addEventListener('click', () => moveInOrder(1));
+    el.sortFramesBtn.addEventListener('click', sortByPosition);
+    el.undoBtn.addEventListener('click', undo);
+    el.redoBtn.addEventListener('click', redo);
+
+    el.clearFramesBtn.addEventListener('click', () => {
+      edit(() => {
+        state.frames = [];
+        setSelection([]);
+        state.currentFrame = 0;
+      });
+      showToast('Recortes removidos (Ctrl+Z desfaz)');
+    });
+
+    el.sameSizeBtn.addEventListener('click', () => {
+      const ref = getSelectedFrame();
+      if (!ref || state.selectedFrameIndices.size < 2) return;
+      edit(() => {
+        selectedFrames().forEach(f => {
+          if (f === ref) return;
+          // Mantém os pés no mesmo lugar relativo ao frame de referência
+          f.x = clamp(f.anchorX - ref.relativeAnchorX, 0, imgW() - ref.width);
+          f.y = clamp(f.anchorY - ref.relativeAnchorY, 0, imgH() - ref.height);
+          f.width = ref.width;
+          f.height = ref.height;
+          syncAnchor(f);
+        });
+      });
+    });
 
     // ETAPA 14: Mesclar Selecionados (Merge)
     el.mergeSelectedBtn.addEventListener('click', () => {
-      if (state.selectedFrameIndices.size < 2) {
-        alert('Selecione ao menos 2 frames para mesclar (segure Shift e clique nos frames).');
+      const indices = selectedIndices();
+      if (indices.length < 2) {
+        showToast('Selecione ao menos 2 frames (Shift + clique)');
         return;
       }
-      const indices = Array.from(state.selectedFrameIndices).sort((a, b) => a - b);
-      const toMerge = indices.map(idx => state.frames[idx]);
-
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-      for (const f of toMerge) {
-        if (f.x < minX) minX = f.x;
-        if (f.y < minY) minY = f.y;
-        if (f.x + f.width > maxX) maxX = f.x + f.width;
-        if (f.y + f.height > maxY) maxY = f.y + f.height;
-      }
-
-      const mergedFrame = {
-        id: indices[0],
-        x: minX,
-        y: minY,
-        width: maxX - minX,
-        height: maxY - minY,
-        contentBounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
-        anchorX: Math.round(minX + (maxX - minX) / 2),
-        anchorY: maxY,
-        relativeAnchorX: Math.round((maxX - minX) / 2),
-        relativeAnchorY: maxY - minY,
-        pixelCount: toMerge.reduce((acc, f) => acc + f.pixelCount, 0),
-        componentsCount: toMerge.reduce((acc, f) => acc + f.componentsCount, 0),
-        confidence: 1.0,
-        warnings: [],
-      };
-
-      // Remover os antigos de trás para frente
-      for (let i = indices.length - 1; i >= 0; i--) {
-        state.frames.splice(indices[i], 1);
-      }
-      state.frames.splice(indices[0], 0, mergedFrame);
-      // Re-indexar IDs
-      state.frames.forEach((f, idx) => f.id = idx);
-      state.selectedFrameIndices = new Set([indices[0]]);
-
-      updateSelectedFrameInputs();
-      renderOverlay();
-      renderPreview();
-      renderStrip();
+      edit(() => {
+        const toMerge = indices.map(idx => state.frames[idx]);
+        const b = boundsOf(toMerge);
+        const merged = normalizeFrame({
+          ...b,
+          anchorX: Math.round(b.x + b.width / 2),
+          anchorY: b.y + b.height,
+          pixelCount: toMerge.reduce((acc, f) => acc + (f.pixelCount || 0), 0),
+          componentsCount: toMerge.reduce((acc, f) => acc + (f.componentsCount || 1), 0),
+        });
+        for (let i = indices.length - 1; i >= 0; i--) state.frames.splice(indices[i], 1);
+        state.frames.splice(indices[0], 0, merged);
+        setSelection([indices[0]]);
+      });
     });
 
     // ETAPA 15: Dividir Vertical / Horizontal (Split)
-    el.splitVertBtn.addEventListener('click', () => {
+    function splitSelected(vertical) {
       const sel = getSelectedFrame();
       if (!sel) return;
-      const idx = sel.id;
-      const halfW = Math.floor(sel.width / 2);
-
-      const f1 = { ...sel, width: halfW, anchorX: Math.round(sel.x + halfW / 2) };
-      const f2 = {
-        ...sel,
-        x: sel.x + halfW,
-        width: sel.width - halfW,
-        anchorX: Math.round(sel.x + halfW + (sel.width - halfW) / 2),
-      };
-
-      state.frames.splice(idx, 1, f1, f2);
-      state.frames.forEach((f, i) => f.id = i);
-      state.selectedFrameIndices = new Set([idx]);
-
-      updateSelectedFrameInputs();
-      renderOverlay();
-      renderPreview();
-      renderStrip();
-    });
-
-    el.splitHorizBtn.addEventListener('click', () => {
-      const sel = getSelectedFrame();
-      if (!sel) return;
-      const idx = sel.id;
-      const halfH = Math.floor(sel.height / 2);
-
-      const f1 = { ...sel, height: halfH, anchorY: sel.y + halfH };
-      const f2 = {
-        ...sel,
-        y: sel.y + halfH,
-        height: sel.height - halfH,
-        anchorY: sel.y + sel.height,
-      };
-
-      state.frames.splice(idx, 1, f1, f2);
-      state.frames.forEach((f, i) => f.id = i);
-      state.selectedFrameIndices = new Set([idx]);
-
-      updateSelectedFrameInputs();
-      renderOverlay();
-      renderPreview();
-      renderStrip();
-    });
-
-    el.deleteFrameBtn.addEventListener('click', () => {
-      const sel = getSelectedFrame();
-      if (!sel) return;
-      const idx = sel.id;
-      state.frames.splice(idx, 1);
-      state.frames.forEach((f, i) => f.id = i);
-      state.selectedFrameIndices = new Set(state.frames.length > 0 ? [Math.min(idx, state.frames.length - 1)] : []);
-
-      updateSelectedFrameInputs();
-      renderOverlay();
-      renderPreview();
-      renderStrip();
-    });
-
-    [el.selFrameX, el.selFrameY, el.selFrameW, el.selFrameH, el.selAnchorX, el.selAnchorY].forEach(inp => {
-      inp.addEventListener('input', applySelectedFrameInputs);
-    });
+      edit(() => {
+        const idx = state.frames.indexOf(sel);
+        let f1, f2;
+        if (vertical) {
+          const half = Math.floor(sel.width / 2);
+          f1 = normalizeFrame({ ...sel, width: half, anchorX: Math.round(sel.x + half / 2) });
+          f2 = normalizeFrame({ ...sel, x: sel.x + half, width: sel.width - half, anchorX: Math.round(sel.x + half + (sel.width - half) / 2) });
+        } else {
+          const half = Math.floor(sel.height / 2);
+          f1 = normalizeFrame({ ...sel, height: half, anchorY: sel.y + half });
+          f2 = normalizeFrame({ ...sel, y: sel.y + half, height: sel.height - half, anchorY: sel.y + sel.height });
+        }
+        state.frames.splice(idx, 1, f1, f2);
+        setSelection([idx, idx + 1], idx);
+      });
+    }
+    el.splitVertBtn.addEventListener('click', () => splitSelected(true));
+    el.splitHorizBtn.addEventListener('click', () => splitSelected(false));
 
     /* ============================================================
-       RENDERIZAÇÃO DO OVERLAY (ETAPA 12, 17)
+       TECLADO
        ============================================================ */
-    function renderOverlay() {
-      const ctx = el.overlay.getContext('2d');
-      ctx.clearRect(0, 0, el.overlay.width, el.overlay.height);
-      ctx.imageSmoothingEnabled = false;
+    function isTypingTarget(t) {
+      return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    }
 
-      // Renderização do Modo Debug se ativo
+    // Botões não devem roubar o foco dos atalhos (Espaço/Enter)
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (b) b.blur();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (el.helpModal.classList.contains('open')) {
+        if (e.key === 'Escape' || e.key === '?') closeHelp();
+        return;
+      }
+      if (isTypingTarget(e.target)) {
+        if (e.key === 'Escape') e.target.blur();
+        return;
+      }
+
+      const ctrl = e.ctrlKey || e.metaKey;
+      const key = e.key;
+      const editing = state.activeTab !== 'manual';
+
+      if (key === ' ') {
+        e.preventDefault();
+        if (!state.spaceDown) {
+          state.spaceDown = true;
+          if (!state.drag) el.overlay.style.cursor = 'grab';
+        }
+        return;
+      }
+
+      if (ctrl && (key === 'z' || key === 'Z')) {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+        return;
+      }
+      if (ctrl && (key === 'y' || key === 'Y')) { e.preventDefault(); redo(); return; }
+      if (ctrl && (key === 'd' || key === 'D')) { e.preventDefault(); if (editing) duplicateSelected(); return; }
+      if (ctrl && (key === 'a' || key === 'A')) {
+        e.preventDefault();
+        if (editing) { setSelection(state.frames.map((_, i) => i)); renderAll(); }
+        return;
+      }
+      if (ctrl) return;
+
+      if (key.startsWith('Arrow') && editing) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : snapStep();
+        const dx = key === 'ArrowLeft' ? -step : key === 'ArrowRight' ? step : 0;
+        const dy = key === 'ArrowUp' ? -step : key === 'ArrowDown' ? step : 0;
+        nudgeSelected(dx, dy, e.altKey);
+        return;
+      }
+
+      switch (key) {
+        case 'Delete':
+        case 'Backspace':
+          if (editing) { e.preventDefault(); deleteSelected(); }
+          break;
+        case 'Escape':
+          if (state.drag && state.drag.before !== undefined) {
+            restore(state.drag.before);
+            state.drag = null;
+          } else {
+            setSelection([]);
+            renderAll();
+          }
+          break;
+        case 'Tab':
+          if (editing) { e.preventDefault(); selectRelative(e.shiftKey ? -1 : 1); }
+          break;
+        case 't': case 'T':
+          if (editing) trimSelected();
+          break;
+        case '[': if (editing) moveInOrder(-1); break;
+        case ']': if (editing) moveInOrder(1); break;
+        case 'f': case 'F': zoomToSelection(); break;
+        case '0': fitView(); break;
+        case '1': {
+          const { w, h } = viewportSize();
+          setZoomAt(1, w / 2, h / 2);
+          break;
+        }
+        case '+': case '=': zoomBy(1.25); break;
+        case '-': case '_': zoomBy(0.8); break;
+        case 'l': case 'L': toggleLoupe(); break;
+        case 'p': case 'P': togglePlay(); break;
+        case ',': stepFrame(-1); break;
+        case '.': stepFrame(1); break;
+        case '?': openHelp(); break;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === ' ') {
+        if (!isTypingTarget(e.target)) e.preventDefault();
+        state.spaceDown = false;
+        if (!state.drag) el.overlay.style.cursor = state.hover ? hoverCursor(state.hover) : 'crosshair';
+      }
+    });
+
+    window.addEventListener('blur', () => { state.spaceDown = false; });
+
+    /* ============================================================
+       RENDERIZAÇÃO DO VIEWPORT (ETAPA 12, 17)
+       ============================================================ */
+    let renderQueued = false;
+    function requestRender() {
+      if (renderQueued) return;
+      renderQueued = true;
+      requestAnimationFrame(() => {
+        renderQueued = false;
+        renderOverlay();
+        renderLoupe();
+      });
+    }
+
+    function strokeScreenRect(ctx, x, y, w, h) {
+      ctx.strokeRect(Math.round(x) + 0.5, Math.round(y) + 0.5, Math.round(w), Math.round(h));
+    }
+
+    function renderOverlay() {
+      const canvas = el.overlay;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const v = state.view;
+      const vpW = canvas.width / dpr, vpH = canvas.height / dpr;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, vpW, vpH);
+      if (!imgW()) return;
+
+      // Imagem e camadas de debug no espaço da imagem
+      ctx.save();
+      ctx.translate(v.panX, v.panY);
+      ctx.scale(v.zoom, v.zoom);
+      ctx.imageSmoothingEnabled = v.zoom < 1;
+      ctx.globalAlpha = state.debugView === 'boxes_only' ? 0.3 : 1;
+      ctx.drawImage(el.sheetImage, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.imageSmoothingEnabled = false;
       if (state.debugView === 'mask' && state.debugCanvasMask) {
         ctx.globalAlpha = 0.88;
         ctx.drawImage(state.debugCanvasMask, 0, 0);
-        ctx.globalAlpha = 1.0;
       } else if (state.debugView === 'components' && state.debugCanvasComponents) {
         ctx.globalAlpha = 0.88;
         ctx.drawImage(state.debugCanvasComponents, 0, 0);
-        ctx.globalAlpha = 1.0;
       }
+      ctx.restore();
 
-      if (!state.showBoxes) return;
+      // Borda da folha
+      ctx.strokeStyle = 'rgba(154, 167, 208, 0.35)';
+      ctx.lineWidth = 1;
+      strokeScreenRect(ctx, toSX(0), toSY(0), imgW() * v.zoom, imgH() * v.zoom);
 
-      const framesToRender = state.activeTab === 'manual' ? getManualRects() : state.frames;
-
-      // Desenhar cada frame
-      framesToRender.forEach((f, idx) => {
-        const isSelected = state.selectedFrameIndices.has(idx);
-        const hasWarning = f.warnings && f.warnings.length > 0;
-
-        // Bounding Box
-        ctx.lineWidth = isSelected ? 2.5 : 1.5;
-        ctx.strokeStyle = isSelected
-          ? '#ffd166'
-          : hasWarning
-          ? '#ff526c'
-          : '#58b6ff';
-
-        ctx.fillStyle = isSelected
-          ? 'rgba(255, 209, 102, 0.12)'
-          : hasWarning
-          ? 'rgba(255, 82, 108, 0.08)'
-          : 'rgba(88, 182, 255, 0.05)';
-
-        ctx.fillRect(f.x, f.y, f.width, f.height);
-        ctx.strokeRect(f.x, f.y, f.width, f.height);
-
-        // Badge com Número do Frame
-        if (state.showLabels) {
-          const numStr = String(idx + 1).padStart(2, '0');
-          ctx.font = 'bold 11px ui-monospace, Consolas, monospace';
-          const txtW = ctx.measureText(numStr).width;
-          ctx.fillStyle = isSelected ? '#ffd166' : '#14182b';
-          ctx.fillRect(f.x, f.y - 15, txtW + 8, 15);
-          ctx.strokeStyle = isSelected ? '#ffd166' : '#2a3359';
-          ctx.strokeRect(f.x, f.y - 15, txtW + 8, 15);
-          ctx.fillStyle = isSelected ? '#0c0f1d' : '#eef2ff';
-          ctx.fillText(numStr, f.x + 4, f.y - 3);
-        }
-
-        // Pivô / Anchor nos pés (+)
-        if (state.showAnchors && f.anchorX !== undefined && f.anchorY !== undefined) {
-          ctx.strokeStyle = '#ff3366';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(f.anchorX - 5, f.anchorY);
-          ctx.lineTo(f.anchorX + 5, f.anchorY);
-          ctx.moveTo(f.anchorX, f.anchorY - 5);
-          ctx.lineTo(f.anchorX, f.anchorY + 5);
-          ctx.stroke();
-        }
-
-        // Handles de redimensionamento no frame selecionado
-        if (isSelected && state.activeTab !== 'manual') {
-          const handles = getBoxHandles(f);
-          ctx.fillStyle = '#ffd166';
-          ctx.strokeStyle = '#0c0f1d';
-          ctx.lineWidth = 1.5;
-          handles.forEach(h => {
-            ctx.fillRect(h.x - HANDLE_SIZE / 2, h.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
-            ctx.strokeRect(h.x - HANDLE_SIZE / 2, h.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
-          });
-        }
-      });
-
-      // Retângulo dinâmico durante arraste de criação
-      if (state.dragMode === 'create' && state.dragStart && state.dragCurrent) {
-        const x = Math.min(state.dragStart.x, state.dragCurrent.x);
-        const y = Math.min(state.dragStart.y, state.dragCurrent.y);
-        const w = Math.abs(state.dragStart.x - state.dragCurrent.x);
-        const h = Math.abs(state.dragStart.y - state.dragCurrent.y);
-
-        ctx.strokeStyle = '#4ce08b';
-        ctx.lineWidth = 2;
+      // Guias em cruz no cursor
+      const hover = state.hover;
+      if (hover && hover.inside && !(state.drag && state.drag.mode === 'pan')) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(76, 224, 139, 0.35)';
         ctx.setLineDash([4, 4]);
-        ctx.strokeRect(x, y, w, h);
-        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(0, Math.round(hover.sy) + 0.5);
+        ctx.lineTo(vpW, Math.round(hover.sy) + 0.5);
+        ctx.moveTo(Math.round(hover.sx) + 0.5, 0);
+        ctx.lineTo(Math.round(hover.sx) + 0.5, vpH);
+        ctx.stroke();
+        ctx.restore();
       }
+
+      if (state.showBoxes) {
+        const frames = activeFrames();
+        const isManual = state.activeTab === 'manual';
+
+        frames.forEach((f, idx) => {
+          const isSelected = !isManual && state.selectedFrameIndices.has(idx);
+          const isPrimary = isSelected && idx === state.primaryIndex;
+          const isCurrent = idx === state.currentFrame;
+          const hasWarning = f.warnings && f.warnings.length > 0;
+          const X = toSX(f.x), Y = toSY(f.y), Wd = f.width * v.zoom, Hd = f.height * v.zoom;
+
+          ctx.fillStyle = isSelected ? 'rgba(255, 209, 102, 0.10)'
+            : hasWarning ? 'rgba(255, 82, 108, 0.08)'
+            : 'rgba(88, 182, 255, 0.04)';
+          ctx.fillRect(X, Y, Wd, Hd);
+
+          ctx.lineWidth = isSelected ? 2 : 1;
+          ctx.strokeStyle = isSelected ? '#ffd166' : hasWarning ? '#ff526c' : isCurrent ? '#4ce08b' : '#58b6ff';
+          strokeScreenRect(ctx, X, Y, Wd, Hd);
+
+          // Número do frame
+          if (state.showLabels) {
+            const numStr = String(idx + 1).padStart(2, '0');
+            ctx.font = 'bold 11px ui-monospace, Consolas, monospace';
+            const txtW = ctx.measureText(numStr).width;
+            const ly = Y >= 15 ? Y - 15 : Y;
+            ctx.fillStyle = isSelected ? '#ffd166' : 'rgba(20, 24, 43, 0.9)';
+            ctx.fillRect(Math.round(X), Math.round(ly), txtW + 8, 15);
+            ctx.fillStyle = isSelected ? '#0c0f1d' : '#eef2ff';
+            ctx.fillText(numStr, Math.round(X) + 4, Math.round(ly) + 11);
+          }
+
+          // Pivô / Anchor nos pés (+)
+          if (state.showAnchors && f.anchorX !== undefined) {
+            const ax = Math.round(toSX(f.anchorX)) + 0.5, ay = Math.round(toSY(f.anchorY)) + 0.5;
+            const r = isPrimary ? 7 : 5;
+            ctx.strokeStyle = '#ff3366';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(ax - r, ay); ctx.lineTo(ax + r, ay);
+            ctx.moveTo(ax, ay - r); ctx.lineTo(ax, ay + r);
+            ctx.stroke();
+            if (isPrimary) {
+              ctx.beginPath();
+              ctx.arc(ax, ay, 4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+
+          // Alças de redimensionamento
+          if (isPrimary) {
+            const hs = HANDLE_PX - 1;
+            ctx.fillStyle = '#ffd166';
+            ctx.strokeStyle = '#0c0f1d';
+            ctx.lineWidth = 1.5;
+            getBoxHandles(f).forEach(h => {
+              const hx = Math.round(toSX(h.x) - hs / 2), hy = Math.round(toSY(h.y) - hs / 2);
+              ctx.fillRect(hx, hy, hs, hs);
+              ctx.strokeRect(hx + 0.5, hy + 0.5, hs - 1, hs - 1);
+            });
+          }
+        });
+      }
+
+      // Retângulo dinâmico durante criação / seleção / grade
+      const drag = state.drag;
+      if (drag && (drag.mode === 'create' || drag.mode === 'marquee' || drag.mode === 'gridcell') && drag.current) {
+        const a = drag.start, b = drag.current;
+        const x = snapV(Math.min(a.fx, b.fx)), y = snapV(Math.min(a.fy, b.fy));
+        const w = snapV(Math.max(a.fx, b.fx)) - x, h = snapV(Math.max(a.fy, b.fy)) - y;
+        ctx.save();
+        ctx.strokeStyle = drag.mode === 'marquee' ? '#b388ff' : '#4ce08b';
+        ctx.fillStyle = drag.mode === 'marquee' ? 'rgba(179, 136, 255, 0.10)' : 'rgba(76, 224, 139, 0.08)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.fillRect(toSX(x), toSY(y), w * v.zoom, h * v.zoom);
+        strokeScreenRect(ctx, toSX(x), toSY(y), w * v.zoom, h * v.zoom);
+        ctx.restore();
+        drawSizeTag(ctx, `${w} × ${h}`, b.sx + 14, b.sy + 18);
+      } else if (drag && drag.mode === 'resize') {
+        const sel = getSelectedFrame();
+        if (sel) drawSizeTag(ctx, `${sel.width} × ${sel.height}`, toSX(sel.x + sel.width) + 10, toSY(sel.y + sel.height) + 10);
+      }
+    }
+
+    function drawSizeTag(ctx, text, x, y) {
+      ctx.save();
+      ctx.font = 'bold 11px ui-monospace, Consolas, monospace';
+      const w = ctx.measureText(text).width + 10;
+      ctx.fillStyle = 'rgba(12, 15, 29, 0.92)';
+      ctx.strokeStyle = '#4ce08b';
+      ctx.lineWidth = 1;
+      ctx.fillRect(Math.round(x), Math.round(y), w, 18);
+      ctx.strokeRect(Math.round(x) + 0.5, Math.round(y) + 0.5, w - 1, 17);
+      ctx.fillStyle = '#eef2ff';
+      ctx.fillText(text, Math.round(x) + 5, Math.round(y) + 13);
+      ctx.restore();
+    }
+
+    // Lupa: amplia 8x a região em volta do cursor
+    const LOUPE_SIZE = 168, LOUPE_MAG = 8;
+    function renderLoupe() {
+      const hover = state.hover;
+      const show = state.showLoupe && hover && hover.inside && imgW() && !(state.drag && state.drag.mode === 'pan');
+      el.loupe.style.display = show ? 'block' : 'none';
+      if (!show) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const ctx = el.loupe.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = '#070912';
+      ctx.fillRect(0, 0, LOUPE_SIZE, LOUPE_SIZE);
+
+      const span = LOUPE_SIZE / LOUPE_MAG;
+      const cx = Math.floor(hover.fx), cy = Math.floor(hover.fy);
+      const ox = cx + 0.5 - span / 2, oy = cy + 0.5 - span / 2;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(el.sheetImage, ox, oy, span, span, 0, 0, LOUPE_SIZE, LOUPE_SIZE);
+
+      const toL = (vx, vy) => [(vx - ox) * LOUPE_MAG, (vy - oy) * LOUPE_MAG];
+      ctx.lineWidth = 1;
+      if (state.showBoxes) {
+        activeFrames().forEach((f, idx) => {
+          const [lx, ly] = toL(f.x, f.y);
+          const sel = state.activeTab !== 'manual' && state.selectedFrameIndices.has(idx);
+          ctx.strokeStyle = sel ? '#ffd166' : '#58b6ff';
+          ctx.strokeRect(Math.round(lx) + 0.5, Math.round(ly) + 0.5, f.width * LOUPE_MAG, f.height * LOUPE_MAG);
+        });
+      }
+
+      // Pixel sob o cursor
+      const [px, py] = toL(cx, cy);
+      ctx.strokeStyle = '#4ce08b';
+      ctx.strokeRect(Math.round(px) + 0.5, Math.round(py) + 0.5, LOUPE_MAG - 1, LOUPE_MAG - 1);
+
+      ctx.fillStyle = 'rgba(7, 9, 18, 0.85)';
+      ctx.fillRect(0, LOUPE_SIZE - 18, LOUPE_SIZE, 18);
+      ctx.fillStyle = '#9aa7d0';
+      ctx.font = '11px ui-monospace, Consolas, monospace';
+      ctx.fillText(`${cx}, ${cy}`, 6, LOUPE_SIZE - 5);
+    }
+
+    function updateHint() {
+      const hints = {
+        auto: '<b>Arraste</b> no vazio: novo recorte · <b>Shift+arraste</b>: selecionar vários · <b>Roda</b>: zoom · <b>Espaço+arraste</b>: mover vista · <b>?</b>: atalhos',
+        manual: '<b>Arraste</b> sobre o primeiro frame para definir a célula da grade · <b>Roda</b>: zoom · <b>Espaço+arraste</b>: mover vista',
+        combat: '<b>Roda</b>: zoom · <b>Espaço+arraste</b>: mover vista',
+      };
+      el.viewerHint.innerHTML = hints[state.activeTab] || '';
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      el.toast.textContent = msg;
+      el.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2200);
+    }
+
+    function renderAll({ skipInputs = false } = {}) {
+      requestRender();
+      renderPreview();
+      renderStrip();
+      if (!skipInputs) updateSelectedFrameInputs();
+      updateAnalyzerStatusUI();
+      updateEditorButtons();
+      el.currentFrame.value = state.currentFrame;
+      scheduleSave();
     }
 
     /* ============================================================
@@ -1607,33 +2602,30 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = false;
 
-      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
-      if (!frames || frames.length === 0 || !el.sheetImage.naturalWidth) return;
+      const frames = activeFrames();
+      if (!frames || frames.length === 0 || !imgW()) return;
 
-      const currIdx = Math.min(state.currentFrame, frames.length - 1);
+      const currIdx = clamp(state.currentFrame, 0, frames.length - 1);
       const f = frames[currIdx];
       if (!f) return;
 
-      const zoom = Number(el.previewScale.value) || 2;
+      const zoom = Number(el.previewScale.value) || 0.5;
+      ctx.imageSmoothingEnabled = zoom < 1;
 
-      if (state.normalizePreview && state.activeTab !== 'manual') {
+      if (state.normalizePreview) {
         // Alinhamento Estável pelo Pivô no Chão (ETAPA 10, 11)
         const targetAnchorX = Math.round(canvas.width / 2);
-        const targetAnchorY = Math.round(canvas.height - 25);
+        const targetAnchorY = Math.round(canvas.height - 20);
 
         const relAnchorX = f.relativeAnchorX ?? Math.round(f.width / 2);
         const relAnchorY = f.relativeAnchorY ?? f.height;
 
-        const drawX = targetAnchorX - relAnchorX * zoom;
-        const drawY = targetAnchorY - relAnchorY * zoom;
-
         ctx.drawImage(
           el.sheetImage,
           f.x, f.y, f.width, f.height,
-          drawX, drawY, f.width * zoom, f.height * zoom
+          targetAnchorX - relAnchorX * zoom, targetAnchorY - relAnchorY * zoom, f.width * zoom, f.height * zoom
         );
 
-        // Linha do solo e cruzeta do pivô
         if (state.showAnchors) {
           ctx.strokeStyle = 'rgba(88, 182, 255, 0.3)';
           ctx.lineWidth = 1;
@@ -1652,98 +2644,121 @@
           ctx.stroke();
         }
       } else {
-        // Centralização simples
         const drawW = f.width * zoom;
         const drawH = f.height * zoom;
-        const drawX = Math.round((canvas.width - drawW) / 2);
-        const drawY = Math.round((canvas.height - drawH) / 2);
-
-        ctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, drawX, drawY, drawW, drawH);
+        ctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height,
+          Math.round((canvas.width - drawW) / 2), Math.round((canvas.height - drawH) / 2), drawW, drawH);
       }
+
+      ctx.fillStyle = '#9aa7d0';
+      ctx.font = '10px ui-monospace, Consolas, monospace';
+      ctx.fillText(`#${currIdx + 1}/${frames.length}`, 6, 13);
     }
 
     function renderStrip() {
-      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
-      if (!frames || frames.length === 0 || !el.sheetImage.naturalWidth) return;
-
       const canvas = el.stripCanvas;
       const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = false;
+      const frames = activeFrames();
+      state.stripHits = [];
+
+      if (!frames || frames.length === 0 || !imgW()) {
+        canvas.width = 900;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#9aa7d0';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('Nenhum frame ainda — clique em "Analisar" ou arraste um retângulo sobre a folha.', 12, 90);
+        return;
+      }
 
       const maxH = Math.max(...frames.map(f => f.height));
-      const scale = Math.min(1.5, 140 / (maxH || 1));
+      const scale = Math.min(1.5, 130 / (maxH || 1));
       const pad = 12;
 
       let totalW = pad;
-      frames.forEach(f => {
-        totalW += Math.round(f.width * scale) + pad;
-      });
+      frames.forEach(f => { totalW += Math.max(40, Math.round(f.width * scale)) + pad; });
 
       canvas.width = Math.max(900, totalW);
       canvas.height = 180;
+      canvas.style.width = canvas.width + 'px';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = scale < 1;
 
+      const isManual = state.activeTab === 'manual';
       let curX = pad;
       frames.forEach((f, idx) => {
         const dw = Math.round(f.width * scale);
         const dh = Math.round(f.height * scale);
-        const dy = Math.round(150 - dh);
+        const slotW = Math.max(40, dw);
+        const dy = Math.round(145 - dh);
+        const dx = curX + Math.round((slotW - dw) / 2);
 
         const isCurrent = idx === state.currentFrame;
-        const isSelected = state.selectedFrameIndices.has(idx);
+        const isSelected = !isManual && state.selectedFrameIndices.has(idx);
 
-        // Fundo e moldura do frame no strip
         ctx.fillStyle = isCurrent ? 'rgba(76, 224, 139, 0.15)' : 'rgba(255,255,255,0.02)';
-        ctx.fillRect(curX, dy, dw, dh);
+        ctx.fillRect(dx, dy, dw, dh);
+        ctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, dx, dy, dw, dh);
 
-        ctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, curX, dy, dw, dh);
+        ctx.strokeStyle = isSelected ? '#ffd166' : isCurrent ? '#4ce08b' : '#2a3359';
+        ctx.lineWidth = isSelected || isCurrent ? 2 : 1;
+        ctx.strokeRect(dx, dy, dw, dh);
 
-        ctx.strokeStyle = isCurrent ? '#4ce08b' : isSelected ? '#ffd166' : '#2a3359';
-        ctx.lineWidth = isCurrent ? 2 : 1;
-        ctx.strokeRect(curX, dy, dw, dh);
-
-        // Legenda com ID e dimensões
-        ctx.fillStyle = isCurrent ? '#4ce08b' : '#9aa7d0';
+        ctx.fillStyle = isSelected ? '#ffd166' : isCurrent ? '#4ce08b' : '#9aa7d0';
         ctx.font = '10px ui-monospace, Consolas, monospace';
-        ctx.fillText(`#${idx + 1} (${f.width}×${f.height})`, curX, 168);
+        ctx.fillText(`#${idx + 1}`, curX, 160);
+        ctx.fillStyle = '#6b77a0';
+        ctx.fillText(`${f.width}×${f.height}`, curX, 173);
 
-        // Salvar coordenadas para hit-test no strip
-        f._stripX = curX;
-        f._stripW = dw;
-
-        curX += dw + pad;
+        state.stripHits.push({ x: curX, w: slotW });
+        curX += slotW + pad;
       });
+
+      // Mantém o frame atual visível na fita
+      const hit = state.stripHits[state.currentFrame];
+      const box = canvas.parentElement;
+      if (hit && (hit.x < box.scrollLeft || hit.x + hit.w > box.scrollLeft + box.clientWidth)) {
+        box.scrollLeft = hit.x - box.clientWidth / 2 + hit.w / 2;
+      }
     }
 
-    // Clique no Strip para selecionar frame
-    el.stripCanvas.addEventListener('click', (e) => {
+    function stripIndexAt(e) {
       const rect = el.stripCanvas.getBoundingClientRect();
       const clickX = (e.clientX - rect.left) * (el.stripCanvas.width / rect.width);
-      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+      return state.stripHits.findIndex(h => clickX >= h.x && clickX <= h.x + h.w);
+    }
 
-      for (let i = 0; i < frames.length; i++) {
-        const f = frames[i];
-        if (clickX >= f._stripX && clickX <= f._stripX + f._stripW) {
-          state.currentFrame = i;
-          state.selectedFrameIndices = new Set([i]);
-          el.currentFrame.value = i;
-          updateSelectedFrameInputs();
-          renderOverlay();
-          renderPreview();
-          renderStrip();
-          break;
+    el.stripCanvas.addEventListener('click', (e) => {
+      const i = stripIndexAt(e);
+      if (i < 0) return;
+      state.currentFrame = i;
+      if (state.activeTab !== 'manual') {
+        if (e.shiftKey || e.ctrlKey || e.metaKey) {
+          const next = new Set(state.selectedFrameIndices);
+          if (next.has(i)) next.delete(i); else next.add(i);
+          setSelection(Array.from(next), i);
+        } else {
+          setSelection([i]);
+          scrollIntoViewIfNeeded();
         }
       }
+      renderAll();
+    });
+
+    el.stripCanvas.addEventListener('dblclick', (e) => {
+      const i = stripIndexAt(e);
+      if (i < 0 || state.activeTab === 'manual') return;
+      setSelection([i]);
+      zoomToSelection();
+      renderAll();
     });
 
     // Loop de Animação
     function animLoop(timestamp) {
       if (state.playing) {
-        const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
+        const frames = activeFrames();
         if (frames.length > 0) {
           const fps = Math.max(1, Number(el.fps.value) || 8);
-          const interval = 1000 / fps;
-          if (timestamp - state.lastFrameTime >= interval) {
+          if (timestamp - state.lastFrameTime >= 1000 / fps) {
             state.currentFrame = (state.currentFrame + 1) % frames.length;
             el.currentFrame.value = state.currentFrame;
             state.lastFrameTime = timestamp;
@@ -1757,66 +2772,150 @@
     requestAnimationFrame(animLoop);
 
     /* ============================================================
-       ETAPA 20: EXPORTAÇÃO COMPLETA (JSON, ATLAS, INDIVIDUAL PNGS)
+       ETAPA 20: EXPORTAÇÃO COMPLETA (JSON, ATLAS, ZIP DE PNGS)
        ============================================================ */
-    el.exportJsonBtn.addEventListener('click', () => {
-      if (!state.analysisResult) return;
-      const json = window.SpriteAnalyzer.exportMetadataJSON(
-        { ...state.analysisResult, frames: state.frames },
+    function exportBaseName() {
+      return (state.customImageName || state.imageName).replace(/\.[^.]+$/, '');
+    }
+
+    function buildMetadataJSON() {
+      const frames = state.frames;
+      const base = state.analysisResult || { detectedGrid: null, background: null };
+      return window.SpriteAnalyzer.exportMetadataJSON(
+        {
+          ...base,
+          frames,
+          normalizedDimensions: {
+            maxWidth: frames.length ? Math.max(...frames.map(f => f.width)) : 0,
+            maxHeight: frames.length ? Math.max(...frames.map(f => f.height)) : 0,
+          },
+        },
         state.customImageName || state.imageName + '.png'
       );
-      downloadBlob(new Blob([json], { type: 'application/json' }), `${state.imageName}_metadata.json`);
+    }
+
+    el.exportJsonBtn.addEventListener('click', () => {
+      if (!state.frames.length) return showToast('Nenhum frame para exportar');
+      downloadBlob(new Blob([buildMetadataJSON()], { type: 'application/json' }), `${exportBaseName()}_metadata.json`);
     });
 
     el.exportSheetBtn.addEventListener('click', () => {
-      if (state.frames.length === 0 || !el.sheetImage.naturalWidth) return;
-      // Cria atlas normalizado com frames alinhados por pivô
-      const maxW = Math.max(...state.frames.map(f => f.width));
-      const maxH = Math.max(...state.frames.map(f => f.height));
+      if (state.frames.length === 0 || !imgW()) return showToast('Nenhum frame para exportar');
+      // Atlas normalizado: todos os frames alinhados pelo pivô na mesma célula
+      const left = Math.max(...state.frames.map(f => f.relativeAnchorX));
+      const right = Math.max(...state.frames.map(f => f.width - f.relativeAnchorX));
+      const top = Math.max(...state.frames.map(f => f.relativeAnchorY));
+      const bottom = Math.max(...state.frames.map(f => f.height - f.relativeAnchorY));
+      const cellW = left + right, cellH = top + bottom;
       const cols = Math.min(6, state.frames.length);
       const rows = Math.ceil(state.frames.length / cols);
 
       const atlasCanvas = document.createElement('canvas');
-      atlasCanvas.width = cols * maxW;
-      atlasCanvas.height = rows * maxH;
+      atlasCanvas.width = cols * cellW;
+      atlasCanvas.height = rows * cellH;
       const actx = atlasCanvas.getContext('2d');
       actx.imageSmoothingEnabled = false;
 
       state.frames.forEach((f, idx) => {
-        const c = idx % cols;
-        const r = Math.floor(idx / cols);
-        const cellX = c * maxW;
-        const cellY = r * maxH;
-
-        // Ponto de solo uniforme na base da célula
-        const targetAnchorX = cellX + Math.round(maxW / 2);
-        const targetAnchorY = cellY + Math.round(maxH - 10);
-        const drawX = targetAnchorX - f.relativeAnchorX;
-        const drawY = targetAnchorY - f.relativeAnchorY;
-
-        actx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, drawX, drawY, f.width, f.height);
+        const cellX = (idx % cols) * cellW;
+        const cellY = Math.floor(idx / cols) * cellH;
+        actx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height,
+          cellX + left - f.relativeAnchorX, cellY + top - f.relativeAnchorY, f.width, f.height);
       });
 
-      atlasCanvas.toBlob(blob => {
-        downloadBlob(blob, `${state.imageName}_normalized_atlas.png`);
-      });
+      atlasCanvas.toBlob(blob => downloadBlob(blob, `${exportBaseName()}_normalized_atlas.png`));
+      showToast(`Atlas ${cols}×${rows} com células de ${cellW}×${cellH}px`);
     });
 
-    el.exportFramesBtn.addEventListener('click', () => {
-      if (state.frames.length === 0) return;
-      // Baixa os primeiros 8 frames ou gera download sequencial
-      state.frames.forEach((f, idx) => {
-        const frameCanvas = document.createElement('canvas');
-        frameCanvas.width = f.width;
-        frameCanvas.height = f.height;
-        const fctx = frameCanvas.getContext('2d');
+    el.exportFramesBtn.addEventListener('click', async () => {
+      if (state.frames.length === 0) return showToast('Nenhum frame para exportar');
+      const base = exportBaseName();
+      const files = [];
+      for (const [idx, f] of state.frames.entries()) {
+        const c = document.createElement('canvas');
+        c.width = f.width;
+        c.height = f.height;
+        const fctx = c.getContext('2d');
         fctx.imageSmoothingEnabled = false;
         fctx.drawImage(el.sheetImage, f.x, f.y, f.width, f.height, 0, 0, f.width, f.height);
-        frameCanvas.toBlob(blob => {
-          downloadBlob(blob, `${state.imageName}_frame_${String(idx + 1).padStart(2, '0')}.png`);
-        });
-      });
+        const blob = await new Promise(res => c.toBlob(res));
+        files.push({ name: `${base}_frame_${String(idx + 1).padStart(2, '0')}.png`, data: new Uint8Array(await blob.arrayBuffer()) });
+      }
+      files.push({ name: `${base}_metadata.json`, data: new TextEncoder().encode(buildMetadataJSON()) });
+      downloadBlob(makeZip(files), `${base}_frames.zip`);
+      showToast(`${state.frames.length} frames exportados em .zip`);
     });
+
+    // ZIP mínimo (sem compressão) para baixar todos os frames num arquivo só
+    const CRC_TABLE = (() => {
+      const t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+
+    function crc32(bytes) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function makeZip(files) {
+      const enc = new TextEncoder();
+      const parts = [];
+      const central = [];
+      let offset = 0;
+
+      for (const file of files) {
+        const name = enc.encode(file.name);
+        const crc = crc32(file.data);
+        const size = file.data.length;
+
+        const local = new DataView(new ArrayBuffer(30));
+        local.setUint32(0, 0x04034b50, true);
+        local.setUint16(4, 20, true);
+        local.setUint16(6, 0x0800, true);   // nomes em UTF-8
+        local.setUint16(8, 0, true);        // sem compressão
+        local.setUint16(10, 0, true);
+        local.setUint16(12, 0x21, true);    // 1980-01-01
+        local.setUint32(14, crc, true);
+        local.setUint32(18, size, true);
+        local.setUint32(22, size, true);
+        local.setUint16(26, name.length, true);
+        local.setUint16(28, 0, true);
+        parts.push(local, name, file.data);
+
+        const cd = new DataView(new ArrayBuffer(46));
+        cd.setUint32(0, 0x02014b50, true);
+        cd.setUint16(4, 20, true);
+        cd.setUint16(6, 20, true);
+        cd.setUint16(8, 0x0800, true);
+        cd.setUint16(10, 0, true);
+        cd.setUint16(12, 0, true);
+        cd.setUint16(14, 0x21, true);
+        cd.setUint32(16, crc, true);
+        cd.setUint32(20, size, true);
+        cd.setUint32(24, size, true);
+        cd.setUint16(28, name.length, true);
+        cd.setUint32(42, offset, true);
+        central.push(cd, name);
+
+        offset += 30 + name.length + size;
+      }
+
+      const cdSize = central.reduce((a, p) => a + p.byteLength, 0);
+      const end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true);
+      end.setUint16(8, files.length, true);
+      end.setUint16(10, files.length, true);
+      end.setUint32(12, cdSize, true);
+      end.setUint32(16, offset, true);
+
+      return new Blob([...parts, ...central, end], { type: 'application/zip' });
+    }
 
     function downloadBlob(blob, filename) {
       const a = document.createElement('a');
@@ -1834,57 +2933,64 @@
     /* ============================================================
        CONTROLES DE ANIMAÇÃO & BOTÕES DE TOOLBAR
        ============================================================ */
-    el.playBtn.addEventListener('click', () => {
+    function togglePlay() {
       state.playing = !state.playing;
       el.playBtn.textContent = state.playing ? '⏸ Pause' : '▶ Play';
       el.playBtn.className = state.playing ? 'btn-warn' : 'btn-ok';
       el.playStatus.textContent = state.playing ? 'Reproduzindo' : 'Pausado';
-    });
+    }
 
-    el.prevBtn.addEventListener('click', () => {
-      state.playing = false;
-      el.playBtn.textContent = '▶ Play';
-      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
-      state.currentFrame = (state.currentFrame - 1 + frames.length) % frames.length;
+    function stepFrame(dir) {
+      const frames = activeFrames();
+      if (!frames.length) return;
+      if (state.playing) togglePlay();
+      state.currentFrame = (state.currentFrame + dir + frames.length) % frames.length;
       el.currentFrame.value = state.currentFrame;
       renderPreview();
       renderStrip();
-    });
+      requestRender();
+    }
 
-    el.nextBtn.addEventListener('click', () => {
-      state.playing = false;
-      el.playBtn.textContent = '▶ Play';
-      const frames = state.activeTab === 'manual' ? getManualRects() : state.frames;
-      state.currentFrame = (state.currentFrame + 1) % frames.length;
-      el.currentFrame.value = state.currentFrame;
-      renderPreview();
-      renderStrip();
-    });
+    el.playBtn.addEventListener('click', togglePlay);
+    el.prevBtn.addEventListener('click', () => stepFrame(-1));
+    el.nextBtn.addEventListener('click', () => stepFrame(1));
 
     el.fps.addEventListener('input', () => {
       el.previewFpsBadge.textContent = `${el.fps.value} FPS`;
     });
 
     el.currentFrame.addEventListener('input', () => {
-      state.currentFrame = Number(el.currentFrame.value) || 0;
+      const n = activeFrames().length;
+      state.currentFrame = n ? clamp(Number(el.currentFrame.value) || 0, 0, n - 1) : 0;
       renderPreview();
       renderStrip();
+      requestRender();
     });
 
     el.previewScale.addEventListener('input', renderPreview);
 
+    function toggleButton(btn, on) {
+      btn.classList.toggle('on', on);
+    }
+
     el.toggleAnchorsBtn.addEventListener('click', () => {
       state.showAnchors = !state.showAnchors;
-      el.toggleAnchorsBtn.textContent = `Pivô: ${state.showAnchors ? 'ON' : 'OFF'}`;
-      renderOverlay();
-      renderPreview();
+      toggleButton(el.toggleAnchorsBtn, state.showAnchors);
+      renderAll();
     });
 
     el.toggleLabelsBtn.addEventListener('click', () => {
       state.showLabels = !state.showLabels;
-      el.toggleLabelsBtn.textContent = `Números: ${state.showLabels ? 'ON' : 'OFF'}`;
-      renderOverlay();
+      toggleButton(el.toggleLabelsBtn, state.showLabels);
+      requestRender();
     });
+
+    function toggleLoupe() {
+      state.showLoupe = !state.showLoupe;
+      toggleButton(el.toggleLoupeBtn, state.showLoupe);
+      requestRender();
+    }
+    el.toggleLoupeBtn.addEventListener('click', toggleLoupe);
 
     el.toggleNormalizedPreviewBtn.addEventListener('click', () => {
       state.normalizePreview = !state.normalizePreview;
@@ -1894,10 +3000,26 @@
 
     el.debugViewSelect.addEventListener('change', () => {
       state.debugView = el.debugViewSelect.value;
-      renderOverlay();
+      requestRender();
     });
 
-    el.runAutoAnalyzeBtn.addEventListener('click', runAutoAnalysis);
+    el.zoomInBtn.addEventListener('click', () => zoomBy(1.25));
+    el.zoomOutBtn.addEventListener('click', () => zoomBy(0.8));
+    el.zoomLabel.addEventListener('click', fitView);
+    el.zoomFitBtn.addEventListener('click', fitView);
+    el.zoomSelBtn.addEventListener('click', zoomToSelection);
+
+    function openHelp() { el.helpModal.classList.add('open'); }
+    function closeHelp() { el.helpModal.classList.remove('open'); }
+    el.helpBtn.addEventListener('click', openHelp);
+    el.helpCloseBtn.addEventListener('click', closeHelp);
+    el.helpModal.addEventListener('click', (e) => { if (e.target === el.helpModal) closeHelp(); });
+
+    el.runAutoAnalyzeBtn.addEventListener('click', () => {
+      runAutoAnalysis();
+      el.sheetBadge.textContent = state.customImageName ? 'Customizado' : 'Oficial';
+      showToast(`${state.frames.length} frames detectados (Ctrl+Z desfaz)`);
+    });
 
     el.sheetSelect.addEventListener('change', () => {
       loadSheet(el.sheetSelect.value);
@@ -1916,62 +3038,139 @@
       reader.readAsDataURL(file);
     });
 
-    /* ============================================================
-       SUPORTE AO MODO MANUAL CLÁSSICO (Preservado)
-       ============================================================ */
-    function getManualRects() {
-      const x = Number(el.frameX.value) || 0;
-      const y = Number(el.frameY.value) || 0;
-      const w = Math.max(1, Number(el.frameW.value) || CELL_W);
-      const h = Math.max(1, Number(el.frameH.value) || CELL_H);
-      const count = Math.max(1, Number(el.frameCount.value) || 4);
-      const cols = Math.max(1, Number(el.columns.value) || 4);
-      const gapX = Number(el.gapX.value) || 0;
-      const gapY = Number(el.gapY.value) || 0;
+    new ResizeObserver(() => resizeOverlay()).observe(el.viewerWrap);
 
+    /* ============================================================
+       GRADE REGULAR
+       ============================================================ */
+    function readManualConfig() {
+      return {
+        x: Number(el.frameX.value) || 0,
+        y: Number(el.frameY.value) || 0,
+        w: Math.max(1, Number(el.frameW.value) || CELL_W),
+        h: Math.max(1, Number(el.frameH.value) || CELL_H),
+        count: Math.max(1, Number(el.frameCount.value) || 4),
+        columns: Math.max(1, Number(el.columns.value) || 4),
+        gapX: Number(el.gapX.value) || 0,
+        gapY: Number(el.gapY.value) || 0,
+        fps: Number(el.fps.value) || 8,
+        animation: el.animationSelect.value,
+      };
+    }
+
+    function getManualRects() {
+      const c = readManualConfig();
       const rects = [];
-      for (let i = 0; i < count; i++) {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
+      for (let i = 0; i < c.count; i++) {
+        const col = i % c.columns;
+        const row = Math.floor(i / c.columns);
+        const x = c.x + col * (c.w + c.gapX);
+        const y = c.y + row * (c.h + c.gapY);
         rects.push({
           id: i,
-          x: x + col * (w + gapX),
-          y: y + row * (h + gapY),
-          width: w,
-          height: h,
-          anchorX: x + col * (w + gapX) + w / 2,
-          anchorY: y + row * (h + gapY) + h,
-          relativeAnchorX: w / 2,
-          relativeAnchorY: h,
+          x, y,
+          width: c.w,
+          height: c.h,
+          anchorX: x + c.w / 2,
+          anchorY: y + c.h,
+          relativeAnchorX: c.w / 2,
+          relativeAnchorY: c.h,
           warnings: []
         });
       }
       return rects;
     }
 
+    function updateManualJson() {
+      el.jsonOutput.value = JSON.stringify(readManualConfig(), null, 2);
+    }
+
+    function applyManualConfig(c) {
+      if (c.x !== undefined) el.frameX.value = c.x;
+      if (c.y !== undefined) el.frameY.value = c.y;
+      if (c.w !== undefined) el.frameW.value = c.w;
+      if (c.h !== undefined) el.frameH.value = c.h;
+      if (c.count !== undefined) el.frameCount.value = c.count;
+      if (c.columns !== undefined) el.columns.value = c.columns;
+      if (c.gapX !== undefined) el.gapX.value = c.gapX;
+      if (c.gapY !== undefined) el.gapY.value = c.gapY;
+      if (c.fps !== undefined) { el.fps.value = c.fps; el.previewFpsBadge.textContent = `${c.fps} FPS`; }
+      updateManualJson();
+      renderAll();
+    }
+
     [el.frameX, el.frameY, el.frameW, el.frameH, el.frameCount, el.columns, el.gapX, el.gapY].forEach(inp => {
-      inp?.addEventListener('input', () => {
-        if (state.activeTab === 'manual') {
-          renderOverlay();
-          renderPreview();
-          renderStrip();
-        }
+      inp.addEventListener('input', () => {
+        updateManualJson();
+        if (state.activeTab === 'manual') renderAll();
       });
     });
 
-    el.animationSelect?.addEventListener('change', () => {
+    el.animationSelect.addEventListener('change', () => {
       const anim = GAME_ATLAS[state.imageName]?.animations[el.animationSelect.value]
         || GAME_ATLAS.solarion.animations.idle;
-      el.frameX.value = anim.x;
-      el.frameY.value = anim.y;
-      el.frameW.value = anim.w / anim.count;
-      el.frameH.value = anim.h;
-      el.frameCount.value = anim.count;
-      el.columns.value = anim.count;
-      el.fps.value = anim.fps;
-      renderOverlay();
-      renderPreview();
-      renderStrip();
+      applyManualConfig({
+        x: anim.x, y: anim.y, w: anim.w / anim.count, h: anim.h,
+        count: anim.count, columns: anim.count, gapX: 0, gapY: 0, fps: anim.fps,
+      });
+      zoomToRect(anim.x, anim.y, anim.w, anim.h, 40, 4);
+    });
+
+    el.fitNaturalBtn.addEventListener('click', () => {
+      const { w, h } = viewportSize();
+      setZoomAt(1, w / 2, h / 2);
+    });
+
+    el.resetBtn.addEventListener('click', () => {
+      applyManualConfig({ x: 0, y: 0, w: CELL_W, h: CELL_H, count: 4, columns: 4, gapX: 0, gapY: 0 });
+    });
+
+    el.toggleBoxesBtn.addEventListener('click', () => {
+      state.showBoxes = !state.showBoxes;
+      el.toggleBoxesBtn.textContent = state.showBoxes ? 'Ocultar Caixas' : 'Mostrar Caixas';
+      requestRender();
+    });
+
+    function gridToFrames(trim) {
+      const rects = getManualRects();
+      switchTab('auto');
+      let empty = 0;
+      edit(() => {
+        const frames = rects.map(r => {
+          const f = normalizeFrame(r);
+          if (trim && !trimFrame(f)) empty++;
+          return f;
+        });
+        state.frames = frames;
+        setSelection(frames.length ? [0] : []);
+        state.currentFrame = 0;
+      });
+      showToast(`${rects.length} recortes criados a partir da grade${empty ? ` (${empty} vazios)` : ''}`);
+    }
+    el.gridToFramesBtn.addEventListener('click', () => gridToFrames(false));
+    el.gridToFramesTrimBtn.addEventListener('click', () => gridToFrames(true));
+
+    el.copyJsonBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(el.jsonOutput.value);
+        showToast('JSON copiado');
+      } catch (e) {
+        el.jsonOutput.select();
+        showToast('Selecionado — use Ctrl+C para copiar');
+      }
+    });
+
+    el.downloadJsonBtn.addEventListener('click', () => {
+      downloadBlob(new Blob([el.jsonOutput.value], { type: 'application/json' }), `${exportBaseName()}_grid.json`);
+    });
+
+    el.applyJsonBtn.addEventListener('click', () => {
+      try {
+        applyManualConfig(JSON.parse(el.jsonOutput.value));
+        showToast('Configuração aplicada');
+      } catch (e) {
+        showToast('JSON inválido');
+      }
     });
 
     /* ============================================================
@@ -2077,6 +3276,8 @@
 
     // Inicialização da Página
     initSelectors();
+    updateHint();
+    updateManualJson();
     loadSheet('solarion');
   </script>
 </body>
