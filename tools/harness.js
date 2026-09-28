@@ -3,7 +3,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.join(__dirname, '..');
-const DEFAULT_SCRIPTS = ['assets/sprites/processed/atlas.js', 'game.js'];
+const DEFAULT_SCRIPTS = ['assets/sprites/processed/atlas.js', 'core.js', 'game.js'];
 
 function createHarness({ scripts = DEFAULT_SCRIPTS } = {}) {
   const listeners = {};
