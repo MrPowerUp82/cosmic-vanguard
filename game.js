@@ -8,6 +8,7 @@
   const W = canvas.width;
   const H = canvas.height;
   const SAVE_PREFIX = 'cosmic_vanguard_save_';
+  const { createScheduler } = window.CV_CORE;
   const keys = Object.create(null);
   const pressed = new Set();
   const SOLO_CONTROLS = {
@@ -380,6 +381,7 @@
       bossName: null,
       stageEndTimer: 0,
       lockX: null,
+      scheduler: createScheduler(),
     };
   }
 
@@ -692,6 +694,7 @@
     updateProjectiles(dt);
     updateParticles(dt);
     updateStageFlow();
+    game.scheduler.update(dt);
 
     const living = game.players.filter(p => p.hp > 0);
     const centerX = living.reduce((sum, p) => sum + p.x, 0) / living.length;
@@ -868,12 +871,13 @@
     return hits;
   }
 
+  // O agendador pertence à partida e só avança dentro de updateStage:
+  // pausa congela o golpe e sair da fase o descarta.
   function queueHeroAction(p, heroId, delayMs, fn) {
-    const stageGame = game;
-    setTimeout(() => {
-      if (state !== 'stage' || game !== stageGame || p.heroId !== heroId || p.hp <= 0) return;
+    game.scheduler.schedule(delayMs / 1000, () => {
+      if (p.heroId !== heroId || p.hp <= 0) return;
       fn(p, HEROES[heroId]);
-    }, delayMs);
+    }, p);
   }
 
   function useSpecial(p) {
@@ -983,11 +987,10 @@
   }
 
   function queueEnemyAction(enemy, delayMs, fn) {
-    const stageGame = game;
-    setTimeout(() => {
-      if (state !== 'stage' || game !== stageGame || !game.enemies.includes(enemy) || enemy.dead || game.players.every(p => p.hp <= 0)) return;
+    game.scheduler.schedule(delayMs / 1000, () => {
+      if (!game.enemies.includes(enemy) || enemy.dead || game.players.every(p => p.hp <= 0)) return;
       fn(enemy);
-    }, delayMs);
+    }, enemy);
   }
 
   function targetForEnemy(e) {
@@ -1340,12 +1343,10 @@
     if (st.id === 'void') save.campaignWon = true;
     save.highScore = Math.max(save.highScore || 0, game.score);
     persistSave();
-    setTimeout(() => {
-      if (state === 'stage') {
-        state = 'stageclear';
-        game.stageEndTimer = 0;
-      }
-    }, 900);
+    game.scheduler.schedule(.9, () => {
+      state = 'stageclear';
+      game.stageEndTimer = 0;
+    });
   }
 
   function updateParticles(dt) {
@@ -2136,6 +2137,16 @@
   function frame(now){
     const dt=Math.min(.033,(now-last)/1000||.016);last=now;update(dt);render();requestAnimationFrame(frame);
   }
+
+  // Ponte para os módulos de gameplay (combat.js, progression.js, variety.js).
+  window.CV = {
+    game: () => game,
+    state: () => state,
+    save: () => save,
+    schedule(sec, fn, owner) {
+      if (game) game.scheduler.schedule(sec, fn, owner);
+    },
+  };
 
   requestAnimationFrame(frame);
 })();
