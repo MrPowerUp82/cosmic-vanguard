@@ -8,7 +8,7 @@
   const W = canvas.width;
   const H = canvas.height;
   const SAVE_PREFIX = 'cosmic_vanguard_save_';
-  const { createScheduler } = window.CV_CORE;
+  const { createScheduler, createTimeControl } = window.CV_CORE;
   const keys = Object.create(null);
   const pressed = new Set();
   const SOLO_CONTROLS = {
@@ -382,6 +382,7 @@
       stageEndTimer: 0,
       lockX: null,
       scheduler: createScheduler(),
+      clock: createTimeControl(),
     };
   }
 
@@ -657,21 +658,23 @@
       return;
     }
 
-    game.time += dt;
+    // wdt = tempo de mundo (hitstop/slow-mo); dt = tempo real (UI, partículas, câmera).
+    const wdt = game.clock.step(dt);
+    game.time += wdt;
     for (const p of game.players) {
-      p.animTime += dt;
-      p.invuln = Math.max(0, p.invuln - dt);
-      p.hurtTimer = Math.max(0, p.hurtTimer - dt);
-      p.attackTimer = Math.max(0, p.attackTimer - dt);
-      p.specialTimer = Math.max(0, p.specialTimer - dt);
-      p.dashTimer = Math.max(0, p.dashTimer - dt);
-      p.dashCooldown = Math.max(0, p.dashCooldown - dt);
-      p.switchCooldown = Math.max(0, p.switchCooldown - dt);
-      p.comboWindow = Math.max(0, p.comboWindow - dt);
-      p.flash = Math.max(0, p.flash - dt);
-      if (p.hp > 0) p.energy = Math.min(p.maxEnergy, p.energy + dt * 8.5);
+      p.animTime += wdt;
+      p.invuln = Math.max(0, p.invuln - wdt);
+      p.hurtTimer = Math.max(0, p.hurtTimer - wdt);
+      p.attackTimer = Math.max(0, p.attackTimer - wdt);
+      p.specialTimer = Math.max(0, p.specialTimer - wdt);
+      p.dashTimer = Math.max(0, p.dashTimer - wdt);
+      p.dashCooldown = Math.max(0, p.dashCooldown - wdt);
+      p.switchCooldown = Math.max(0, p.switchCooldown - wdt);
+      p.comboWindow = Math.max(0, p.comboWindow - wdt);
+      p.flash = Math.max(0, p.flash - wdt);
+      if (p.hp > 0) p.energy = Math.min(p.maxEnergy, p.energy + wdt * 8.5);
     }
-    game.comboTimer = Math.max(0, game.comboTimer - dt);
+    game.comboTimer = Math.max(0, game.comboTimer - wdt);
     if (game.comboTimer <= 0) game.combo = 0;
     if (game.notice?.timer > 0) game.notice.timer -= dt;
 
@@ -686,15 +689,15 @@
     for (const p of game.players) {
       if (p.hp <= 0) continue;
       const h = HEROES[p.heroId];
-      handlePlayerMovement(p, dt, h, controlsFor(p));
+      handlePlayerMovement(p, wdt, h, controlsFor(p));
       handlePlayerActions(p, controlsFor(p));
-      updatePlayerAttack(p, dt, h);
+      updatePlayerAttack(p, wdt, h);
     }
-    updateEnemies(dt);
-    updateProjectiles(dt);
+    updateEnemies(wdt);
+    updateProjectiles(wdt);
     updateParticles(dt);
     updateStageFlow();
-    game.scheduler.update(dt);
+    game.scheduler.update(wdt);
 
     const living = game.players.filter(p => p.hp > 0);
     const centerX = living.reduce((sum, p) => sum + p.x, 0) / living.length;
@@ -2145,6 +2148,12 @@
     save: () => save,
     schedule(sec, fn, owner) {
       if (game) game.scheduler.schedule(sec, fn, owner);
+    },
+    hitstop(sec) {
+      if (game) game.clock.hitstop(sec);
+    },
+    slowmo(scale, sec) {
+      if (game) game.clock.slowmo(scale, sec);
     },
   };
 
