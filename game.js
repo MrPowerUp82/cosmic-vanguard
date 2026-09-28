@@ -41,8 +41,10 @@
     sol: 'emerald_nova',
   };
 
-  const SPRITE_CELL_W = 400;
-  const SPRITE_CELL_H = 300;
+  // Cell size and frame counts come from the atlas built by tools/slice_sprite_sheets.py.
+  const SPRITE_ATLAS = window.SPRITE_ATLAS;
+  const SPRITE_CELL_W = SPRITE_ATLAS.cellW;
+  const SPRITE_CELL_H = SPRITE_ATLAS.cellH;
   const animRow = (row, count, fps, loop = false) => ({
     x: 0, y: row * SPRITE_CELL_H, w: count * SPRITE_CELL_W, h: SPRITE_CELL_H, count, fps, loop
   });
@@ -94,41 +96,49 @@
 
   const ENEMY_SHEETS = {
     shadow_trooper: {
-      src: 'assets/sprites/enemies/shadow_trooper.png', scale: .336,
+      src: 'assets/sprites/processed/enemies/shadow_trooper.png', scale: .336,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,11)
       }
     },
     pulse_gunner: {
-      src: 'assets/sprites/enemies/pulse_gunner.png', scale: .352,
+      src: 'assets/sprites/processed/enemies/pulse_gunner.png', scale: .352,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,11)
       }
     },
     armored_brute: {
-      src: 'assets/sprites/enemies/armored_brute.png', scale: .368,
+      src: 'assets/sprites/processed/enemies/armored_brute.png', scale: .368,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,8),
         jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,10)
       }
     },
     rift_assassin: {
-      src: 'assets/sprites/enemies/rift_assassin.png', scale: .336,
+      src: 'assets/sprites/processed/enemies/rift_assassin.png', scale: .336,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,9),
         jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,11)
       }
     },
     void_tyrant: {
-      src: 'assets/sprites/enemies/void_tyrant.png', scale: .384,
+      src: 'assets/sprites/processed/enemies/void_tyrant.png', scale: .384,
       animations: {
         idle: animRow(0,4,5,true), walk: animRow(1,6,8,true), attack: animRow(2,4,8),
         jump: animRow(3,3,7), dash: animRow(4,4,7,true), hurt: animRow(5,2,6), special: animRow(6,6,10)
       }
     },
   };
+
+  // Frame counts differ per sheet (e.g. 7-frame walks); the rows above only set row, fps and loop.
+  for (const [id, sheet] of Object.entries({ ...SPRITE_SHEETS, ...ENEMY_SHEETS })) {
+    for (const [action, def] of Object.entries(sheet.animations)) {
+      def.count = SPRITE_ATLAS.counts[id][action];
+      def.w = def.count * SPRITE_CELL_W;
+    }
+  }
 
   const ENEMY_VISUALS = {
     grunt:         { sheet: 'shadow_trooper', scaleMul: 1.00, name: 'SHADOW TROOPER', ranged: false, leap: true, special: 'shockRush' },
@@ -1766,7 +1776,7 @@
     ctx.save();
     ctx.translate(Math.round(x), Math.round(groundY));
     ctx.scale(facing, 1);
-    ctx.drawImage(img, sx, def.y, sw, sh, -dw / 2, -dh + Math.round(15 * scale), dw, dh);
+    ctx.drawImage(img, sx, def.y, sw, sh, -dw / 2, -dh + Math.round(SPRITE_ATLAS.footMargin * scale), dw, dh);
     ctx.restore();
     return true;
   }

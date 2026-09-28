@@ -649,8 +649,8 @@
           <div><label for="frameY">Y Inicial</label><input id="frameY" type="number" value="0" /></div>
         </div>
         <div class="row">
-          <div><label for="frameW">Largura Frame</label><input id="frameW" type="number" value="400" /></div>
-          <div><label for="frameH">Altura Frame</label><input id="frameH" type="number" value="300" /></div>
+          <div><label for="frameW">Largura Frame</label><input id="frameW" type="number" value="480" /></div>
+          <div><label for="frameH">Altura Frame</label><input id="frameH" type="number" value="320" /></div>
         </div>
         <div class="row">
           <div><label for="frameCount">Quantidade</label><input id="frameCount" type="number" value="4" /></div>
@@ -776,6 +776,7 @@
   </main>
 
   <!-- MÓDULO DO ANALISADOR INTELIGENTE (ETAPA 2) -->
+  <script src="assets/sprites/processed/atlas.js"></script>
   <script src="src/utils/spriteAnalyzer.js"></script>
 
   <script>
@@ -790,11 +791,11 @@
       { id: 'red_velocity', name: 'Red Velocity', src: 'assets/sprites/processed/red_velocity.png' },
       { id: 'abyss_king', name: 'Abyss King', src: 'assets/sprites/processed/abyss_king.png' },
       { id: 'emerald_nova', name: 'Emerald Nova', src: 'assets/sprites/processed/emerald_nova.png' },
-      { id: 'shadow_trooper', name: 'Shadow Trooper', src: 'assets/sprites/enemies/shadow_trooper.png' },
-      { id: 'pulse_gunner', name: 'Pulse Gunner', src: 'assets/sprites/enemies/pulse_gunner.png' },
-      { id: 'armored_brute', name: 'Armored Brute', src: 'assets/sprites/enemies/armored_brute.png' },
-      { id: 'rift_assassin', name: 'Rift Assassin', src: 'assets/sprites/enemies/rift_assassin.png' },
-      { id: 'void_tyrant', name: 'Void Tyrant', src: 'assets/sprites/enemies/void_tyrant.png' },
+      { id: 'shadow_trooper', name: 'Shadow Trooper', src: 'assets/sprites/processed/enemies/shadow_trooper.png' },
+      { id: 'pulse_gunner', name: 'Pulse Gunner', src: 'assets/sprites/processed/enemies/pulse_gunner.png' },
+      { id: 'armored_brute', name: 'Armored Brute', src: 'assets/sprites/processed/enemies/armored_brute.png' },
+      { id: 'rift_assassin', name: 'Rift Assassin', src: 'assets/sprites/processed/enemies/rift_assassin.png' },
+      { id: 'void_tyrant', name: 'Void Tyrant', src: 'assets/sprites/processed/enemies/void_tyrant.png' },
     ];
 
     const GAME_ANIMATIONS = [
@@ -807,27 +808,28 @@
       { id: 'special', label: 'Special Attack', row: 6, count: 6 },
     ];
 
+    const { cellW: CELL_W, cellH: CELL_H, footMargin: FOOT_MARGIN, counts: FRAME_COUNTS } = window.SPRITE_ATLAS;
     const heroAnimation = (row, count, fps, loop = false) => ({
-      x: 0, y: row * 300, w: count * 400, h: 300, count, fps, loop
+      x: 0, y: row * CELL_H, w: count * CELL_W, h: CELL_H, count, fps, loop
     });
-    const heroAtlas = (scale, fps) => ({
+    const heroAtlas = (id, scale, fps) => ({
       scale,
       animations: Object.fromEntries(GAME_ANIMATIONS.map((anim, i) => [
-        anim.id, heroAnimation(anim.row, anim.count, fps[i], i === 0 || i === 1 || i === 4)
+        anim.id, heroAnimation(anim.row, FRAME_COUNTS[id][anim.id], fps[i], i === 0 || i === 1 || i === 4)
       ]))
     });
     const GAME_ATLAS = {
-      solarion: heroAtlas(.392, [5, 9, 9, 7, 11, 7, 9]),
-      night_talon: heroAtlas(.392, [5, 9, 9, 7, 11, 7, 10]),
-      valoria: heroAtlas(.384, [5, 9, 9, 7, 10, 7, 9]),
-      red_velocity: heroAtlas(.392, [6, 12, 13, 9, 16, 8, 13]),
-      abyss_king: heroAtlas(.376, [5, 8, 9, 7, 10, 7, 9]),
-      emerald_nova: heroAtlas(.392, [5, 9, 9, 7, 11, 7, 9]),
-      shadow_trooper: heroAtlas(.336, [5, 8, 9, 7, 7, 6, 11]),
-      pulse_gunner: heroAtlas(.352, [5, 8, 9, 7, 7, 6, 11]),
-      armored_brute: heroAtlas(.368, [5, 8, 8, 7, 7, 6, 10]),
-      rift_assassin: heroAtlas(.336, [5, 8, 9, 7, 7, 6, 11]),
-      void_tyrant: heroAtlas(.384, [5, 8, 8, 7, 7, 6, 10]),
+      solarion: heroAtlas('solarion', .392, [5, 9, 9, 7, 11, 7, 9]),
+      night_talon: heroAtlas('night_talon', .392, [5, 9, 9, 7, 11, 7, 10]),
+      valoria: heroAtlas('valoria', .384, [5, 9, 9, 7, 10, 7, 9]),
+      red_velocity: heroAtlas('red_velocity', .392, [6, 12, 13, 9, 16, 8, 13]),
+      abyss_king: heroAtlas('abyss_king', .376, [5, 8, 9, 7, 10, 7, 9]),
+      emerald_nova: heroAtlas('emerald_nova', .392, [5, 9, 9, 7, 11, 7, 9]),
+      shadow_trooper: heroAtlas('shadow_trooper', .336, [5, 8, 9, 7, 7, 6, 11]),
+      pulse_gunner: heroAtlas('pulse_gunner', .352, [5, 8, 9, 7, 7, 6, 11]),
+      armored_brute: heroAtlas('armored_brute', .368, [5, 8, 8, 7, 7, 6, 10]),
+      rift_assassin: heroAtlas('rift_assassin', .336, [5, 8, 9, 7, 7, 6, 11]),
+      void_tyrant: heroAtlas('void_tyrant', .384, [5, 8, 8, 7, 7, 6, 10]),
     };
 
     // Estado da Aplicação
@@ -994,7 +996,7 @@
         const opt = document.createElement('option');
         opt.value = sheet.id;
         opt.textContent = sheet.name;
-        if (sheet.src.includes('/processed/')) el.gameplayHero.appendChild(opt);
+        if (!sheet.src.includes('/enemies/')) el.gameplayHero.appendChild(opt);
         else el.gameplayEnemy.appendChild(opt);
       });
       el.gameplayHero.value = 'solarion';
@@ -1920,8 +1922,8 @@
     function getManualRects() {
       const x = Number(el.frameX.value) || 0;
       const y = Number(el.frameY.value) || 0;
-      const w = Math.max(1, Number(el.frameW.value) || 400);
-      const h = Math.max(1, Number(el.frameH.value) || 300);
+      const w = Math.max(1, Number(el.frameW.value) || CELL_W);
+      const h = Math.max(1, Number(el.frameH.value) || CELL_H);
       const count = Math.max(1, Number(el.frameCount.value) || 4);
       const cols = Math.max(1, Number(el.columns.value) || 4);
       const gapX = Number(el.gapX.value) || 0;
@@ -2045,7 +2047,7 @@
         ctx.save();
         ctx.translate(x, groundY);
         ctx.scale(facing, 1);
-        ctx.drawImage(img, sx, def.y, sw, def.h, -dw / 2, -dh + Math.round(15 * scale), dw, dh);
+        ctx.drawImage(img, sx, def.y, sw, def.h, -dw / 2, -dh + Math.round(FOOT_MARGIN * scale), dw, dh);
         ctx.restore();
       }
 
