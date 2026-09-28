@@ -684,6 +684,12 @@
     if (game.comboTimer <= 0) game.combo = 0;
     if (game.notice?.timer > 0) game.notice.timer -= dt;
 
+    if (game.cleared && game.players.every(p => p.hp <= 0)) {
+      updateParticles(dt);
+      game.scheduler.update(wdt);
+      return;
+    }
+
     if (game.players.every(p => p.hp <= 0)) {
       for (const p of game.players) p.hp = 0;
       game.notice = { text: 'MISSÃO FALHOU', sub: 'Pressione Enter para voltar ao mapa', timer: 999 };
@@ -706,6 +712,7 @@
     game.scheduler.update(wdt);
 
     const living = game.players.filter(p => p.hp > 0);
+    if (!living.length) return;
     const centerX = living.reduce((sum, p) => sum + p.x, 0) / living.length;
     const targetCam = clamp(centerX - W / 2, 0, game.stage.width - W + 120);
     game.cameraX = lerp(game.cameraX, targetCam, 1 - Math.pow(.0001, dt));

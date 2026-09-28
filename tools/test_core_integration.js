@@ -158,6 +158,10 @@ function startSoloStage() {
   assert.equal(count('waveClear'), game.stage.waves.length, 'waveClear em toda onda');
   assert.equal(count('stageClear'), 1, 'stageClear');
   assert.equal(seen.find(ev => ev.name === 'stageClear').data.stage.id, 'harbor');
+  for (const hero of game.players) hero.hp = 0;
+  h.step(60);
+  assert.equal(CV.state(), 'stageclear', 'vitória pendente deve ocorrer mesmo com todos os heróis mortos');
+  assert.notEqual(game.notice?.text, 'MISSÃO FALHOU', 'fase concluída não deve virar derrota');
 }
 
 console.log('Núcleo integrado: agendador pausa, retoma e descarta com a partida OK.');

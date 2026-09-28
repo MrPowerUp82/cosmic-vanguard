@@ -36,6 +36,18 @@ test('agendador dispara vencidos em ordem de vencimento', () => {
   assert.deepEqual(order, ['a', 'b']);
 });
 
+test('erro em ação agendada não impede as próximas ações', () => {
+  const s = createScheduler();
+  let fired = 0;
+  errors.length = 0;
+  s.schedule(.01, () => { throw new Error('boom'); });
+  s.schedule(.01, () => fired++);
+  assert.doesNotThrow(() => s.update(.02));
+  assert.equal(fired, 1);
+  assert.equal(s.size, 0);
+  assert.equal(errors.length, 1);
+});
+
 test('timer criado dentro de callback espera o próximo update', () => {
   const s = createScheduler();
   let inner = 0;

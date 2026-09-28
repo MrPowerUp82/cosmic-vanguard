@@ -18,7 +18,13 @@
         if (!due.length) return;
         timers = timers.filter(timer => timer.t > 0);
         due.sort((a, b) => a.t - b.t);
-        for (const timer of due) timer.fn();
+        for (const timer of due) {
+          try {
+            timer.fn();
+          } catch (err) {
+            console.error('[CV] ação agendada falhou', err);
+          }
+        }
       },
       cancelOwner(owner) {
         timers = timers.filter(timer => timer.owner !== owner);
