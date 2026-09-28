@@ -1,12 +1,14 @@
 # Cosmic Vanguard
 
+![Banner de Cosmic Vanguard](assets/banner.png)
+
 Beat 'em up 2D / 2.5D para navegador, com mapa de operações, recrutamento de personagens e troca de herói durante a luta.
 
 ## Versões nativas
 
 Há um port C++/SDL2 para Windows, Linux, Nintendo Switch, PS Vita e PSP em
 [`native/README.md`](native/README.md). Os pacotes locais ficam em
-`native/dist/v0.1.0/` após executar `./native/tools/build-all.ps1` no PowerShell.
+`native/dist/v0.1.1/` após executar `./native/tools/build-all.ps1` no PowerShell.
 É uma primeira versão jogável; consulte o README nativo para diferenças em
 relação ao jogo web e estado da validação dos consoles.
 

@@ -188,6 +188,9 @@
     scenarioImages[scenario.id] = img;
   }
 
+  const titleBanner = new Image();
+  titleBanner.src = 'assets/banner.png';
+
   const HEROES = {
     solarion: {
       id: 'solarion', name: 'SOLARION', role: 'Poder / voo', sprite: 'solarion',
@@ -1433,63 +1436,41 @@
   }
 
   function renderTitle() {
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, '#07172d');
-    grad.addColorStop(.6, '#060b18');
-    grad.addColorStop(1, '#02040a');
-    ctx.fillStyle = grad;
+    ctx.fillStyle = '#030713';
     ctx.fillRect(0, 0, W, H);
-
-    drawStars(titleStars, 0, 0, 1);
-    drawPlanet(760, 118, 145);
-    drawCitySilhouette(0, 355, '#07101e', '#0d1d34');
-
-    // logo
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#c9d8ee';
-    ctx.font = '900 18px ui-monospace, monospace';
-    ctx.fillText('ORIGINAL ARCADE PROTOTYPE', 55, 72);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 66px ui-monospace, monospace';
-    ctx.fillText('COSMIC', 50, 145);
-    ctx.fillStyle = '#6fe9ff';
-    ctx.fillText('VANGUARD', 50, 205);
-    ctx.fillStyle = '#7892ae';
-    ctx.font = '16px ui-monospace, monospace';
-    ctx.fillText('Monte sua equipe. Explore os setores. Recrute novos heróis.', 54, 235);
-
-    ctx.fillStyle = 'rgba(5,14,28,.82)';
-    roundRect(45, 278, 870, 186, 12, true);
-    ctx.strokeStyle = '#24466e';
-    ctx.lineWidth = 2;
-    roundRect(45, 278, 870, 186, 12, false, true);
-
+    if (titleBanner.complete && titleBanner.naturalWidth) {
+      ctx.drawImage(titleBanner, 0, 0, W, W * titleBanner.naturalHeight / titleBanner.naturalWidth);
+    }
+    const shade = ctx.createLinearGradient(0, 345, 0, 385);
+    shade.addColorStop(0, 'rgba(3,7,19,0)');
+    shade.addColorStop(1, '#030713');
+    ctx.fillStyle = shade;
+    ctx.fillRect(0, 345, W, 42);
     ctx.fillStyle = '#8fa8c6';
     ctx.font = '700 13px ui-monospace, monospace';
-    ctx.fillText('SELECIONE UM SLOT', 65, 306);
-
+    ctx.fillText('SELECIONE UM SLOT', 50, 390);
     for (let i = 1; i <= 3; i++) {
-      const x = 66 + (i - 1) * 274;
+      const x = 50 + (i - 1) * 305;
       const info = slotInfo(i);
       const sel = selectedSlot === i;
       ctx.fillStyle = sel ? 'rgba(67,165,205,.18)' : 'rgba(255,255,255,.025)';
-      roundRect(x, 322, 248, 84, 8, true);
+      roundRect(x, 402, 270, 76, 8, true);
       ctx.strokeStyle = sel ? '#72e8ff' : '#263a54';
       ctx.lineWidth = sel ? 2 : 1;
-      roundRect(x, 322, 248, 84, 8, false, true);
+      roundRect(x, 402, 270, 76, 8, false, true);
       ctx.fillStyle = sel ? '#dcf9ff' : '#b9c7d8';
       ctx.font = '900 17px ui-monospace, monospace';
-      ctx.fillText(`SLOT ${i}`, x + 14, 347);
+      ctx.fillText(`SLOT ${i}`, x + 14, 427);
       ctx.font = '12px ui-monospace, monospace';
       if (info) {
         const progress = Math.min(4, info.completed?.length || 0);
         ctx.fillStyle = '#8fa5bd';
-        ctx.fillText(`${progress}/4 setores • ${DIFFICULTY[info.difficulty]?.label || 'NORMAL'}`, x + 14, 369);
+        ctx.fillText(`${progress}/4 setores • ${DIFFICULTY[info.difficulty]?.label || 'NORMAL'}`, x + 14, 449);
         ctx.fillStyle = '#ffe77c';
-        ctx.fillText(`${info.credits || 0} créditos`, x + 14, 389);
+        ctx.fillText(`${info.credits || 0} créditos`, x + 14, 468);
       } else {
         ctx.fillStyle = '#637790';
-        ctx.fillText('NOVO JOGO', x + 14, 374);
+        ctx.fillText('NOVO JOGO', x + 14, 455);
       }
     }
 
@@ -1497,19 +1478,19 @@
     ctx.fillStyle = '#859db7';
     ctx.font = '12px ui-monospace, monospace';
     if (!currentInfo) {
-      ctx.fillText(`D = dificuldade inicial: ${DIFFICULTY[difficultyPreview].label}`, 67, 438);
+      ctx.fillText(`D = dificuldade inicial: ${DIFFICULTY[difficultyPreview].label}`, 50, 505);
     } else {
-      ctx.fillText('Backspace/Delete = apagar slot', 67, 438);
+      ctx.fillText('Backspace/Delete = apagar slot', 50, 505);
     }
     ctx.textAlign = 'right';
     ctx.fillStyle = '#dfefff';
     ctx.font = '700 13px ui-monospace, monospace';
-    ctx.fillText('← → selecionar  •  ENTER iniciar', 893, 438);
+    ctx.fillText('← → selecionar  •  ENTER iniciar', 910, 505);
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#52677f';
     ctx.font = '11px ui-monospace, monospace';
-    ctx.fillText('Cooperativo local: pressione M no mapa para alternar entre 1P e 2P.', 52, 510);
+    ctx.fillText('Cooperativo local: pressione M no mapa para alternar entre 1P e 2P.', 50, 530);
   }
 
   function renderMap() {

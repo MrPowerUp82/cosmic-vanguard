@@ -42,9 +42,18 @@ for key, filename in [("harbor", "neon-harbor"), ("metro", "iron-district"),
     src.convert("RGB").resize((480, 270), Image.Resampling.LANCZOS).save(
         PSP / (key + ".jpg"), quality=85, optimize=True)
 
+banner = Image.open(ROOT / "assets/banner.png").convert("RGB")
+banner.resize((960, 384), Image.Resampling.LANCZOS).save(
+    OUT / "title.jpg", quality=90, optimize=True)
+psp_banner = banner.resize((480, 192), Image.Resampling.LANCZOS)
+psp_banner.save(PSP / "title.jpg", quality=86, optimize=True)
+psp_backdrop = Image.new("RGB", (480, 272), "#030713")
+psp_backdrop.paste(psp_banner, (0, 40))
+psp_backdrop.save(ROOT / "native/platforms/psp/pic1.png")
+
 for font_file in ("DejaVuSans-Bold.ttf", "DejaVu-LICENSE.txt"):
     path = OUT / font_file
     if path.exists() and not (PSP / font_file).exists():
         shutil.copy2(path, PSP / font_file)
 
-print(f"Baked {len(atlas['counts'])} sprite atlases and 4 backgrounds to {OUT}")
+print(f"Baked {len(atlas['counts'])} sprite atlases, 4 backgrounds and title banner to {OUT}")
