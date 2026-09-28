@@ -27,16 +27,25 @@ using namespace cosmic;
 namespace {
 constexpr int W=960,H=540;
 #if defined(COSMIC_PSP)
-constexpr int CELL=32;
+constexpr int CELL=72;
+constexpr int PROJECTILE_W=64,PROJECTILE_H=32;
 #else
-constexpr int CELL=64;
+constexpr int CELL=144;
+constexpr int PROJECTILE_W=128,PROJECTILE_H=64;
 #endif
 SDL_Renderer* renderer=nullptr;
 TTF_Font* font=nullptr;
 std::array<SDL_Texture*,11> sprite{};
 std::array<SDL_Texture*,4> backgrounds{};
 SDL_Texture* titleBanner=nullptr;
+SDL_Texture* projectileAtlas=nullptr;
 std::array<const char*,11> spriteNames{{"solarion","night_talon","valoria","red_velocity","abyss_king","emerald_nova","shadow_trooper","pulse_gunner","armored_brute","rift_assassin","void_tyrant"}};
+constexpr int frameCounts[11][7] = {
+  {4,7,4,3,4,2,6}, {4,7,4,3,4,2,6}, {4,7,4,3,4,2,6},
+  {4,7,4,3,4,2,5}, {4,6,4,3,4,2,6}, {4,7,4,3,4,2,6},
+  {4,6,4,3,6,1,6}, {4,6,4,3,6,2,5}, {4,6,4,2,6,2,6},
+  {4,6,4,3,6,2,6}, {4,7,3,3,7,2,3}
+};
 std::string assetRoot;
 std::array<SDL_GameController*,2> pads{};
 std::array<std::array<bool,SDL_CONTROLLER_BUTTON_MAX>,2> oldPad{};
@@ -64,12 +73,25 @@ int enemySprite(EnemyKind kind,int stage) { switch(kind) {
 }
 void character(int id,Action action,float t,float x,float y,int facing,float scale=1) {
   auto* tex=sprite[id]; if(!tex) { rect(x-16,y-60,32,60,{220,220,240,255}); return; }
-  int row=(int)action; int frames=row==0?4:row==1?6:row==2?4:row==3?3:row==4?4:row==5?2:6;
+  int row=(int)action; int frames=frameCounts[id][row];
   int frame=((int)(t*(row==1?12:8)))%frames;
   SDL_Rect src{frame*CELL,row*CELL,CELL,CELL};
-  int side=(int)(90*scale); SDL_Rect dest{(int)x-side/2,(int)y-side,side,side};
+  int side=(int)(202.5f*scale); SDL_Rect dest{(int)x-side/2,(int)y-side+(int)std::round(side*5.f/144.f),side,side};
   SDL_RendererFlip flip=facing<0?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE;
   SDL_RenderCopyEx(renderer,tex,&src,&dest,0,nullptr,flip);
+}
+void projectile(const Projectile& pr,float camera) {
+  constexpr float lift[]{43,43,42,42,47,49};
+  const int style=(int)pr.style;
+  const float x=pr.x-camera,y=370+pr.y*.7f-lift[style];
+  if(!projectileAtlas) {
+    rect(x-6,y-5,12,10,pr.hostile?SDL_Color{255,80,145,255}:SDL_Color{255,208,80,255});
+    return;
+  }
+  SDL_Rect src{0,style*PROJECTILE_H,PROJECTILE_W,PROJECTILE_H};
+  SDL_Rect dst{(int)std::round(x)-64,(int)std::round(y)-32,128,64};
+  SDL_RenderCopyEx(renderer,projectileAtlas,&src,&dst,0,nullptr,
+                   pr.vx<0?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE);
 }
 void backdrop(int stage,float camera) {
   auto* bg=backgrounds[stage];
@@ -101,16 +123,15 @@ void render(const Game& game) {
     for(auto* e:sorted) {
       float x=e->x-game.camera,y=370+e->y*.7f;
       rect(x-25,y-4,50,6,{0,0,0,100});
-      Action a=e->hurt>0?Action::Hurt:e->attack>0?Action::Attack:Action::Walk;
+      Action a=e->hurt>0?Action::Hurt:e->special>0?Action::Special:e->attack>0?Action::Attack:Action::Walk;
       character(enemySprite(e->kind,game.selectedStage),a,e->anim,x,y,e->facing,e->kind==EnemyKind::Boss?1.7f:1.1f);
       bar(x-26,y-87,52,5,e->hp/e->maxHp,{238,82,109,255});
     }
-    for(auto& pr:game.projectiles) rect(pr.x-game.camera-5,370+pr.y*.7f-5,10,10,pr.hostile?SDL_Color{255,80,145,255}:SDL_Color{98,243,255,255});
+    for(auto& pr:game.projectiles) projectile(pr,game.camera);
     for(int i=0;i<game.playerCount;i++) {
       const auto& p=game.players[i]; float x=p.x-game.camera,y=370+p.y*.7f;
       rect(x-22,y-5,44,6,{0,0,0,105});
       character(p.hero,p.action,p.anim,x,y-p.z,p.facing,1.25f);
-      if(p.invuln>0) { color({255,255,255,120}); SDL_Rect rr{(int)x-37,(int)y-98,74,90}; SDL_RenderDrawRect(renderer,&rr); }
     }
     rect(0,0,960,67,{5,12,30,225});
     for(int i=0;i<game.playerCount;i++) {
@@ -309,6 +330,8 @@ int main(int argc,char** argv) {
     if(assetExists(std::string(path)+"solarion.png")) { assetRoot=path; break; }
 #endif
   for(int i=0;i<11;i++) sprite[i]=image(std::string(spriteNames[i])+".png");
+  projectileAtlas=image("projectiles.png");
+  if(projectileAtlas) SDL_SetTextureBlendMode(projectileAtlas,SDL_BLENDMODE_BLEND);
   for(int i=0;i<4;i++) backgrounds[i]=image(std::string(i==0?"harbor":i==1?"metro":i==2?"sky":"void")+".jpg");
   titleBanner=image("title.jpg");
   font=TTF_OpenFont((assetRoot+"DejaVuSans-Bold.ttf").c_str(),20);
@@ -352,6 +375,7 @@ int main(int argc,char** argv) {
   if(font) TTF_CloseFont(font);
   for(auto* pad:pads) if(pad) SDL_GameControllerClose(pad);
   for(auto* t:sprite) if(t) SDL_DestroyTexture(t);
+  if(projectileAtlas) SDL_DestroyTexture(projectileAtlas);
   for(auto* t:backgrounds) if(t) SDL_DestroyTexture(t);
   if(titleBanner) SDL_DestroyTexture(titleBanner);
   SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window); TTF_Quit(); IMG_Quit(); SDL_Quit();

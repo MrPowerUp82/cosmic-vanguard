@@ -19,7 +19,7 @@ function createHarness({ scripts = DEFAULT_SCRIPTS } = {}) {
     createRadialGradient: () => ({ addColorStop() {} }),
     measureText: text => ({ width: text.length * 8 }),
     fillText: (text, x) => labels.push({ text, x }),
-    drawImage: (image, sx, sy) => draws.push({ src: image.src, sy }),
+    drawImage: (image, sx, sy) => draws.push({ src: image.src, sx, sy }),
   }, { get(target, key) { return target[key] ?? (() => {}); } });
 
   const canvas = {

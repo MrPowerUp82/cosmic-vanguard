@@ -176,26 +176,32 @@ void Game::update(float dt,const std::array<Input,2>& input) {
       auto area=[&](float radius,float damage) {
         for(auto& e:enemies) if(!e.dead && distance(e.x-p.x,(e.y-p.y)*1.2f)<radius) damageEnemy(e,damage,p.facing*80);
       };
-      if(p.hero==0 && p.specialStep==0 && p.specialElapsed>=.28f) { forward(430,66,48); p.specialStep++; }
+      if(p.hero==0 && p.specialStep==0 && p.specialElapsed>=.28f) {
+        projectiles.push_back({p.x+p.facing*55,p.y,p.facing*720.f,0,48,.72f,false,true,ProjectileStyle::Solarion});
+        p.specialStep++;
+      }
       if(p.hero==1) while(p.specialStep<4 && p.specialElapsed>=.68f*(.28f+.14f*p.specialStep)) {
         p.x=cap(p.x+p.facing*34,40,(float)stageWidth()-120);
         forward(220,72,15+p.specialStep*3.f); p.specialStep++;
       }
       if(p.hero==2 && p.specialStep==0 && p.specialElapsed>=.24f) { area(145,30); p.specialStep++; }
       if(p.hero==2 && p.specialStep==1 && p.specialElapsed>=.40f) {
-        projectiles.push_back({p.x+p.facing*55,p.y,p.facing*390.f,0,36,.9f,false,true}); p.specialStep++;
+        projectiles.push_back({p.x+p.facing*55,p.y,p.facing*390.f,0,36,.9f,false,true,ProjectileStyle::Valoria}); p.specialStep++;
       }
       if(p.hero==3) while(p.specialStep<4 && p.specialElapsed>=.68f*(.30f+.12f*p.specialStep)) {
         p.x=cap(p.x+p.facing*62,40,(float)stageWidth()-120);
         forward(185,74,13+p.specialStep*4.f); p.specialStep++;
       }
       if(p.hero==4 && p.specialStep==0 && p.specialElapsed>=.28f) {
-        area(95,22); projectiles.push_back({p.x+p.facing*52,p.y,p.facing*315.f,0,48,1.12f,false,true}); p.specialStep++;
+        area(95,22); projectiles.push_back({p.x+p.facing*52,p.y,p.facing*315.f,0,48,1.12f,false,true,ProjectileStyle::AbyssKing}); p.specialStep++;
       }
       if(p.hero==5) while(p.specialStep<4 && p.specialElapsed>=.68f*(.28f+.09f*p.specialStep)) {
-        projectiles.push_back({p.x+p.facing*38,p.y+(p.specialStep-1.5f)*5,p.facing*(470.f+p.specialStep*35),0,15,.85f,false,true}); p.specialStep++;
+        projectiles.push_back({p.x+p.facing*38,p.y+(p.specialStep-1.5f)*5,p.facing*(470.f+p.specialStep*35),0,15,.85f,false,true,ProjectileStyle::EmeraldNova}); p.specialStep++;
       }
-      if(p.hero==5 && p.specialStep==4 && p.specialElapsed>=.68f*.68f) { forward(420,68,34); p.specialStep++; }
+      if(p.hero==5 && p.specialStep==4 && p.specialElapsed>=.68f*.68f) {
+        projectiles.push_back({p.x+p.facing*52,p.y,p.facing*550.f,0,34,.82f,false,true,ProjectileStyle::EmeraldNova});
+        p.specialStep++;
+      }
     }
     float dx=in.x,dy=in.y;
     if(p.hurt>0||p.attack>.09f||p.special>0) dx=dy=0;
@@ -220,7 +226,7 @@ void Game::update(float dt,const std::array<Input,2>& input) {
     float trigger=waveX[selectedStage][wave+1]-480;
     bool crossed=false; for(int i=0;i<playerCount;i++) crossed|=players[i].hp>0&&players[i].x>=trigger;
     if(crossed) {
-      wave++; activeWave=true; enemies.clear();
+      wave++; activeWave=true; enemies.clear(); projectiles.clear();
       auto spawn=[&](EnemyKind kind,int n) {
         for(int k=0;k<n;k++) {
           Enemy e; e.kind=kind; e.x=waveX[selectedStage][wave]+80+(k%2)*130+k*20;
@@ -228,8 +234,8 @@ void Game::update(float dt,const std::array<Input,2>& input) {
           e.hp*=hpFactor(profile.difficulty); e.maxHp=e.hp;
           e.speed=kind==EnemyKind::Boss?105:kind==EnemyKind::Elite?118:kind==EnemyKind::Brute?72:kind==EnemyKind::Ranger?82:100;
           e.damage=(kind==EnemyKind::Boss?23:kind==EnemyKind::Elite?18:kind==EnemyKind::Brute?16:kind==EnemyKind::Ranger?9:10)*damageFactor(profile.difficulty);
-          e.range=kind==EnemyKind::Ranger?230:kind==EnemyKind::Boss?78:55;
-          e.ranged=kind==EnemyKind::Ranger || (kind==EnemyKind::Boss&&selectedStage==1);
+          e.range=kind==EnemyKind::Ranger?230:kind==EnemyKind::Boss?(selectedStage==3?300:78):55;
+          e.ranged=kind==EnemyKind::Ranger || (kind==EnemyKind::Boss&&(selectedStage==1||selectedStage==3));
           e.cooldown=.4f+k*.14f; enemies.push_back(e);
         }
       };
@@ -242,16 +248,25 @@ void Game::update(float dt,const std::array<Input,2>& input) {
   }
   for(auto& e:enemies) {
     if(e.dead) continue;
-    tick(e.hurt,dt); tick(e.invuln,dt); tick(e.attack,dt); tick(e.cooldown,dt); e.anim+=dt;
+    tick(e.hurt,dt); tick(e.invuln,dt); tick(e.attack,dt); tick(e.special,dt); tick(e.cooldown,dt); e.anim+=dt;
     Player* target=nullptr; float nearest=1e9f;
     for(int i=0;i<playerCount;i++) if(players[i].hp>0) { float d=distance(players[i].x-e.x,players[i].y-e.y); if(d<nearest) { nearest=d; target=&players[i]; } }
     if(!target) break;
     float dx=target->x-e.x,dy=target->y-e.y; e.facing=dx>=0?1:-1;
-    if(nearest>e.range*.7f && e.hurt==0) { float d=std::max(nearest,1.f); e.x+=dx/d*e.speed*dt; e.y+=dy/d*e.speed*.65f*dt; }
-    if(nearest<e.range && e.cooldown==0) {
-      e.cooldown=e.kind==EnemyKind::Boss?.8f:e.kind==EnemyKind::Elite?.9f:e.ranged?1.55f:1.2f;
-      e.attack=.42f;
-      if(e.ranged) { float d=std::max(nearest,1.f); projectiles.push_back({e.x,e.y,dx/d*260,dy/d*260,e.damage,2.f,true,false}); }
+    const bool voidBoss=e.kind==EnemyKind::Boss && selectedStage==3;
+    if(nearest>e.range*.7f && e.hurt==0 && e.special==0) { float d=std::max(nearest,1.f); e.x+=dx/d*e.speed*dt; e.y+=dy/d*e.speed*.65f*dt; }
+    if(voidBoss && e.special>0 && !e.specialFired && e.special<=.58f) {
+      float d=std::max(nearest,1.f);
+      for(int spread=-1;spread<=1;spread++)
+        projectiles.push_back({e.x+e.facing*18,e.y+spread*8,dx/d*300,dy/d*300+spread*35,
+                               e.damage*.9f,1.35f,true,false,ProjectileStyle::VoidTyrant});
+      e.specialFired=true;
+    }
+    if(nearest<e.range && e.cooldown==0 && e.special==0) {
+      e.cooldown=voidBoss?1.55f:e.kind==EnemyKind::Boss?.8f:e.kind==EnemyKind::Elite?.9f:e.ranged?1.55f:1.2f;
+      e.attack=voidBoss?0:.42f;
+      if(voidBoss) { e.special=.94f; e.specialFired=false; e.anim=0; }
+      else if(e.ranged) { float d=std::max(nearest,1.f); projectiles.push_back({e.x,e.y,dx/d*260,dy/d*260,e.damage,2.f,true,false,ProjectileStyle::PulseGunner}); }
       else if(nearest<e.range+15 && std::abs(dy)<50) damagePlayer(*target,e.damage,e.facing*20);
     }
   }
@@ -263,10 +278,18 @@ void Game::update(float dt,const std::array<Input,2>& input) {
           damagePlayer(players[i],pr.damage,pr.vx>0?12:-12); pr.life=0;
         }
     } else {
-      for(auto& e:enemies)
-        if(pr.life>0&&!e.dead&&distance(pr.x-e.x,pr.y-e.y)<30) {
-          damageEnemy(e,pr.damage,pr.vx>0?10:-10); if(!pr.pierce) pr.life=0;
+      constexpr float hitWidth[]{62,48,70,40,30,30};
+      for(std::size_t index=0;index<enemies.size();index++) {
+        if(index>=64) break;
+        auto& e=enemies[index];
+        auto bit=std::uint64_t{1}<<index;
+        if(pr.life>0 && !e.dead && e.invuln<=0 && !(pr.hitMask&bit) &&
+           std::abs(pr.x-e.x)<hitWidth[(int)pr.style] && std::abs(pr.y-e.y)<34) {
+          pr.hitMask|=bit;
+          damageEnemy(e,pr.damage,pr.vx>0?10:-10);
+          if(!pr.pierce) pr.life=0;
         }
+      }
     }
   }
   projectiles.erase(std::remove_if(projectiles.begin(),projectiles.end(),[](const Projectile& p){return p.life<=0;}),projectiles.end());

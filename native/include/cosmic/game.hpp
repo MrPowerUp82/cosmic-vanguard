@@ -10,6 +10,7 @@ namespace cosmic {
 enum class Screen { Title, Map, Roster, Stage, Pause, Clear, Ending };
 enum class Action { Idle, Walk, Attack, Jump, Dash, Hurt, Special };
 enum class EnemyKind { Grunt, Ranger, Brute, Elite, Boss };
+enum class ProjectileStyle { Solarion, Valoria, AbyssKing, EmeraldNova, PulseGunner, VoidTyrant };
 
 struct HeroDef {
   const char* id;
@@ -42,11 +43,15 @@ struct Enemy {
   float x{}, y{}, hp{}, maxHp{}, speed{}, damage{}, range{}, cooldown{}, attack{}, hurt{}, invuln{}, anim{};
   int facing{-1}, phase{};
   bool dead{}, ranged{};
+  float special{};
+  bool specialFired{};
 };
 
 struct Projectile {
   float x{}, y{}, vx{}, vy{}, damage{}, life{};
   bool hostile{}, pierce{};
+  ProjectileStyle style{ProjectileStyle::PulseGunner};
+  std::uint64_t hitMask{};
 };
 
 struct Profile {

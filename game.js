@@ -181,11 +181,29 @@
     spriteImages[id] = img;
   }
 
+  // Each image continues the attack already drawn in its character sheet.
+  const PROJECTILE_VISUALS = {
+    solarion:     { width: 118, height: 32, lift: 43 },
+    valoria:      { width: 110, height: 25, lift: 43 },
+    abyss_king:   { width: 112, height: 53, lift: 42 },
+    emerald_nova: { width: 78,  height: 24, lift: 42 },
+    pulse_gunner: { width: 54,  height: 21, lift: 47 },
+    void_tyrant:  { width: 76,  height: 33, lift: 49 },
+  };
+  const projectileImages = {};
+  for (const id of Object.keys(PROJECTILE_VISUALS)) {
+    const img = new Image();
+    img.src = `assets/sprites/projectiles/${id}.png`;
+    projectileImages[id] = img;
+  }
+
   const scenarioImages = {};
   for (const scenario of window.SCENARIOS) {
-    const img = new Image();
-    img.src = scenario.src;
-    scenarioImages[scenario.id] = img;
+    scenarioImages[scenario.id] = scenario.scenes.map(scene => {
+      const img = new Image();
+      img.src = scene.src;
+      return img;
+    });
   }
 
   const titleBanner = new Image();
@@ -239,46 +257,54 @@
   const STAGES = [
     {
       id: 'harbor', name: 'NEON HARBOR', subtitle: 'Zona portuária sob cerco', x: 195, y: 280,
-      primary: '#20bfe6', secondary: '#09335c', recruit: 'red_velocity', width: 3200,
+      primary: '#20bfe6', secondary: '#09335c', recruit: 'red_velocity', width: 5600,
       unlocked: () => true,
       waves: [
         { x: 680, enemies: ['grunt','grunt','ranger'] },
-        { x: 1430, enemies: ['grunt','brute','grunt','ranger'] },
-        { x: 2180, enemies: ['brute','grunt','ranger','ranger'] },
-        { x: 2840, boss: 'Breaker' },
+        { x: 1510, enemies: ['grunt','brute','grunt','ranger'] },
+        { x: 2300, enemies: ['brute','grunt','ranger','ranger'] },
+        { x: 3250, enemies: ['grunt','ranger','brute'] },
+        { x: 4230, enemies: ['brute','ranger','grunt','ranger'] },
+        { x: 5180, boss: 'Breaker' },
       ]
     },
     {
       id: 'metro', name: 'IRON DISTRICT', subtitle: 'Fábricas automatizadas', x: 470, y: 170,
-      primary: '#e79d43', secondary: '#522c1d', recruit: 'abyss_king', width: 3200,
+      primary: '#e79d43', secondary: '#522c1d', recruit: 'abyss_king', width: 5600,
       unlocked: () => true,
       waves: [
         { x: 700, enemies: ['grunt','ranger','grunt'] },
-        { x: 1460, enemies: ['brute','brute','grunt'] },
-        { x: 2200, enemies: ['ranger','ranger','brute','grunt'] },
-        { x: 2840, boss: 'Overseer' },
+        { x: 1520, enemies: ['brute','brute','grunt'] },
+        { x: 2310, enemies: ['ranger','ranger','brute','grunt'] },
+        { x: 3260, enemies: ['grunt','ranger','brute'] },
+        { x: 4240, enemies: ['brute','ranger','ranger','grunt'] },
+        { x: 5180, boss: 'Overseer' },
       ]
     },
     {
       id: 'sky', name: 'SKYSPIRE', subtitle: 'Fortaleza acima das nuvens', x: 745, y: 280,
-      primary: '#9b8bff', secondary: '#332c6f', recruit: 'emerald_nova', width: 3200,
+      primary: '#9b8bff', secondary: '#332c6f', recruit: 'emerald_nova', width: 5600,
       unlocked: () => true,
       waves: [
         { x: 700, enemies: ['grunt','grunt','ranger'] },
-        { x: 1460, enemies: ['ranger','ranger','brute'] },
-        { x: 2200, enemies: ['brute','grunt','brute','ranger'] },
-        { x: 2840, boss: 'Aerial Warden' },
+        { x: 1520, enemies: ['ranger','ranger','brute'] },
+        { x: 2310, enemies: ['brute','grunt','brute','ranger'] },
+        { x: 3260, enemies: ['grunt','ranger','brute'] },
+        { x: 4240, enemies: ['ranger','brute','grunt','ranger'] },
+        { x: 5180, boss: 'Aerial Warden' },
       ]
     },
     {
       id: 'void', name: 'VOID GATE', subtitle: 'Origem da invasão', x: 470, y: 398,
-      primary: '#f35bd2', secondary: '#49104b', recruit: null, width: 3500,
+      primary: '#f35bd2', secondary: '#49104b', recruit: null, width: 6000,
       unlocked: () => ['harbor','metro','sky'].every(id => save?.completed?.includes(id)),
       waves: [
         { x: 760, enemies: ['brute','ranger','grunt','grunt'] },
-        { x: 1580, enemies: ['brute','brute','ranger','ranger'] },
-        { x: 2420, enemies: ['elite','grunt','ranger'] },
-        { x: 3160, boss: 'Null Sovereign', final: true },
+        { x: 1680, enemies: ['brute','brute','ranger','ranger'] },
+        { x: 2580, enemies: ['elite','grunt','ranger'] },
+        { x: 3550, enemies: ['brute','ranger','grunt'] },
+        { x: 4610, enemies: ['elite','brute','ranger'] },
+        { x: 5650, boss: 'Null Sovereign', final: true },
       ]
     },
   ];
@@ -918,7 +944,7 @@
     switch (h.special) {
       case 'solarBurst':
         queueHeroAction(p, heroId, hitAt, (pp, hh) => {
-          forwardHit(pp, 430, 66, 48, 130);
+          spawnPlayerProjectile(pp.x + pp.facing * 55, pp.y, pp.facing * 720, 0, 48, '#ffd75f', 42, 18, .72, true, false, 'solarion');
           for (let i = 0; i < 34; i++) game.particles.push({
             x: pp.x + pp.facing * (35 + Math.random() * 370), y: pp.y + (Math.random() - .5) * 28,
             vx: pp.facing * (50 + Math.random() * 100), vy: (Math.random() - .5) * 40,
@@ -941,7 +967,7 @@
           burst(pp.x, pp.y, '#ffe174', 26, 210);
         });
         queueHeroAction(p, heroId, hitAt + 120, (pp, hh) => {
-          spawnPlayerProjectile(pp.x + pp.facing * 55, pp.y, pp.facing * 390, 0, 36, '#ffd85b', 28, 18, .9, true);
+          spawnPlayerProjectile(pp.x + pp.facing * 55, pp.y, pp.facing * 390, 0, 36, '#ffd85b', 28, 18, .9, true, false, 'valoria');
           screenShake = 8;
         });
         break;
@@ -955,7 +981,7 @@
       case 'tidalBreaker':
         queueHeroAction(p, heroId, hitAt, (pp, hh) => {
           areaHit(pp.x, pp.y, 95, 22, 90);
-          spawnPlayerProjectile(pp.x + pp.facing * 52, pp.y, pp.facing * 315, 0, 48, '#61e8ff', 50, 28, 1.12, true, true);
+          spawnPlayerProjectile(pp.x + pp.facing * 52, pp.y, pp.facing * 315, 0, 48, '#61e8ff', 50, 28, 1.12, true, true, 'abyss_king');
           burst(pp.x + pp.facing * 35, pp.y, '#c6fbff', 26, 190);
           screenShake = 11;
         });
@@ -963,12 +989,12 @@
       case 'novaBarrage':
         for (let i = 0; i < 4; i++) {
           queueHeroAction(p, heroId, Math.round(p.specialDuration * 1000 * (.28 + i * .09)), (pp, hh) => {
-            spawnPlayerProjectile(pp.x + pp.facing * 38, pp.y + (Math.random() - .5) * 18, pp.facing * (470 + i * 35), (Math.random() - .5) * 20, 15, '#48ff78', 18, 10, .85, true);
+            spawnPlayerProjectile(pp.x + pp.facing * 38, pp.y + (Math.random() - .5) * 18, pp.facing * (470 + i * 35), (Math.random() - .5) * 20, 15, '#48ff78', 18, 10, .85, true, false, 'emerald_nova');
             beep(320 + i * 45, .025, 'square', .014);
           });
         }
         queueHeroAction(p, heroId, Math.round(p.specialDuration * 1000 * .68), (pp, hh) => {
-          forwardHit(pp, 420, 68, 34, 120);
+          spawnPlayerProjectile(pp.x + pp.facing * 52, pp.y, pp.facing * 550, 0, 34, '#48ff78', 30, 14, .82, true, false, 'emerald_nova');
           burst(pp.x + pp.facing * 75, pp.y, '#baffc7', 24, 220);
           screenShake = 8;
         });
@@ -987,8 +1013,8 @@
     });
   }
 
-  function spawnPlayerProjectile(x, y, vx, vy, damage, color, width = 14, height = 8, life = .9, pierce = false, explosive = false) {
-    game.projectiles.push({ x, y, vx, vy, damage, color, width, height, life, owner: 'player', pierce, explosive, hit: new Set() });
+  function spawnPlayerProjectile(x, y, vx, vy, damage, color, width = 14, height = 8, life = .9, pierce = false, explosive = false, spriteId = null) {
+    game.projectiles.push({ x, y, vx, vy, damage, color, width, height, life, owner: 'player', pierce, explosive, spriteId, hit: new Set() });
   }
 
   function spawnEnemyProjectile(e, p) {
@@ -1000,7 +1026,7 @@
       vx: dx / len * speed, vy: dy / len * speed,
       damage: e.damage * (e.boss ? 1.05 : .82), color: e.boss ? '#ff60de' : '#dc8cff',
       width: e.boss ? 16 : 10, height: e.boss ? 16 : 10, life: 1.7,
-      owner: 'enemy', pierce: false, explosive: false, hit: new Set()
+      owner: 'enemy', pierce: false, explosive: false, spriteId: 'pulse_gunner', hit: new Set()
     });
     beep(190, .035, 'sawtooth', .012);
   }
@@ -1054,7 +1080,7 @@
         x: e.x, y: e.y - 4,
         vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
         damage: e.damage * (e.boss ? 0.92 : 0.72), color: color || e.color,
-        width, height, life: 1.7, owner: 'enemy', pierce: false, explosive: false, hit: new Set()
+        width, height, life: 1.7, owner: 'enemy', pierce: false, explosive: false, spriteId: 'pulse_gunner', hit: new Set()
       });
     }
   }
@@ -1143,7 +1169,7 @@
             x: e.x + e.facing * 18, y: e.y - 12 + i * 8,
             vx: e.facing * (300 + i * 40), vy: -10 + i * 10,
             damage: e.damage * 0.9, color: '#ff66ff', width: 20, height: 14,
-            life: 1.35, owner: 'enemy', pierce: false, explosive: true, hit: new Set()
+            life: 1.35, owner: 'enemy', pierce: false, explosive: true, spriteId: 'void_tyrant', hit: new Set()
           });
         }
         enemyMeleeHit(e, 1.2, 250, 115);
@@ -1701,14 +1727,25 @@
 
   function drawStageBackground(stage, camX) {
     const id = stage.id;
-    const image = scenarioImages[id];
-    if (image?.complete && image.naturalWidth) {
-      // A slight pan gives the scenery depth without needing a tileable image.
-      const cropW = image.naturalWidth / 1.15;
-      const cropH = cropW * H / W;
-      const progress = clamp(camX / Math.max(1, stage.width - W), 0, 1);
-      ctx.drawImage(image, (image.naturalWidth - cropW) * progress,
-        (image.naturalHeight - cropH) / 2, cropW, cropH, 0, 0, W, H);
+    const scenes = scenarioImages[id] || [];
+    const firstReady = scenes[0]?.complete && scenes[0].naturalWidth;
+    const secondReady = scenes[1]?.complete && scenes[1].naturalWidth;
+    if (firstReady || secondReady) {
+      const midpoint = stage.width / 2;
+      const transition = 520;
+      const worldCenter = camX + W / 2;
+      const t = clamp((worldCenter - midpoint + transition / 2) / transition, 0, 1);
+      const blend = t * t * (3 - 2 * t);
+      const firstPan = clamp(camX / Math.max(1, midpoint - W / 2), 0, 1);
+      const secondPan = clamp((camX - midpoint + W / 2) /
+        Math.max(1, stage.width - midpoint - W / 2), 0, 1);
+      if (firstReady && (blend < 1 || !secondReady)) drawScenarioImage(scenes[0], firstPan);
+      if (secondReady && (blend > 0 || !firstReady)) {
+        ctx.save();
+        ctx.globalAlpha = firstReady ? blend : 1;
+        drawScenarioImage(scenes[1], secondPan);
+        ctx.restore();
+      }
     } else if (id === 'harbor') drawHarbor(camX);
     else if (id === 'metro') drawMetro(camX);
     else if (id === 'sky') drawSky(camX);
@@ -1719,6 +1756,14 @@
     ctx.fillRect(0, H - 8, W, 8);
     ctx.fillStyle = stage.primary;
     ctx.fillRect(0, H - 8, W * clamp(Math.max(...game.players.map(p => p.x)) / stage.width, 0, 1), 8);
+  }
+
+  function drawScenarioImage(image, progress) {
+    // Pan within each scene while keeping the floor and horizon level.
+    const cropH = image.naturalHeight * .72;
+    const cropW = Math.min(image.naturalWidth, cropH * W / H);
+    ctx.drawImage(image, (image.naturalWidth - cropW) * progress,
+      (image.naturalHeight - cropH) / 2, cropW, cropH, 0, 0, W, H);
   }
 
   function drawHarbor(cam) {
@@ -1973,9 +2018,22 @@
   }
 
   function drawProjectile(pr){
-    const x=pr.x-game.cameraX,y=354+pr.y*.75;
-    ctx.save();ctx.shadowColor=pr.color;ctx.shadowBlur=14;ctx.fillStyle=pr.color;
-    if(pr.owner==='player' && Math.abs(pr.vx)>300){ctx.fillRect(x-pr.width*(pr.vx>0?1.4:.2),y-pr.height/2,pr.width*1.8,pr.height);}else{ctx.beginPath();ctx.ellipse(x,y,pr.width,pr.height,0,0,Math.PI*2);ctx.fill();}
+    const x=pr.x-game.cameraX;
+    const visual=PROJECTILE_VISUALS[pr.spriteId];
+    const img=projectileImages[pr.spriteId];
+    const y=(pr.owner==='player'?363:354)+pr.y*.75-(visual?.lift||0);
+    ctx.save();
+    if(visual && img?.complete && img.naturalWidth){
+      ctx.translate(Math.round(x),Math.round(y));
+      if(pr.vx<0)ctx.scale(-1,1);
+      ctx.imageSmoothingEnabled=true;
+      ctx.shadowColor=pr.color;
+      ctx.shadowBlur=8;
+      ctx.drawImage(img,-visual.width/2,-visual.height/2,visual.width,visual.height);
+    }else{
+      ctx.shadowColor=pr.color;ctx.shadowBlur=14;ctx.fillStyle=pr.color;
+      if(pr.owner==='player' && Math.abs(pr.vx)>300){ctx.fillRect(x-pr.width*(pr.vx>0?1.4:.2),y-pr.height/2,pr.width*1.8,pr.height);}else{ctx.beginPath();ctx.ellipse(x,y,pr.width,pr.height,0,0,Math.PI*2);ctx.fill();}
+    }
     ctx.restore();
   }
 

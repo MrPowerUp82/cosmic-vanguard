@@ -47,6 +47,6 @@ if ($all -or $Targets -contains 'psp') {
   & docker run --rm -v $mount -w /src arcana-host bash -lc 'set -e; umd=native/build-psp/umd; mkdir -p "$umd/PSP_GAME/SYSDIR" "$umd/PSP_GAME/USRDIR/assets"; cp native/build-psp/PARAM_UMD.SFO "$umd/PSP_GAME/PARAM.SFO"; cp native/platforms/psp/icon0.png "$umd/PSP_GAME/ICON0.PNG"; cp native/platforms/psp/pic1.png "$umd/PSP_GAME/PIC1.PNG"; cp native/build-psp/cosmic_psp.prx "$umd/PSP_GAME/SYSDIR/EBOOT.BIN"; cp native/assets/psp/* "$umd/PSP_GAME/USRDIR/assets/"; printf "CVAN-90001|0000000000000001|0001|G" > "$umd/UMD_DATA.BIN"; genisoimage -quiet -iso-level 4 -xa -A "PSP GAME" -V "COSMIC" -sysid "PSP GAME" -o native/dist/v0.1.1/cosmic-vanguard-v0.1.1-psp.iso "$umd"; python3 native/tools/make_cso.py native/dist/v0.1.1/cosmic-vanguard-v0.1.1-psp.iso native/dist/v0.1.1/cosmic-vanguard-v0.1.1-psp.cso'
   if ($LASTEXITCODE -ne 0) { throw 'PSP ISO/CSO packaging failed' }
 }
-$hashes=Get-ChildItem -LiteralPath $release -File | Sort-Object Name | ForEach-Object { "{0}  {1}" -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(),$_.Name }
+$hashes=Get-ChildItem -LiteralPath $release -File | Where-Object Name -NE 'SHA256SUMS' | Sort-Object Name | ForEach-Object { "{0}  {1}" -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(),$_.Name }
 [IO.File]::WriteAllLines((Join-Path $release 'SHA256SUMS'),$hashes)
 Write-Host "Release artifacts: $release"

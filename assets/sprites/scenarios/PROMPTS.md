@@ -1,6 +1,15 @@
-# Prompts dos cenários
+# Cenários da versão web
 
-Gerados com a ferramenta integrada de geração de imagens. Cada imagem é um fundo panorâmico para o canvas de 960 × 540.
+Cada fase usa dois fundos novos gerados com o modelo de imagens. Eles têm vista lateral, horizonte nivelado e uma pista contínua livre na parte inferior. A câmera percorre cada imagem e faz uma transição gradual perto da metade da fase. Os arquivos WebP são os usados no canvas de 960 × 540; os PNGs antigos permanecem apenas como referência visual.
+
+| Fase | Primeiro trecho | Segundo trecho |
+| --- | --- | --- |
+| Neon Harbor | `neon-harbor-quay.webp` — cais de carga | `neon-harbor-drydock.webp` — docas de manutenção |
+| Iron District | `iron-district-yard.webp` — pátio industrial | `iron-district-foundry.webp` — fundição |
+| Skyspire | `skyspire-lower.webp` — torres inferiores | `skyspire-summit.webp` — cume do elevador |
+| Void Gate | `void-gate-approach.webp` — cidade corrompida | `void-gate-core.webp` — núcleo do portal |
+
+As imagens originais abaixo serviram como referência de estilo e ambientação para os oito novos trechos.
 
 ## Neon Harbor
 

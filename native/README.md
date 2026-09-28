@@ -50,12 +50,15 @@ começam em slots próprios.
 
 A campanha com quatro setores, seis heróis, recrutamento, ondas, chefes, co-op
 local, troca de herói, dificuldades e três slots está implementada. Os sprites
-originais foram redimensionados para atlases de 448×448 px, com variante de
-224×224 px para PSP. Os quatro cenários e seus sprites são empacotados nos
-executáveis/pacotes. O banner também aparece na tela inicial de todas as plataformas.
+originais foram redimensionados com escala e pivô fixos por personagem para
+atlases de 1008×1008 px, com variante de 504×504 px para PSP. Os seis sprites
+gerados para os projéteis da versão web são empacotados em um atlas nativo
+separado, com variante reduzida para PSP. Os quatro cenários e seus sprites
+são empacotados nos executáveis/pacotes. O
+banner também aparece na tela inicial de todas as plataformas.
 
 Este é o primeiro port jogável. Ainda faltam efeitos visuais e sonoros do navegador,
-ataques especiais dos inimigos/chefes e algumas nuances das habilidades de cada
+alguns ataques especiais dos inimigos/chefes e algumas nuances das habilidades de cada
 herói. A campanha e os controles foram testados no build Linux; a versão Windows
 foi executada e capturada. Switch, Vita e PSP compilaram e foram empacotados, mas
 a execução nesses aparelhos ainda precisa de validação em hardware/emulador.

@@ -29,6 +29,7 @@ vita_create_vpk(cosmic-vanguard.vpk CVAN00001 eboot.bin VERSION 00.11 NAME "Cosm
   FILE ${ROOT}/assets/armored_brute.png assets/armored_brute.png
   FILE ${ROOT}/assets/rift_assassin.png assets/rift_assassin.png
   FILE ${ROOT}/assets/void_tyrant.png assets/void_tyrant.png
+  FILE ${ROOT}/assets/projectiles.png assets/projectiles.png
   FILE ${ROOT}/assets/harbor.jpg assets/harbor.jpg
   FILE ${ROOT}/assets/metro.jpg assets/metro.jpg
   FILE ${ROOT}/assets/sky.jpg assets/sky.jpg
