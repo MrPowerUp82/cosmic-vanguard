@@ -17,7 +17,7 @@ target_compile_definitions(cosmic_vita PRIVATE COSMIC_VITA)
 target_compile_options(cosmic_vita PRIVATE -O2 -fno-rtti)
 target_link_libraries(cosmic_vita PRIVATE SDL2_ttf::SDL2_ttf-static SDL2_image::SDL2_image-static SDL2::SDL2-static freetype png jpeg bz2 z SceCtrl_stub SceProcessmgr_stub)
 vita_create_self(eboot.bin cosmic_vita UNSAFE)
-vita_create_vpk(cosmic-vanguard.vpk CVAN00001 eboot.bin VERSION 00.11 NAME "Cosmic Vanguard"
+vita_create_vpk(cosmic-vanguard.vpk CVAN00001 eboot.bin VERSION 00.12 NAME "Cosmic Vanguard"
   FILE ${ROOT}/assets/solarion.png assets/solarion.png
   FILE ${ROOT}/assets/night_talon.png assets/night_talon.png
   FILE ${ROOT}/assets/valoria.png assets/valoria.png
