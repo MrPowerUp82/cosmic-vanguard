@@ -91,7 +91,7 @@
     /* Tab switcher */
     .nav-tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(4, 1fr);
       gap: 6px;
       background: var(--bg);
       padding: 4px;
@@ -358,7 +358,9 @@
       background: var(--panel);
       min-width: 0;
     }
-    #gameplayCanvas { width: 100%; max-width: 960px; height: auto; border-radius: 8px; }
+    #gameplayCanvas, #scenarioCanvas { width: 100%; max-width: 960px; height: auto; border-radius: 8px; }
+    .scenario-card { padding: 16px; background: var(--panel); flex: 1 1 auto; }
+    .scenario-card .canvas-box { max-width: 960px; margin: 0 auto; }
 
     /* Canvas Stage (viewport com zoom/pan) */
     .viewer-wrap {
@@ -554,10 +556,11 @@
       <button class="nav-tab active" id="tabAuto" onclick="switchTab('auto')">✂ Recortes</button>
       <button class="nav-tab" id="tabManual" onclick="switchTab('manual')">📐 Grade</button>
       <button class="nav-tab" id="tabCombat" onclick="switchTab('combat')">⚔️ Combate</button>
+      <button class="nav-tab" id="tabScenarios" onclick="switchTab('scenarios')">🌆 Cenários</button>
     </div>
 
     <!-- 1. SPRITE SHEET SELECTOR (Comum a todas as abas) -->
-    <div class="section">
+    <div class="section" id="sheetSection">
       <div class="section-title">
         <span>Folha de Sprites</span>
         <span class="section-badge" id="sheetBadge">Oficial</span>
@@ -783,7 +786,13 @@
     <!-- ABA 2: SIMULAÇÃO DE COMBATE (Cena do Jogo) -->
     <div id="panelCombat" style="display: none;">
       <div class="section">
-        <div class="section-title">Simulação de Jogo (Fase 1)</div>
+        <div class="section-title">Simulação de Jogo</div>
+        <div class="row row-1">
+          <div>
+            <label for="gameplayScenario">Cenário</label>
+            <select id="gameplayScenario"></select>
+          </div>
+        </div>
         <div class="row row-1">
           <div>
             <label for="gameplayHero">Herói na Cena</label>
@@ -803,7 +812,17 @@
       </div>
     </div>
 
-    <!-- ABA 3: GRADE REGULAR -->
+    <!-- ABA 3: CENÁRIOS -->
+    <div id="panelScenarios" style="display: none;">
+      <div class="section">
+        <div class="section-title">Sprites dos Cenários</div>
+        <label for="scenarioSelect">Setor da Campanha</label>
+        <select id="scenarioSelect"></select>
+        <p class="tiny" id="scenarioDescription"></p>
+      </div>
+    </div>
+
+    <!-- ABA 4: GRADE REGULAR -->
     <div id="panelManual" style="display: none; flex-direction: column; gap: 14px;">
       <div class="section">
         <div class="section-title">Grade Regular</div>
@@ -894,7 +913,13 @@
       <div class="canvas-box">
         <canvas id="gameplayCanvas" width="960" height="540" aria-label="Prévia em escala de jogo"></canvas>
       </div>
-      <p class="tiny" id="gameplayStatus">Prévia da primeira fase com física, escala real de combate e renderização por pés fixos.</p>
+      <p class="tiny" id="gameplayStatus">Prévia com escala de combate e renderização por pés fixos.</p>
+    </section>
+
+    <section class="scenario-card" id="scenarioCard" style="display: none;">
+      <div class="canvas-box">
+        <canvas id="scenarioCanvas" width="960" height="540" aria-label="Prévia do cenário selecionado"></canvas>
+      </div>
     </section>
 
     <!-- Viewport do Sprite Sheet (zoom/pan) -->
@@ -907,7 +932,7 @@
     </div>
 
     <!-- Painéis Inferiores: Animação e Strip -->
-    <div class="bottom-panels">
+    <div class="bottom-panels" id="bottomPanels">
       <!-- Preview Animado (ETAPA 12) -->
       <div class="preview-card">
         <h3>
@@ -996,6 +1021,7 @@
 
   <!-- MÓDULO DO ANALISADOR INTELIGENTE (ETAPA 2) -->
   <script src="assets/sprites/processed/atlas.js"></script>
+  <script src="assets/sprites/scenarios/scenarios.js"></script>
   <script src="src/utils/spriteAnalyzer.js"></script>
 
   <script>
@@ -1053,7 +1079,7 @@
 
     // Estado da Aplicação
     const state = {
-      activeTab: 'auto', // 'auto' | 'combat' | 'manual'
+      activeTab: 'auto', // 'auto' | 'combat' | 'scenarios' | 'manual'
       imageName: 'solarion',
       customImageName: null,
       showBoxes: true,
@@ -1099,6 +1125,7 @@
     const $ = (id) => document.getElementById(id);
     const el = {
       sheetSelect: $('sheetSelect'),
+      sheetSection: $('sheetSection'),
       uploadInput: $('uploadInput'),
       sheetInfo: $('sheetInfo'),
       sheetBadge: $('sheetBadge'),
@@ -1193,9 +1220,15 @@
       gameplayCard: $('gameplayCard'),
       gameplayHero: $('gameplayHero'),
       gameplayEnemy: $('gameplayEnemy'),
+      gameplayScenario: $('gameplayScenario'),
       gameplayPlayBtn: $('gameplayPlayBtn'),
       gameplayCanvas: $('gameplayCanvas'),
       gameplayStatus: $('gameplayStatus'),
+      scenarioCard: $('scenarioCard'),
+      scenarioCanvas: $('scenarioCanvas'),
+      scenarioSelect: $('scenarioSelect'),
+      scenarioDescription: $('scenarioDescription'),
+      bottomPanels: $('bottomPanels'),
 
       // Grade
       animationSelect: $('animationSelect'),
@@ -1229,11 +1262,24 @@
       document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
       $('panelAuto').style.display = tab === 'auto' ? 'flex' : 'none';
       $('panelCombat').style.display = tab === 'combat' ? 'block' : 'none';
+      $('panelScenarios').style.display = tab === 'scenarios' ? 'block' : 'none';
       $('panelManual').style.display = tab === 'manual' ? 'flex' : 'none';
       el.gameplayCard.style.display = tab === 'combat' ? 'block' : 'none';
+      el.scenarioCard.style.display = tab === 'scenarios' ? 'block' : 'none';
+      el.sheetSection.style.display = tab === 'scenarios' ? 'none' : 'block';
+      el.viewerWrap.style.display = tab === 'scenarios' ? 'none' : 'block';
+      el.bottomPanels.style.display = tab === 'scenarios' ? 'none' : 'grid';
+      document.querySelector('.viewer-toolbar').style.display = tab === 'scenarios' ? 'none' : 'flex';
 
       if (tab === 'auto') $('tabAuto').classList.add('active');
-      if (tab === 'combat') $('tabCombat').classList.add('active');
+      if (tab === 'combat') {
+        $('tabCombat').classList.add('active');
+        renderGameplayScene();
+      }
+      if (tab === 'scenarios') {
+        $('tabScenarios').classList.add('active');
+        renderScenarioScene();
+      }
       if (tab === 'manual') {
         $('tabManual').classList.add('active');
         updateManualJson();
@@ -1266,6 +1312,17 @@
       });
       el.gameplayHero.value = 'solarion';
       el.gameplayEnemy.value = 'shadow_trooper';
+
+      for (const scenario of window.SCENARIOS) {
+        for (const select of [el.gameplayScenario, el.scenarioSelect]) {
+          const opt = document.createElement('option');
+          opt.value = scenario.id;
+          opt.textContent = scenario.name;
+          select.appendChild(opt);
+        }
+      }
+      el.gameplayScenario.value = 'harbor';
+      el.scenarioSelect.value = 'harbor';
 
       el.animationSelect.innerHTML = '';
       GAME_ANIMATIONS.forEach(anim => {
@@ -3176,6 +3233,48 @@
     /* ============================================================
        SIMULADOR DE COMBATE DA FASE 1 (Preservado e Integrado)
        ============================================================ */
+    const scenarioImages = {};
+    for (const scenario of window.SCENARIOS) {
+      const img = new Image();
+      img.onload = () => { renderScenarioScene(); renderGameplayScene(); };
+      img.src = scenario.src;
+      scenarioImages[scenario.id] = img;
+    }
+
+    function drawScenarioImage(ctx, id, width, height) {
+      const img = scenarioImages[id];
+      if (!img?.naturalWidth) return false;
+      ctx.drawImage(img, 0, 0, width, height);
+      return true;
+    }
+
+    function renderScenarioScene() {
+      const scenario = window.SCENARIOS.find(s => s.id === el.scenarioSelect.value);
+      if (!scenario) return;
+      const canvas = el.scenarioCanvas;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      el.scenarioDescription.textContent = scenario.description;
+      if (!drawScenarioImage(ctx, scenario.id, canvas.width, canvas.height)) {
+        ctx.fillStyle = '#0c0f1d';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#9aa7d0';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('Carregando cenário…', 32, 48);
+      }
+    }
+
+    el.scenarioSelect.addEventListener('change', () => {
+      el.gameplayScenario.value = el.scenarioSelect.value;
+      renderScenarioScene();
+      renderGameplayScene();
+    });
+    el.gameplayScenario.addEventListener('change', () => {
+      el.scenarioSelect.value = el.gameplayScenario.value;
+      renderScenarioScene();
+      renderGameplayScene();
+    });
+
     const gameplayImages = {};
     function getGameplayImage(id) {
       if (!gameplayImages[id]) {
@@ -3196,20 +3295,12 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = false;
 
-      // Fundo estilizado do cenário cósmico
-      const g = ctx.createLinearGradient(0, 0, 0, 540);
-      g.addColorStop(0, '#071b35');
-      g.addColorStop(.55, '#0c3150');
-      g.addColorStop(1, '#07111e');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 960, 540);
-
-      // Chão do cenário
-      ctx.fillStyle = '#142436';
-      ctx.fillRect(0, 310, 960, 230);
-      ctx.strokeStyle = '#4c6d86';
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 358); ctx.lineTo(960, 358); ctx.stroke();
+      if (!drawScenarioImage(ctx, el.gameplayScenario.value, canvas.width, canvas.height)) {
+        ctx.fillStyle = '#071b35';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#142436';
+        ctx.fillRect(0, 310, canvas.width, 230);
+      }
 
       const elapsed = (performance.now() - state.gameplayStart) / 1000;
       const heroId = el.gameplayHero.value;
@@ -3276,6 +3367,7 @@
 
     // Inicialização da Página
     initSelectors();
+    renderScenarioScene();
     updateHint();
     updateManualJson();
     loadSheet('solarion');

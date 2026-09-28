@@ -36,17 +36,20 @@
     </div>
 
     <div id="footerbar">
-      <span>WASD/Setas: mover</span>
-      <span>J/Z: atacar</span>
-      <span>K/X: especial</span>
-      <span>L/C: movimento especial</span>
-      <span>Espaço: pular</span>
-      <span>Q/E: trocar herói</span>
-      <span>Esc: pausa</span>
+      <span class="solo-controls">WASD/Setas: mover</span>
+      <span class="solo-controls">J/Z: atacar</span>
+      <span class="solo-controls">K/X: especial</span>
+      <span class="solo-controls">L/C: movimento especial</span>
+      <span class="solo-controls">Espaço: pular</span>
+      <span class="solo-controls">Q/E: trocar herói</span>
+      <span class="coop-controls" style="display: none;">P1: WASD · F atacar · G especial · H movimento · Espaço pular · Q/E trocar</span>
+      <span class="coop-controls" style="display: none;">P2: Setas · J atacar · K especial · L movimento · Shift direito pular · U/O trocar</span>
+      <span>Esc/P: pausa</span>
     </div>
   </main>
 
   <script src="assets/sprites/processed/atlas.js"></script>
+  <script src="assets/sprites/scenarios/scenarios.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

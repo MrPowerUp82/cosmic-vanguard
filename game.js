@@ -10,6 +10,18 @@
   const SAVE_PREFIX = 'cosmic_vanguard_save_';
   const keys = Object.create(null);
   const pressed = new Set();
+  const SOLO_CONTROLS = {
+    left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], up: ['ArrowUp', 'KeyW'], down: ['ArrowDown', 'KeyS'],
+    attack: ['KeyJ', 'KeyZ'], special: ['KeyK', 'KeyX'], mobility: ['KeyL', 'KeyC'], jump: ['Space'],
+    previous: ['KeyQ'], next: ['KeyE'],
+  };
+  const COOP_CONTROLS = [
+    { left: ['KeyA'], right: ['KeyD'], up: ['KeyW'], down: ['KeyS'], attack: ['KeyF'], special: ['KeyG'], mobility: ['KeyH'], jump: ['Space'], previous: ['KeyQ'], next: ['KeyE'] },
+    { left: ['ArrowLeft'], right: ['ArrowRight'], up: ['ArrowUp'], down: ['ArrowDown'], attack: ['KeyJ'], special: ['KeyK'], mobility: ['KeyL'], jump: ['ShiftRight'], previous: ['KeyU'], next: ['KeyO'] },
+  ];
+  const down = codes => codes.some(code => keys[code]);
+  const justPressed = codes => codes.some(code => pressed.has(code));
+  const controlsFor = p => coopMode ? COOP_CONTROLS[p.slot - 1] : SOLO_CONTROLS;
   let mouse = { x: 0, y: 0, down: false };
   let last = performance.now();
   let state = 'title';
@@ -19,6 +31,7 @@
   let selectedNode = 0;
   let selectedRoster = 0;
   let difficultyPreview = 'normal';
+  let coopMode = false;
   let save = null;
   let game = null;
   let audioCtx = null;
@@ -164,6 +177,13 @@
     const img = new Image();
     img.src = sheet.src;
     spriteImages[id] = img;
+  }
+
+  const scenarioImages = {};
+  for (const scenario of window.SCENARIOS) {
+    const img = new Image();
+    img.src = scenario.src;
+    scenarioImages[scenario.id] = img;
   }
 
   const HEROES = {
@@ -335,12 +355,16 @@
 
   function createGame(stage) {
     const heroId = save.currentHero && save.unlocked.includes(save.currentHero) ? save.currentHero : save.unlocked[0];
-    const hero = HEROES[heroId];
+    const available = save.unlocked.filter(id => HEROES[id]);
+    const secondHero = available.find(id => id !== heroId) || heroId;
+    const player = makePlayer(heroId, 120, 80, 1);
+    const players = coopMode ? [player, makePlayer(secondHero, 165, 115, 2)] : [player];
     return {
       stage,
       time: 0,
       cameraX: 0,
-      player: makePlayer(heroId),
+      player,
+      players,
       enemies: [],
       projectiles: [],
       particles: [],
@@ -359,11 +383,12 @@
     };
   }
 
-  function makePlayer(heroId) {
+  function makePlayer(heroId, x = 120, y = 80, slot = 1) {
     const h = HEROES[heroId];
     return {
+      slot,
       heroId,
-      x: 120, y: 80, z: 0, vz: 0,
+      x, y, z: 0, vz: 0,
       w: 34, h: 70,
       hp: h.hp, maxHp: h.hp,
       energy: h.energy, maxEnergy: h.energy,
@@ -390,11 +415,12 @@
     };
   }
 
-  function switchHero(dir) {
+  function switchHero(p, dir) {
     if (!game || state !== 'stage') return;
-    const p = game.player;
     if (p.switchCooldown > 0 || p.hurtTimer > 0 || save.unlocked.length < 2) return;
-    const list = save.unlocked.filter(id => HEROES[id]);
+    const occupied = game.players.find(other => other !== p && other.hp > 0)?.heroId;
+    const list = save.unlocked.filter(id => HEROES[id] && id !== occupied);
+    if (list.length < 2) return;
     let idx = list.indexOf(p.heroId);
     idx = (idx + dir + list.length) % list.length;
     const next = HEROES[list[idx]];
@@ -413,8 +439,10 @@
     p.energy = Math.min(next.energy, next.energy * enRatio + 14);
     p.switchCooldown = .75;
     p.invuln = .42;
-    save.currentHero = next.id;
-    persistSave();
+    if (p.slot === 1) {
+      save.currentHero = next.id;
+      persistSave();
+    }
     burst(p.x, p.y, '#ffffff', 22, 160);
     floatingText(p.x, p.y - 25, next.name, next.primary);
     beep(600, .06, 'square', .03);
@@ -550,6 +578,7 @@
       beep(480, .04, 'square', .02);
       return;
     }
+    if (pressed.has('KeyM')) toggleCoopMode();
 
     if (pressed.has('ArrowLeft') || pressed.has('KeyA')) cycleMap(-1);
     if (pressed.has('ArrowRight') || pressed.has('KeyD')) cycleMap(1);
@@ -559,6 +588,14 @@
     if (pressed.has('Enter') || pressed.has('Space') || pressed.has('KeyJ')) {
       startStage(STAGES[selectedNode]);
     }
+  }
+
+  function toggleCoopMode() {
+    coopMode = !coopMode;
+    document.body.classList.toggle('coop-mode', coopMode);
+    document.querySelectorAll('.solo-controls').forEach(el => { el.style.display = coopMode ? 'none' : 'inline'; });
+    document.querySelectorAll('.coop-controls').forEach(el => { el.style.display = coopMode ? 'inline' : 'none'; });
+    beep(coopMode ? 620 : 410, .06, 'triangle', .025);
   }
 
   function cycleMap(dir) {
@@ -619,41 +656,50 @@
     }
 
     game.time += dt;
-    const p = game.player;
-    const h = HEROES[p.heroId];
-    p.animTime += dt;
-    p.invuln = Math.max(0, p.invuln - dt);
-    p.hurtTimer = Math.max(0, p.hurtTimer - dt);
-    p.attackTimer = Math.max(0, p.attackTimer - dt);
-    p.specialTimer = Math.max(0, p.specialTimer - dt);
-    p.dashTimer = Math.max(0, p.dashTimer - dt);
-    p.dashCooldown = Math.max(0, p.dashCooldown - dt);
-    p.switchCooldown = Math.max(0, p.switchCooldown - dt);
-    p.comboWindow = Math.max(0, p.comboWindow - dt);
-    p.flash = Math.max(0, p.flash - dt);
-    p.energy = Math.min(p.maxEnergy, p.energy + dt * 8.5);
+    for (const p of game.players) {
+      p.animTime += dt;
+      p.invuln = Math.max(0, p.invuln - dt);
+      p.hurtTimer = Math.max(0, p.hurtTimer - dt);
+      p.attackTimer = Math.max(0, p.attackTimer - dt);
+      p.specialTimer = Math.max(0, p.specialTimer - dt);
+      p.dashTimer = Math.max(0, p.dashTimer - dt);
+      p.dashCooldown = Math.max(0, p.dashCooldown - dt);
+      p.switchCooldown = Math.max(0, p.switchCooldown - dt);
+      p.comboWindow = Math.max(0, p.comboWindow - dt);
+      p.flash = Math.max(0, p.flash - dt);
+      if (p.hp > 0) p.energy = Math.min(p.maxEnergy, p.energy + dt * 8.5);
+    }
     game.comboTimer = Math.max(0, game.comboTimer - dt);
     if (game.comboTimer <= 0) game.combo = 0;
     if (game.notice?.timer > 0) game.notice.timer -= dt;
 
-    if (p.hp <= 0) {
-      p.hp = 0;
+    if (game.players.every(p => p.hp <= 0)) {
+      for (const p of game.players) p.hp = 0;
       game.notice = { text: 'MISSÃO FALHOU', sub: 'Pressione Enter para voltar ao mapa', timer: 999 };
       if (pressed.has('Enter') || pressed.has('Space')) state = 'map';
       updateParticles(dt);
       return;
     }
 
-    handlePlayerMovement(dt, h);
-    handlePlayerActions();
-    updatePlayerAttack(dt, h);
+    for (const p of game.players) {
+      if (p.hp <= 0) continue;
+      const h = HEROES[p.heroId];
+      handlePlayerMovement(p, dt, h, controlsFor(p));
+      handlePlayerActions(p, controlsFor(p));
+      updatePlayerAttack(p, dt, h);
+    }
     updateEnemies(dt);
     updateProjectiles(dt);
     updateParticles(dt);
     updateStageFlow();
 
-    const targetCam = clamp(p.x - 250, 0, game.stage.width - W + 120);
+    const living = game.players.filter(p => p.hp > 0);
+    const centerX = living.reduce((sum, p) => sum + p.x, 0) / living.length;
+    const targetCam = clamp(centerX - W / 2, 0, game.stage.width - W + 120);
     game.cameraX = lerp(game.cameraX, targetCam, 1 - Math.pow(.0001, dt));
+    if (coopMode) {
+      for (const p of living) p.x = clamp(p.x, game.cameraX + 30, game.cameraX + W - 30);
+    }
   }
 
   function animDuration(heroId, action) {
@@ -674,16 +720,15 @@
     return profiles[type] || profiles.flight;
   }
 
-  function handlePlayerMovement(dt, h) {
-    const p = game.player;
+  function handlePlayerMovement(p, dt, h, controls) {
     let dx = 0, dy = 0;
     const movementLocked = p.hurtTimer > 0 || p.attackTimer > .09 || p.specialTimer > 0;
 
     if (!movementLocked || p.dashTimer > 0) {
-      if (keys.ArrowLeft || keys.KeyA) dx -= 1;
-      if (keys.ArrowRight || keys.KeyD) dx += 1;
-      if (keys.ArrowUp || keys.KeyW) dy -= 1;
-      if (keys.ArrowDown || keys.KeyS) dy += 1;
+      if (down(controls.left)) dx -= 1;
+      if (down(controls.right)) dx += 1;
+      if (down(controls.up)) dy -= 1;
+      if (down(controls.down)) dy += 1;
       if (dx && dy) { dx *= .7071; dy *= .7071; }
     }
 
@@ -715,8 +760,7 @@
     }
   }
 
-  function startMobility() {
-    const p = game.player;
+  function startMobility(p) {
     const h = HEROES[p.heroId];
     const profile = mobilityProfile(h.mobility);
     p.dashDuration = profile.duration;
@@ -746,22 +790,21 @@
     }
   }
 
-  function handlePlayerActions() {
-    const p = game.player;
-    if (pressed.has('Space') && p.z === 0 && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.attackTimer <= 0 && p.dashTimer <= 0) {
+  function handlePlayerActions(p, controls) {
+    if (justPressed(controls.jump) && p.z === 0 && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.attackTimer <= 0 && p.dashTimer <= 0) {
       p.vz = 340;
       p.z = 1;
       p.animTime = 0;
       beep(250, .03, 'square', .014);
     }
-    if (pressed.has('KeyQ')) switchHero(-1);
-    if (pressed.has('KeyE')) switchHero(1);
+    if (justPressed(controls.previous)) switchHero(p, -1);
+    if (justPressed(controls.next)) switchHero(p, 1);
 
-    if ((pressed.has('KeyL') || pressed.has('KeyC')) && p.dashCooldown <= 0 && p.hurtTimer <= 0 && p.attackTimer <= 0 && p.specialTimer <= 0) {
-      startMobility();
+    if (justPressed(controls.mobility) && p.dashCooldown <= 0 && p.hurtTimer <= 0 && p.attackTimer <= 0 && p.specialTimer <= 0) {
+      startMobility(p);
     }
 
-    if ((pressed.has('KeyJ') || pressed.has('KeyZ')) && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.dashTimer <= 0 && p.attackTimer <= 0) {
+    if (justPressed(controls.attack) && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.dashTimer <= 0 && p.attackTimer <= 0) {
       p.attackDuration = animDuration(p.heroId, 'attack');
       p.attackTimer = p.attackDuration;
       p.attackHit = false;
@@ -773,13 +816,12 @@
       beep(150, .03, 'square', .014);
     }
 
-    if ((pressed.has('KeyK') || pressed.has('KeyX')) && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.attackTimer <= 0 && p.dashTimer <= 0) {
-      useSpecial();
+    if (justPressed(controls.special) && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.attackTimer <= 0 && p.dashTimer <= 0) {
+      useSpecial(p);
     }
   }
 
-  function updatePlayerAttack(dt, h) {
-    const p = game.player;
+  function updatePlayerAttack(p, dt, h) {
     if (p.attackTimer <= 0) return;
     const def = SPRITE_SHEETS[p.heroId]?.animations?.attack;
     const count = def?.count || 4;
@@ -811,8 +853,7 @@
     }
   }
 
-  function forwardHit(range, lane, dmg, knock, originX = null) {
-    const p = game.player;
+  function forwardHit(p, range, lane, dmg, knock, originX = null) {
     const ox = originX ?? p.x;
     let hits = 0;
     for (const e of game.enemies) {
@@ -827,15 +868,15 @@
     return hits;
   }
 
-  function queueHeroAction(heroId, delayMs, fn) {
+  function queueHeroAction(p, heroId, delayMs, fn) {
+    const stageGame = game;
     setTimeout(() => {
-      if (state !== 'stage' || !game || game.player.heroId !== heroId || game.player.hp <= 0) return;
-      fn(game.player, HEROES[heroId]);
+      if (state !== 'stage' || game !== stageGame || p.heroId !== heroId || p.hp <= 0) return;
+      fn(p, HEROES[heroId]);
     }, delayMs);
   }
 
-  function useSpecial() {
-    const p = game.player;
+  function useSpecial(p) {
     const h = HEROES[p.heroId];
     if (p.energy < h.specialCost) {
       floatingText(p.x, p.y - 35, 'SEM ENERGIA', '#9eb0c9');
@@ -853,8 +894,8 @@
 
     switch (h.special) {
       case 'solarBurst':
-        queueHeroAction(heroId, hitAt, (pp, hh) => {
-          forwardHit(430, 66, 48, 130);
+        queueHeroAction(p, heroId, hitAt, (pp, hh) => {
+          forwardHit(pp, 430, 66, 48, 130);
           for (let i = 0; i < 34; i++) game.particles.push({
             x: pp.x + pp.facing * (35 + Math.random() * 370), y: pp.y + (Math.random() - .5) * 28,
             vx: pp.facing * (50 + Math.random() * 100), vy: (Math.random() - .5) * 40,
@@ -864,32 +905,32 @@
         });
         break;
       case 'shadowOnslaught':
-        [0.28, 0.43, 0.58, 0.70].forEach((ratio, i) => queueHeroAction(heroId, Math.round(p.specialDuration * 1000 * ratio), (pp, hh) => {
+        [0.28, 0.43, 0.58, 0.70].forEach((ratio, i) => queueHeroAction(p, heroId, Math.round(p.specialDuration * 1000 * ratio), (pp, hh) => {
           pp.x = clamp(pp.x + pp.facing * 34, 40, game.stage.width - 120);
-          forwardHit(220, 72, 15 + i * 3, 70 + i * 20);
+          forwardHit(pp, 220, 72, 15 + i * 3, 70 + i * 20);
           burst(pp.x + pp.facing * 50, pp.y, i % 2 ? '#43d5ff' : '#0d69b7', 10, 170);
           screenShake = Math.max(screenShake, 4 + i);
         }));
         break;
       case 'aegisStorm':
-        queueHeroAction(heroId, hitAt - 40, (pp, hh) => {
+        queueHeroAction(p, heroId, hitAt - 40, (pp, hh) => {
           areaHit(pp.x, pp.y, 145, 30, 130);
           burst(pp.x, pp.y, '#ffe174', 26, 210);
         });
-        queueHeroAction(heroId, hitAt + 120, (pp, hh) => {
+        queueHeroAction(p, heroId, hitAt + 120, (pp, hh) => {
           spawnPlayerProjectile(pp.x + pp.facing * 55, pp.y, pp.facing * 390, 0, 36, '#ffd85b', 28, 18, .9, true);
           screenShake = 8;
         });
         break;
       case 'kineticSurge':
-        [0.30, 0.42, 0.54, 0.66].forEach((ratio, i) => queueHeroAction(heroId, Math.round(p.specialDuration * 1000 * ratio), (pp, hh) => {
+        [0.30, 0.42, 0.54, 0.66].forEach((ratio, i) => queueHeroAction(p, heroId, Math.round(p.specialDuration * 1000 * ratio), (pp, hh) => {
           pp.x = clamp(pp.x + pp.facing * 62, 40, game.stage.width - 120);
-          forwardHit(185, 74, 13 + i * 4, 85 + i * 22);
+          forwardHit(pp, 185, 74, 13 + i * 4, 85 + i * 22);
           burst(pp.x, pp.y, '#ff6b4f', 14, 230);
         }));
         break;
       case 'tidalBreaker':
-        queueHeroAction(heroId, hitAt, (pp, hh) => {
+        queueHeroAction(p, heroId, hitAt, (pp, hh) => {
           areaHit(pp.x, pp.y, 95, 22, 90);
           spawnPlayerProjectile(pp.x + pp.facing * 52, pp.y, pp.facing * 315, 0, 48, '#61e8ff', 50, 28, 1.12, true, true);
           burst(pp.x + pp.facing * 35, pp.y, '#c6fbff', 26, 190);
@@ -898,13 +939,13 @@
         break;
       case 'novaBarrage':
         for (let i = 0; i < 4; i++) {
-          queueHeroAction(heroId, Math.round(p.specialDuration * 1000 * (.28 + i * .09)), (pp, hh) => {
+          queueHeroAction(p, heroId, Math.round(p.specialDuration * 1000 * (.28 + i * .09)), (pp, hh) => {
             spawnPlayerProjectile(pp.x + pp.facing * 38, pp.y + (Math.random() - .5) * 18, pp.facing * (470 + i * 35), (Math.random() - .5) * 20, 15, '#48ff78', 18, 10, .85, true);
             beep(320 + i * 45, .025, 'square', .014);
           });
         }
-        queueHeroAction(heroId, Math.round(p.specialDuration * 1000 * .68), (pp, hh) => {
-          forwardHit(420, 68, 34, 120);
+        queueHeroAction(p, heroId, Math.round(p.specialDuration * 1000 * .68), (pp, hh) => {
+          forwardHit(pp, 420, 68, 34, 120);
           burst(pp.x + pp.facing * 75, pp.y, '#baffc7', 24, 220);
           screenShake = 8;
         });
@@ -942,36 +983,48 @@
   }
 
   function queueEnemyAction(enemy, delayMs, fn) {
+    const stageGame = game;
     setTimeout(() => {
-      if (state !== 'stage' || !game || !game.enemies.includes(enemy) || enemy.dead || game.player.hp <= 0) return;
-      fn(enemy, game.player);
+      if (state !== 'stage' || game !== stageGame || !game.enemies.includes(enemy) || enemy.dead || game.players.every(p => p.hp <= 0)) return;
+      fn(enemy);
     }, delayMs);
   }
 
+  function targetForEnemy(e) {
+    const living = game.players.filter(p => p.hp > 0);
+    return living.reduce((nearest, p) =>
+      !nearest || Math.hypot(p.x - e.x, p.y - e.y) < Math.hypot(nearest.x - e.x, nearest.y - e.y) ? p : nearest, null);
+  }
+
   function enemyMeleeHit(e, dmgMul = 1, extraRange = 0, knock = 70, lane = 50) {
-    const p = game.player;
-    if (p.invuln > 0 || p.hp <= 0) return false;
-    if (Math.abs(p.x - e.x) < e.range + extraRange && Math.abs(p.y - e.y) < lane && Math.abs((p.z || 0) - (e.z || 0)) < 90) {
-      damagePlayer(e.damage * dmgMul, Math.sign(p.x - e.x || 1) * knock);
-      return true;
+    let hit = false;
+    for (const p of game.players) {
+      if (p.invuln > 0 || p.hp <= 0) continue;
+      if (Math.abs(p.x - e.x) < e.range + extraRange && Math.abs(p.y - e.y) < lane && Math.abs((p.z || 0) - (e.z || 0)) < 90) {
+        damagePlayer(p, e.damage * dmgMul, Math.sign(p.x - e.x || 1) * knock);
+        hit = true;
+      }
     }
-    return false;
+    return hit;
   }
 
   function enemyAreaHit(e, radius, dmgMul = 1, knock = 85) {
-    const p = game.player;
-    if (p.invuln > 0 || p.hp <= 0) return false;
-    const dx = p.x - e.x;
-    const dy = (p.y - e.y) * 1.15;
-    if (Math.hypot(dx, dy) <= radius) {
-      damagePlayer(e.damage * dmgMul, Math.sign(dx || 1) * knock);
-      return true;
+    let hit = false;
+    for (const p of game.players) {
+      if (p.invuln > 0 || p.hp <= 0) continue;
+      const dx = p.x - e.x;
+      const dy = (p.y - e.y) * 1.15;
+      if (Math.hypot(dx, dy) <= radius) {
+        damagePlayer(p, e.damage * dmgMul, Math.sign(dx || 1) * knock);
+        hit = true;
+      }
     }
-    return false;
+    return hit;
   }
 
   function spawnEnemyProjectilePattern(e, count = 3, speed = 255, spread = 0.24, color = null, width = 12, height = 12) {
-    const p = game.player;
+    const p = targetForEnemy(e);
+    if (!p) return;
     const baseAngle = Math.atan2(p.y - e.y, p.x - e.x);
     for (let i = 0; i < count; i++) {
       const angle = baseAngle + (i - (count - 1) / 2) * spread;
@@ -990,7 +1043,10 @@
     e.attackTimer = e.attackDuration;
     e.animTime = 0;
     if (visual.ranged) {
-      queueEnemyAction(e, 145, () => spawnEnemyProjectile(e, game.player));
+      queueEnemyAction(e, 145, () => {
+        const target = targetForEnemy(e);
+        if (target) spawnEnemyProjectile(e, target);
+      });
     } else {
       queueEnemyAction(e, 145, () => enemyMeleeHit(e, e.boss && e.phase ? 1.1 : 1, 16, e.boss ? 110 : 70));
     }
@@ -1014,7 +1070,9 @@
       });
     } else if (visual.phaseLeap) {
       queueEnemyAction(e, 220, () => {
-        e.x = clamp(game.player.x - e.facing * 40, game.cameraX - 60, game.stage.width - 70);
+        const target = targetForEnemy(e);
+        if (!target) return;
+        e.x = clamp(target.x - e.facing * 40, game.cameraX - 60, game.stage.width - 70);
         enemyMeleeHit(e, 1.05, 28, 95);
         burst(e.x, e.y, '#7ef3ff', 10, 140);
       });
@@ -1066,7 +1124,7 @@
             life: 1.35, owner: 'enemy', pierce: false, explosive: true, hit: new Set()
           });
         }
-        if (Math.abs(game.player.y - e.y) < 54) enemyMeleeHit(e, 1.2, 250, 115);
+        enemyMeleeHit(e, 1.2, 250, 115);
         burst(e.x + e.facing * 30, e.y - 10, '#ff77ff', 20, 210);
         flash = Math.max(flash, .2);
         screenShake = Math.max(screenShake, 12);
@@ -1086,7 +1144,6 @@
   }
 
   function updateProjectiles(dt) {
-    const p = game.player;
     for (const pr of game.projectiles) {
       pr.life -= dt;
       pr.x += pr.vx * dt;
@@ -1103,10 +1160,13 @@
           }
         }
       } else {
-        if (p.invuln <= 0 && Math.abs(p.x - pr.x) < pr.width + 18 && Math.abs(p.y - pr.y) < 32) {
-          damagePlayer(pr.damage, Math.sign(pr.vx) * 65);
-          burst(pr.x, pr.y, pr.color, 7, 100);
-          pr.life = 0;
+        for (const p of game.players) {
+          if (p.hp > 0 && p.invuln <= 0 && Math.abs(p.x - pr.x) < pr.width + 18 && Math.abs(p.y - pr.y) < 32) {
+            damagePlayer(p, pr.damage, Math.sign(pr.vx) * 65);
+            burst(pr.x, pr.y, pr.color, 7, 100);
+            pr.life = 0;
+            break;
+          }
         }
       }
     }
@@ -1114,7 +1174,6 @@
   }
 
   function updateEnemies(dt) {
-    const p = game.player;
     for (const e of game.enemies) {
       const visual = enemyVisual(e);
       e.animTime += dt;
@@ -1157,6 +1216,8 @@
         continue;
       }
 
+      const p = targetForEnemy(e);
+      if (!p) continue;
       const dx = p.x - e.x;
       const dy = p.y - e.y;
       const absX = Math.abs(dx);
@@ -1237,8 +1298,7 @@
     beep(e.boss ? 58 : 74, e.boss ? .22 : .07, 'sawtooth', e.boss ? .04 : .025);
   }
 
-  function damagePlayer(dmg, knock) {
-    const p = game.player;
+  function damagePlayer(p, dmg, knock) {
     if (p.invuln > 0 || p.hp <= 0) return;
     p.hp -= dmg;
     p.invuln = .55;
@@ -1252,10 +1312,9 @@
   }
 
   function updateStageFlow() {
-    const p = game.player;
     if (!game.activeWave && game.currentWave + 1 < game.stage.waves.length) {
       const next = game.stage.waves[game.currentWave + 1];
-      if (p.x >= next.x - 480) spawnWave(game.currentWave + 1);
+      if (game.players.some(p => p.hp > 0 && p.x >= next.x - 480)) spawnWave(game.currentWave + 1);
     }
 
     if (game.activeWave) {
@@ -1428,7 +1487,7 @@
 
     ctx.fillStyle = '#52677f';
     ctx.font = '11px ui-monospace, monospace';
-    ctx.fillText('Heróis, inimigos e chefes agora usam sprite sheets com animações aplicadas no gameplay.', 52, 510);
+    ctx.fillText('Cooperativo local: pressione M no mapa para alternar entre 1P e 2P.', 52, 510);
   }
 
   function renderMap() {
@@ -1444,7 +1503,7 @@
     ctx.fillText('MAPA DE OPERAÇÕES', 24, 30);
     ctx.fillStyle = '#7f99b7';
     ctx.font = '12px ui-monospace, monospace';
-    ctx.fillText('Escolha a próxima zona de missão', 24, 50);
+    ctx.fillText(coopMode ? '2P: P1 WASD + F/G/H  •  P2 SETAS + J/K/L' : 'Escolha a próxima zona de missão', 24, 50);
 
     const current = HEROES[save.currentHero] || HEROES.solarion;
     drawMiniHero(755, 17, current, 1);
@@ -1484,6 +1543,8 @@
     ctx.fillStyle = st.unlocked() ? '#d8f8ff' : '#66778b';
     ctx.font = '700 12px ui-monospace, monospace';
     ctx.fillText(st.unlocked() ? 'ENTER: INICIAR  •  R: EQUIPE  •  ESC: MENU' : 'SETOR INACESSÍVEL', 890, 490);
+    ctx.fillStyle = coopMode ? '#ffe286' : '#9cb3c9';
+    ctx.fillText(`M: ${coopMode ? '2 JOGADORES' : '1 JOGADOR'} (TROCAR)`, 890, 508);
     ctx.textAlign = 'left';
   }
 
@@ -1621,7 +1682,7 @@
 
     const entities = [];
     for (const e of game.enemies) entities.push({ y: e.y, type: 'enemy', data: e });
-    entities.push({ y: game.player.y, type: 'player', data: game.player });
+    for (const p of game.players) entities.push({ y: p.y, type: 'player', data: p });
     entities.sort((a,b) => a.y - b.y);
 
     for (const ent of entities) {
@@ -1637,7 +1698,15 @@
 
   function drawStageBackground(stage, camX) {
     const id = stage.id;
-    if (id === 'harbor') drawHarbor(camX);
+    const image = scenarioImages[id];
+    if (image?.complete && image.naturalWidth) {
+      // A slight pan gives the scenery depth without needing a tileable image.
+      const cropW = image.naturalWidth / 1.15;
+      const cropH = cropW * H / W;
+      const progress = clamp(camX / Math.max(1, stage.width - W), 0, 1);
+      ctx.drawImage(image, (image.naturalWidth - cropW) * progress,
+        (image.naturalHeight - cropH) / 2, cropW, cropH, 0, 0, W, H);
+    } else if (id === 'harbor') drawHarbor(camX);
     else if (id === 'metro') drawMetro(camX);
     else if (id === 'sky') drawSky(camX);
     else drawVoid(camX);
@@ -1646,7 +1715,7 @@
     ctx.fillStyle = 'rgba(3,8,16,.65)';
     ctx.fillRect(0, H - 8, W, 8);
     ctx.fillStyle = stage.primary;
-    ctx.fillRect(0, H - 8, W * clamp(game.player.x / stage.width, 0, 1), 8);
+    ctx.fillRect(0, H - 8, W * clamp(Math.max(...game.players.map(p => p.x)) / stage.width, 0, 1), 8);
   }
 
   function drawHarbor(cam) {
@@ -1789,11 +1858,20 @@
     if (sx < -180 || sx > W + 180) return;
     drawShadow(sx, groundY, p.dashTimer > 0 ? 32 : 25, p.z);
     ctx.save();
+    if (p.hp <= 0) ctx.globalAlpha = .35;
     if (p.flash > 0 || (p.invuln > 0 && Math.floor(performance.now()/55)%2===0)) ctx.globalAlpha=.55;
     const anim = playerAnimation(p);
     const drawn = drawSheetFrame(sx, sy, p.heroId, anim.action, anim.index, p.facing, 1);
     if (!drawn) drawHeroSprite(sx, sy, hero, p.facing, 1.0, p.attackTimer > 0, p.comboStep, p.specialTimer > 0);
     ctx.restore();
+    if (coopMode) {
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '900 12px ui-monospace, monospace';
+      ctx.fillStyle = p.slot === 1 ? '#66e7ff' : '#ffd166';
+      ctx.fillText(`P${p.slot}${p.hp <= 0 ? ' KO' : ''}`, sx, sy - 125);
+      ctx.restore();
+    }
   }
 
   function drawEnemy(e) {
@@ -1908,14 +1986,16 @@
   }
 
   function drawStageHud(){
-    const p=game.player,h=HEROES[p.heroId];
-    ctx.fillStyle='rgba(2,7,14,.82)';roundRect(14,14,330,88,9,true);ctx.strokeStyle='#244060';roundRect(14,14,330,88,9,false,true);
-    drawMiniHero(28,30,h,1.05);
-    ctx.fillStyle=h.primary;ctx.font='900 17px ui-monospace, monospace';ctx.fillText(h.name,86,35);
-    ctx.fillStyle='#7890aa';ctx.font='10px ui-monospace, monospace';ctx.fillText(h.role.toUpperCase(),86,49);
-    drawBar(86,59,238,14,p.hp/p.maxHp,'#ff5d6e','#30131a');
-    drawBar(86,80,238,8,p.energy/p.maxEnergy,h.primary,'#112436');
-    ctx.fillStyle='#dcecff';ctx.font='900 10px ui-monospace, monospace';ctx.fillText(`${Math.ceil(p.hp)} / ${p.maxHp}`,92,70);
+    for (const p of game.players) {
+      const h = HEROES[p.heroId], x = p.slot === 1 ? 14 : 357;
+      ctx.fillStyle='rgba(2,7,14,.82)';roundRect(x,14,330,88,9,true);ctx.strokeStyle=p.slot===1?'#244060':'#745d30';roundRect(x,14,330,88,9,false,true);
+      drawMiniHero(x+14,30,h,1.05);
+      ctx.fillStyle=h.primary;ctx.font='900 16px ui-monospace, monospace';ctx.fillText(`${coopMode ? `P${p.slot} ` : ''}${h.name}`,x+72,35);
+      ctx.fillStyle='#7890aa';ctx.font='10px ui-monospace, monospace';ctx.fillText(p.hp>0?h.role.toUpperCase():'FORA DE COMBATE',x+72,49);
+      drawBar(x+72,59,238,14,p.hp/p.maxHp,'#ff5d6e','#30131a');
+      drawBar(x+72,80,238,8,p.energy/p.maxEnergy,h.primary,'#112436');
+      ctx.fillStyle='#dcecff';ctx.font='900 10px ui-monospace, monospace';ctx.fillText(`${Math.ceil(p.hp)} / ${p.maxHp}`,x+78,70);
+    }
 
     ctx.textAlign='right';ctx.fillStyle='rgba(2,7,14,.76)';roundRect(705,14,241,72,9,true);ctx.strokeStyle='#223a58';roundRect(705,14,241,72,9,false,true);
     ctx.fillStyle='#8ca4bd';ctx.font='10px ui-monospace, monospace';ctx.fillText(game.stage.name,930,34);
@@ -1925,9 +2005,11 @@
     if(game.combo>1 && game.comboTimer>0){ctx.fillStyle='#fff18b';ctx.font='900 25px ui-monospace, monospace';ctx.textAlign='center';ctx.fillText(`${game.combo} HIT`,W/2,72);ctx.textAlign='left';}
 
     // party strip
-    const list=save.unlocked.filter(id=>HEROES[id]);
-    let x=18;const y=118;
-    list.forEach((id,i)=>{const hh=HEROES[id];const active=id===p.heroId;ctx.save();ctx.globalAlpha=active?1:.55;ctx.fillStyle=active?'rgba(255,255,255,.11)':'rgba(0,0,0,.24)';roundRect(x,y,48,28,5,true);ctx.strokeStyle=active?hh.primary:'#25364b';roundRect(x,y,48,28,5,false,true);ctx.fillStyle=hh.primary;ctx.fillRect(x+6,y+7,7,14);ctx.fillStyle='#c9d8e7';ctx.font='900 8px monospace';ctx.fillText(hh.name,x+17,y+18);ctx.restore();x+=53;});
+    if (!coopMode) {
+      const list=save.unlocked.filter(id=>HEROES[id]);
+      let x=18;const y=118;
+      list.forEach((id,i)=>{const hh=HEROES[id];const active=id===game.player.heroId;ctx.save();ctx.globalAlpha=active?1:.55;ctx.fillStyle=active?'rgba(255,255,255,.11)':'rgba(0,0,0,.24)';roundRect(x,y,48,28,5,true);ctx.strokeStyle=active?hh.primary:'#25364b';roundRect(x,y,48,28,5,false,true);ctx.fillStyle=hh.primary;ctx.fillRect(x+6,y+7,7,14);ctx.fillStyle='#c9d8e7';ctx.font='900 8px monospace';ctx.fillText(hh.name,x+17,y+18);ctx.restore();x+=53;});
+    }
 
     if(game.bossName){
       const boss=game.enemies.find(e=>e.boss&&!e.dead);
@@ -1941,7 +2023,7 @@
     if(game.notice?.timer>0){
       const alpha=Math.min(1,game.notice.timer*2);ctx.save();ctx.globalAlpha=alpha;ctx.textAlign='center';ctx.fillStyle='rgba(1,5,12,.72)';roundRect(250,200,460,92,8,true);ctx.strokeStyle=game.stage.primary;roundRect(250,200,460,92,8,false,true);ctx.fillStyle='#f5fbff';ctx.font='900 28px ui-monospace, monospace';ctx.fillText(game.notice.text,W/2,238);ctx.fillStyle='#8da6c0';ctx.font='12px ui-monospace, monospace';ctx.fillText(game.notice.sub,W/2,266);ctx.restore();ctx.textAlign='left';
     }
-    if(game.player.hp<=0){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ff6f7e';ctx.font='900 38px ui-monospace, monospace';ctx.fillText('MISSÃO FALHOU',W/2,H/2-12);ctx.fillStyle='#cad8e8';ctx.font='13px ui-monospace, monospace';ctx.fillText('ENTER para voltar ao mapa',W/2,H/2+24);ctx.textAlign='left';}
+    if(game.players.every(p=>p.hp<=0)){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ff6f7e';ctx.font='900 38px ui-monospace, monospace';ctx.fillText('MISSÃO FALHOU',W/2,H/2-12);ctx.fillStyle='#cad8e8';ctx.font='13px ui-monospace, monospace';ctx.fillText('ENTER para voltar ao mapa',W/2,H/2+24);ctx.textAlign='left';}
   }
 
   function renderPauseOverlay(){
@@ -2015,6 +2097,7 @@
       return;
     }
     if(state==='map'){
+      if(x>=650&&y>=495&&y<=520){toggleCoopMode();return;}
       for(let i=0;i<STAGES.length;i++){const st=STAGES[i];if(Math.hypot(x-st.x,y-st.y)<42){selectedNode=i;if(st.unlocked())startStage(st);else beep(110,.07,'square',.02);return;}}
       if(x>700&&y<80){state='roster';selectedRoster=Math.max(0,save.unlocked.indexOf(save.currentHero));}
       return;

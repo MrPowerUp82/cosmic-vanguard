@@ -40,6 +40,10 @@ Os movimentos especiais não são apenas animações: eles possuem dano, alcance
 
 ## Controles
 
+No mapa, pressione **M** para alternar entre **1 jogador** e **2 jogadores** antes de iniciar a missão. No cooperativo local, cada jogador controla um herói diferente no mesmo teclado. A missão continua enquanto ao menos um herói estiver vivo.
+
+**Modo solo**
+
 - **WASD / Setas** — mover
 - **J / Z** — executar o combo completo do sprite sheet
 - **K / X** — especial do personagem
@@ -49,9 +53,24 @@ Os movimentos especiais não são apenas animações: eles possuem dano, alcance
 - **Esc / P** — pausa
 - **R** — tela de equipe no mapa
 
+**Modo 2 jogadores**
+
+| Ação | Jogador 1 | Jogador 2 |
+| --- | --- | --- |
+| Mover | WASD | Setas |
+| Atacar | F | J |
+| Especial | G | K |
+| Movimento especial | H | L |
+| Pular | Espaço | Shift direito |
+| Trocar herói | Q / E | U / O |
+
+**Esc / P** pausa para ambos.
+
 ## Sprite Sheet Viewer
 
 Abra `sprite-viewer.html`. O viewer agora carrega exatamente os atlases processados usados pelo jogo.
+
+Na aba **Cenários**, escolha um dos quatro fundos da campanha para inspecioná-lo em 960 × 540. A aba **Combate** permite trocar o cenário durante a prévia com herói e inimigo. Os fundos também são usados nas respectivas fases do jogo.
 
 Há seleção direta para:
 
@@ -83,6 +102,7 @@ Depois abra `http://localhost:8000`.
 - `sprite-viewer.html` — ferramenta de inspeção de frames
 - `assets/sprites/` — sheets originais
 - `assets/sprites/processed/` — atlases usados pelo gameplay
+- `assets/sprites/scenarios/` — fundos de Neon Harbor, Iron District, Skyspire e Void Gate
 
 
 ## Atualização: sprites de inimigos e boss
