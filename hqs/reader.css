@@ -71,12 +71,22 @@
   font-weight: 700;
 }
 
-/* Atalho flutuante no canto do Canvas (visível em telas cheias e mobile) */
-.hq-canvas-btn {
+/* Atalhos flutuantes no canto do Canvas (visível em telas cheias e mobile) */
+.canvas-corner-actions {
   position: absolute;
   top: 12px;
   right: 12px;
   z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-corner-actions .hq-canvas-btn {
+  position: static;
+}
+
+.hq-canvas-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;

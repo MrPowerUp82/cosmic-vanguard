@@ -30,39 +30,6 @@
     }, duration);
   }
 
-  function updateOnlineStatus() {
-    const isOnline = navigator.onLine;
-    let pill = document.getElementById('pwa-status-pill');
-    if (!pill) {
-      pill = document.createElement('div');
-      pill.id = 'pwa-status-pill';
-      pill.className = 'pwa-status-pill';
-      const topbarRight = document.querySelector('.topbar-right');
-      if (topbarRight) {
-        topbarRight.prepend(pill);
-      } else {
-        document.body.appendChild(pill);
-      }
-    }
-
-    if (!isOnline) {
-      pill.innerHTML = '<span class="status-dot offline"></span> Modo Offline';
-      pill.title = 'Jogo rodando 100% offline via cache PWA.';
-      pill.classList.add('offline');
-      pill.classList.remove('online');
-      pill.style.display = 'inline-flex';
-      showToast('⚡ Modo Offline ativo. Jogo e HQs totalmente disponíveis!');
-    } else {
-      pill.innerHTML = '<span class="status-dot online"></span> Online';
-      pill.title = 'Conectado à rede.';
-      pill.classList.add('online');
-      pill.classList.remove('offline');
-      setTimeout(() => {
-        if (navigator.onLine && pill) pill.style.display = 'none';
-      }, 3500);
-    }
-  }
-
   function hideInstallButtons() {
     const btnTopbar = document.getElementById('pwa-install-btn');
     const btnCanvas = document.getElementById('pwa-canvas-btn');
@@ -94,7 +61,7 @@
       }
       deferredPrompt = null;
     } else {
-      // Guia passo a passo quando o navegador não disparou evento programático ou em iOS Safari
+      // Guia passo a passo caso o navegador não suporte prompt programático ou em iOS Safari
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       if (isIOS) {
         showToast('📲 No iPhone/iPad: toque em Compartilhar (⎋) e depois em "Adicionar à Tela de Início".', 6000);
@@ -164,19 +131,22 @@
     hideInstallButtons();
   });
 
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
+  window.addEventListener('online', () => {
+    showToast('🌐 Conexão restabelecida.');
+  });
+
+  window.addEventListener('offline', () => {
+    showToast('⚡ Modo Offline ativo. Jogo e HQs totalmente disponíveis!');
+  });
 
   // Inicializa quando o DOM estiver pronto
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       setupInstallButtons();
-      if (!navigator.onLine) updateOnlineStatus();
       checkActionParams();
     });
   } else {
     setupInstallButtons();
-    if (!navigator.onLine) updateOnlineStatus();
     checkActionParams();
   }
 
