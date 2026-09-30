@@ -1,4 +1,4 @@
-# Cosmic Vanguard Native v0.1.1
+# Cosmic Vanguard Native v0.1.2
 
 ![Banner de Cosmic Vanguard](../assets/banner.png)
 
@@ -11,7 +11,7 @@ entre Linux, Windows, Nintendo Switch, PS Vita e PSP.
 
 Rode `./native/tools/build-all.ps1` no PowerShell com Docker Desktop ativo. O script
 gera os atlases nativos, compila os cinco alvos e salva os pacotes em
-`native/dist/v0.1.1/` com `SHA256SUMS`. Para um alvo:
+`native/dist/v0.1.2/` com `SHA256SUMS`. Para um alvo:
 
 ```powershell
 ./native/tools/build-all.ps1 -Targets windows
@@ -19,11 +19,11 @@ gera os atlases nativos, compila os cinco alvos e salva os pacotes em
 
 | Plataforma | Pacote | Instalação |
 |---|---|---|
-| Windows x86_64 | `cosmic-vanguard-v0.1.1-windows-x86_64.zip` | Extraia tudo e abra `cosmic_vanguard.exe`. |
-| Linux x86_64 | `cosmic-vanguard-v0.1.1-linux-x86_64.tar.gz` | Requer SDL2, SDL2_image e SDL2_ttf instalados; extraia e rode `./linux/cosmic_vanguard`. |
-| Switch com CFW | `cosmic-vanguard-v0.1.1-switch.nro` | Copie para `sd:/switch/` e abra no Homebrew Menu. |
-| PS Vita com homebrew | `cosmic-vanguard-v0.1.1-vita.vpk` | Instale no VitaShell; Title ID `CVAN00001`. |
-| PSP com CFW / Adrenaline | `cosmic-vanguard-v0.1.1-psp.cso` ou `.iso` | Copie para `ms0:/ISO/`. O `.zip` alternativo contém a pasta `CosmicVanguard` para `ms0:/PSP/GAME/`. |
+| Windows x86_64 | `cosmic-vanguard-v0.1.2-windows-x86_64.zip` | Extraia tudo e abra `cosmic_vanguard.exe`. |
+| Linux x86_64 | `cosmic-vanguard-v0.1.2-linux-x86_64.tar.gz` | Requer SDL2, SDL2_image e SDL2_ttf instalados; extraia e rode `./linux/cosmic_vanguard`. |
+| Switch com CFW | `cosmic-vanguard-v0.1.2-switch.nro` | Copie para `sd:/switch/` e abra no Homebrew Menu. |
+| PS Vita com homebrew | `cosmic-vanguard-v0.1.2-vita.vpk` | Instale no VitaShell; Title ID `CVAN00001`. |
+| PSP com CFW / Adrenaline | `cosmic-vanguard-v0.1.2-psp.cso` ou `.iso` | Copie para `ms0:/ISO/`. O `.zip` alternativo contém a pasta `CosmicVanguard` para `ms0:/PSP/GAME/`. |
 
 ## Controles
 
