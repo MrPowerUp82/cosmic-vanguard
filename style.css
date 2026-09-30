@@ -107,3 +107,107 @@ canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; 
   #touch-ui { display: block; }
   .coop-mode #touch-ui { display: none; }
 }
+
+/* --- PWA: Botão de Instalação, Status Offline e Toast --- */
+.pwa-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(80, 240, 140, 0.45);
+  background: linear-gradient(135deg, rgba(22, 74, 44, 0.92), rgba(10, 38, 22, 0.92));
+  color: #cbf9d7;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+.pwa-install-btn:hover {
+  border-color: #50f08c;
+  background: linear-gradient(135deg, rgba(32, 102, 60, 0.98), rgba(16, 50, 32, 0.98));
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(80, 240, 140, 0.45);
+  transform: translateY(-1px);
+}
+
+.pwa-install-btn:active {
+  transform: translateY(1px);
+}
+
+.pwa-status-pill {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  user-select: none;
+}
+
+.pwa-status-pill.offline {
+  display: inline-flex;
+  background: rgba(255, 177, 44, 0.16);
+  border: 1px solid rgba(255, 177, 44, 0.45);
+  color: #ffca66;
+}
+
+.pwa-status-pill.online {
+  display: inline-flex;
+  background: rgba(80, 240, 140, 0.15);
+  border: 1px solid rgba(80, 240, 140, 0.45);
+  color: #7dff9c;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot.offline {
+  background: #ffb12c;
+  box-shadow: 0 0 6px #ffb12c;
+}
+.status-dot.online {
+  background: #50f08c;
+  box-shadow: 0 0 6px #50f08c;
+}
+
+.pwa-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(24px);
+  background: rgba(5, 14, 28, 0.96);
+  border: 1px solid #79e6ff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  color: #eaf4ff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 24px rgba(121, 230, 255, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 3000;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pwa-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+

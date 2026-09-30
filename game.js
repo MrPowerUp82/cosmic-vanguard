@@ -563,6 +563,7 @@
   }
 
   function update(dt) {
+    document.body.classList.toggle('in-stage', state === 'stage');
     if (state === 'stage') updateStage(dt);
     else if (state === 'title') updateTitle(dt);
     else if (state === 'map') updateMap(dt);
@@ -1517,6 +1518,10 @@
     ctx.fillStyle = '#52677f';
     ctx.font = '11px ui-monospace, monospace';
     ctx.fillText('Cooperativo local: pressione M no mapa para alternar entre 1P e 2P.', 50, 530);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#79e6ff';
+    ctx.fillText('H = ler HQ oficial', 910, 530);
+    ctx.textAlign = 'left';
   }
 
   function renderMap() {
@@ -2088,7 +2093,7 @@
   }
 
   function renderPauseOverlay(){
-    ctx.fillStyle='rgba(1,4,10,.72)';ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(8,18,34,.96)';roundRect(310,175,340,190,12,true);ctx.strokeStyle='#517396';roundRect(310,175,340,190,12,false,true);ctx.textAlign='center';ctx.fillStyle='#eaf5ff';ctx.font='900 30px ui-monospace, monospace';ctx.fillText('PAUSA',W/2,222);ctx.fillStyle='#8fa5bd';ctx.font='13px ui-monospace, monospace';ctx.fillText('ESC / P — continuar',W/2,270);ctx.fillText('M — voltar ao mapa',W/2,300);ctx.fillStyle='#607891';ctx.font='11px ui-monospace, monospace';ctx.fillText('O progresso das áreas concluídas é salvo automaticamente.',W/2,337);ctx.textAlign='left';
+    ctx.fillStyle='rgba(1,4,10,.72)';ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(8,18,34,.96)';roundRect(310,165,340,210,12,true);ctx.strokeStyle='#517396';roundRect(310,165,340,210,12,false,true);ctx.textAlign='center';ctx.fillStyle='#eaf5ff';ctx.font='900 30px ui-monospace, monospace';ctx.fillText('PAUSA',W/2,212);ctx.fillStyle='#8fa5bd';ctx.font='13px ui-monospace, monospace';ctx.fillText('ESC / P — continuar',W/2,254);ctx.fillText('M — voltar ao mapa',W/2,282);ctx.fillStyle='#79e6ff';ctx.fillText('H — ler HQ do jogo',W/2,310);ctx.fillStyle='#607891';ctx.font='11px ui-monospace, monospace';ctx.fillText('O progresso das áreas concluídas é salvo automaticamente.',W/2,348);ctx.textAlign='left';
   }
 
   function renderStageClearOverlay(){
@@ -2213,6 +2218,13 @@
     },
     slowmo(scale, sec) {
       if (game) game.clock.slowmo(scale, sec);
+    },
+    pauseGame() {
+      if (state === 'stage') {
+        previousState = 'stage';
+        state = 'pause';
+        for (const k in keys) keys[k] = false;
+      }
     },
   };
 

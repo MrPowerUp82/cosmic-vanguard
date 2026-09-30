@@ -62,6 +62,7 @@ No mapa, pressione **M** para alternar entre **1 jogador** e **2 jogadores** ant
 - **Q / E** — trocar herói durante a fase
 - **Esc / P** — pausa
 - **R** — tela de equipe no mapa
+- **H** — abrir leitor da HQ oficial (Cosmic Vanguard #1)
 
 **Modo 2 jogadores**
 
@@ -75,6 +76,14 @@ No mapa, pressione **M** para alternar entre **1 jogador** e **2 jogadores** ant
 | Trocar herói | Q / E | U / O |
 
 **Esc / P** pausa para ambos.
+
+## Quadrinhos e Lore (HQs)
+
+O jogo inclui um leitor de quadrinhos integrado acessível a qualquer momento pelo botão no canto da tela (**📖 LER HQs**) ou pressionando a tecla **H**.
+
+- **Edição #1**: *Cosmic Vanguard #1 — A Fronteira Foi Encontrada* (16 páginas em arte colorida).
+- Leitor com suporte a página única e página dupla (spread), barra de miniaturas, navegação por teclado (← / → / Espaço / Esc), zoom, tela cheia, gestos touch e link para download/abertura do PDF original em hqs/.
+- Ao abrir o leitor durante uma missão, o combate é pausado automaticamente.
 
 ## Sprite Sheet Viewer
 
@@ -93,6 +102,14 @@ Há seleção direta para:
 - Special Attack
 
 Os atlases de gameplay usam células de **320 × 240 px**, o que torna simples revisar frame por frame e ajustar cortes.
+
+## Suporte PWA e Jogo Offline
+
+O jogo é uma **Progressive Web App (PWA)** completa com funcionamento offline total:
+
+- **Instalação no dispositivo**: Pode ser instalado no desktop ou celular pelo botão **⬇ Instalar** no topo da tela ou pelo menu do navegador.
+- **Cache Offline Inteligente**: O Service Worker (sw.js) pré-armazena em cache todos os 77 arquivos do jogo (códigos, heróis, inimigos, projéteis, cenários e todas as 16 páginas da HQ).
+- **100% Jogável Sem Internet**: Após a primeira visita, o jogo abre e roda perfeitamente mesmo sem conexão ou em modo avião.
 
 ## Rodar
 
