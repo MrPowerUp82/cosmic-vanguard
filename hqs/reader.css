@@ -86,6 +86,20 @@
   position: static;
 }
 
+@media (hover: none), (pointer: coarse) {
+  .canvas-corner-actions {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    gap: 6px;
+  }
+
+  .canvas-corner-actions .hq-canvas-btn {
+    min-height: 44px;
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+}
+
 .hq-canvas-btn {
   display: inline-flex;
   align-items: center;

@@ -3,7 +3,7 @@
    Garante funcionamento 100% offline do jogo e leitor de HQs.
    ========================================================================== */
 
-const CACHE_NAME = 'cv-cache-v1';
+const CACHE_NAME = 'cv-cache-v2';
 
 const PRECACHE_URLS = [
   './',
