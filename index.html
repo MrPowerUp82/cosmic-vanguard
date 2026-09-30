@@ -20,6 +20,9 @@
       <div class="brand">COSMIC <span>VANGUARD</span></div>
       <div class="topbar-right">
         <div class="hint">Beat 'em up original inspirado em clássicos arcade</div>
+        <button id="pwa-install-btn" class="pwa-install-btn" title="Instalar Cosmic Vanguard como aplicativo" aria-label="Instalar aplicativo">
+          <span>⬇ Instalar</span>
+        </button>
         <button id="hq-shortcut-btn" class="hq-corner-btn" title="Ler Quadrinhos / HQs (Tecla H)" aria-label="Abrir leitor de HQs">
           <span class="hq-corner-icon">📖</span>
           <span class="hq-corner-text">LER HQs</span>
@@ -33,11 +36,16 @@
       <canvas id="game" width="960" height="540" aria-label="Cosmic Vanguard"></canvas>
       <div id="scanlines" aria-hidden="true"></div>
 
-      <button id="hq-canvas-btn" class="hq-canvas-btn" title="Ler Quadrinhos / HQs (Tecla H)" aria-label="Abrir leitor de HQs">
-        <span class="hq-corner-icon">📖</span>
-        <span>HQs</span>
-        <span class="hq-corner-badge">#1</span>
-      </button>
+      <div class="canvas-corner-actions">
+        <button id="pwa-canvas-btn" class="pwa-canvas-btn" title="Instalar Cosmic Vanguard no seu celular ou computador" aria-label="Instalar app">
+          <span>⬇ Instalar</span>
+        </button>
+        <button id="hq-canvas-btn" class="hq-canvas-btn" title="Ler Quadrinhos / HQs (Tecla H)" aria-label="Abrir leitor de HQs">
+          <span class="hq-corner-icon">📖</span>
+          <span>HQs</span>
+          <span class="hq-corner-badge">#1</span>
+        </button>
+      </div>
 
       <div id="touch-ui" aria-hidden="true">
         <div class="dpad">

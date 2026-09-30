@@ -1,5 +1,6 @@
 /* ==========================================================================
    Cosmic Vanguard — Integração PWA e Gerenciador Offline
+   Suporte a Desktop e Dispositivos Móveis (Android / iOS / Tablets)
    ========================================================================== */
 
 (() => {
@@ -7,7 +8,13 @@
 
   let deferredPrompt = null;
 
-  function showToast(message, duration = 3000) {
+  function isRunningStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           window.navigator.standalone === true ||
+           document.referrer.includes('android-app://');
+  }
+
+  function showToast(message, duration = 3500) {
     let toast = document.getElementById('pwa-toast');
     if (!toast) {
       toast = document.createElement('div');
@@ -50,37 +57,71 @@
       pill.title = 'Conectado à rede.';
       pill.classList.add('online');
       pill.classList.remove('offline');
-      // Oculta após alguns segundos quando estiver online para não poluir
       setTimeout(() => {
         if (navigator.onLine && pill) pill.style.display = 'none';
       }, 3500);
     }
   }
 
-  function initInstallButton() {
-    const topbarRight = document.querySelector('.topbar-right');
-    if (!topbarRight || document.getElementById('pwa-install-btn')) return;
+  function hideInstallButtons() {
+    const btnTopbar = document.getElementById('pwa-install-btn');
+    const btnCanvas = document.getElementById('pwa-canvas-btn');
+    if (btnTopbar) btnTopbar.style.display = 'none';
+    if (btnCanvas) btnCanvas.style.display = 'none';
+  }
 
-    const btn = document.createElement('button');
-    btn.id = 'pwa-install-btn';
-    btn.className = 'pwa-install-btn';
-    btn.innerHTML = '⬇ <span>Instalar</span>';
-    btn.title = 'Instalar Cosmic Vanguard como aplicativo no seu dispositivo';
-    btn.style.display = 'none';
+  function showInstallButtons() {
+    if (isRunningStandalone()) return;
+    const btnTopbar = document.getElementById('pwa-install-btn');
+    const btnCanvas = document.getElementById('pwa-canvas-btn');
+    if (btnTopbar) btnTopbar.style.display = 'inline-flex';
+    if (btnCanvas) btnCanvas.style.display = 'inline-flex';
+  }
 
-    btn.addEventListener('click', async () => {
-      if (deferredPrompt) {
+  async function handleInstallClick(e) {
+    if (e) e.preventDefault();
+
+    if (deferredPrompt) {
+      try {
         deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
-        if (choice.outcome === 'accepted') {
+        if (choice && choice.outcome === 'accepted') {
           showToast('🎮 Instalando Cosmic Vanguard...');
-          btn.style.display = 'none';
+          hideInstallButtons();
         }
-        deferredPrompt = null;
+      } catch (err) {
+        console.warn('[PWA] Erro ao abrir prompt:', err);
       }
-    });
+      deferredPrompt = null;
+    } else {
+      // Guia passo a passo quando o navegador não disparou evento programático ou em iOS Safari
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        showToast('📲 No iPhone/iPad: toque em Compartilhar (⎋) e depois em "Adicionar à Tela de Início".', 6000);
+      } else {
+        showToast('📲 Para instalar: abra o menu (⋮) do navegador e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".', 5500);
+      }
+    }
+  }
 
-    topbarRight.prepend(btn);
+  function setupInstallButtons() {
+    if (isRunningStandalone()) {
+      document.body.classList.add('is-standalone');
+      hideInstallButtons();
+      return;
+    }
+
+    const btnTopbar = document.getElementById('pwa-install-btn');
+    const btnCanvas = document.getElementById('pwa-canvas-btn');
+
+    if (btnTopbar) {
+      btnTopbar.addEventListener('click', handleInstallClick);
+    }
+    if (btnCanvas) {
+      btnCanvas.addEventListener('click', handleInstallClick);
+    }
+
+    showInstallButtons();
   }
 
   // Registra Service Worker
@@ -109,19 +150,18 @@
     });
   }
 
-  // Captura evento de instalação nativa PWA
+  // Captura evento nativo de instalação PWA (Chrome/Edge/Android)
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    const btn = document.getElementById('pwa-install-btn');
-    if (btn) btn.style.display = 'inline-flex';
+    showInstallButtons();
   });
 
   window.addEventListener('appinstalled', () => {
-    showToast('🎮 Aplicativo instalado com sucesso!');
+    showToast('🎮 Cosmic Vanguard instalado com sucesso!');
     deferredPrompt = null;
-    const btn = document.getElementById('pwa-install-btn');
-    if (btn) btn.style.display = 'none';
+    document.body.classList.add('is-standalone');
+    hideInstallButtons();
   });
 
   window.addEventListener('online', updateOnlineStatus);
@@ -130,12 +170,12 @@
   // Inicializa quando o DOM estiver pronto
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      initInstallButton();
+      setupInstallButtons();
       if (!navigator.onLine) updateOnlineStatus();
       checkActionParams();
     });
   } else {
-    initInstallButton();
+    setupInstallButtons();
     if (!navigator.onLine) updateOnlineStatus();
     checkActionParams();
   }
