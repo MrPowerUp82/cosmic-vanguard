@@ -24,9 +24,9 @@ assert(playerX(2) > p2Start + 50, 'P2 deve mover-se com a seta');
 assert.equal(playerX(1), p1After, 'P1 deve permanecer parado');
 
 press('KeyF');
-assert(draws.some(draw => draw.src?.includes('solarion.png') && draw.sy === window.SPRITE_ATLAS.cellH * 2), 'F deve atacar com P1');
+assert(draws.some(draw => draw.src?.endsWith('/combos/solarion-combo-v1.png')), 'F deve usar o novo combo com P1');
 press('KeyJ');
-assert(draws.some(draw => draw.src?.includes('night_talon.png') && draw.sy === window.SPRITE_ATLAS.cellH * 2), 'J deve atacar com P2');
+assert(draws.some(draw => draw.src?.endsWith('/combos/night_talon-combo-v1.png')), 'J deve usar o novo combo com P2');
 
 press('KeyO');
 assert(labels.some(label => label.text === 'P2 VALORIA'));

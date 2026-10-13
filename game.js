@@ -209,6 +209,64 @@
   const titleBanner = new Image();
   titleBanner.src = 'assets/banner.png';
 
+  const comboAtlas = window.COMBO_ATLAS;
+  const comboImages = {};
+  const comboAttacks = {};
+  const comboScales = { solarion: .286, night_talon: .306, valoria: .304, red_velocity: .26, abyss_king: .27, emerald_nova: .264 };
+  for (const [id, combo] of Object.entries(comboAtlas?.heroes || {})) {
+    const original = SPRITE_SHEETS[id]?.animations.attack;
+    if (!original) continue;
+    const img = new Image();
+    img.src = `assets/sprites/combos/${combo.src}`;
+    comboImages[id] = img;
+    comboAttacks[id] = {
+      count: combo.frames.length, fps: original.fps * 3, loop: false, combo: true,
+      duration: original.count / original.fps,
+      hitFrames: ['night_talon', 'valoria', 'red_velocity'].includes(id) ? [2, 6, 9] : [2, 6, 10],
+    };
+  }
+
+  function attackDefinition(id) {
+    const img = comboImages[id];
+    return img?.complete && img.naturalWidth ? comboAttacks[id] : SPRITE_SHEETS[id]?.animations.attack;
+  }
+
+  const uiAtlas = window.UI_SPRITES;
+  const uiImages = {};
+  for (const [id, sheet] of Object.entries(uiAtlas?.sheets || {})) {
+    const img = new Image();
+    img.src = sheet.src;
+    uiImages[id] = img;
+  }
+
+  function drawUiSprite(name, x, y, w, h) {
+    const sprite = uiAtlas?.sprites[name];
+    const img = sprite && uiImages[sprite.sheet];
+    if (!img?.complete || !img.naturalWidth) return false;
+    ctx.drawImage(img, sprite.x, sprite.y, sprite.w, sprite.h, x, y, w, h);
+    return true;
+  }
+
+  function drawHudBar(x, y, w, h, ratio, kind, fg, bg) {
+    const frame = `${kind}_frame`, fill = `${kind}_fill`;
+    if (!uiImages.hud?.complete || !uiImages.hud.naturalWidth) {
+      drawBar(x, y, w, h, ratio, fg, bg);
+      return;
+    }
+    ctx.fillStyle = bg;
+    ctx.fillRect(x, y, w, h);
+    const amount = clamp(ratio, 0, 1);
+    if (amount > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, w * amount, h);
+      ctx.clip();
+      drawUiSprite(fill, x, y, w, h);
+      ctx.restore();
+    }
+    drawUiSprite(frame, x - 4, y - 4, w + 8, h + 8);
+  }
+
   const HEROES = {
     solarion: {
       id: 'solarion', name: 'SOLARION', role: 'Poder / voo', sprite: 'solarion',
@@ -854,7 +912,8 @@
     }
 
     if (justPressed(controls.attack) && p.hurtTimer <= 0 && p.specialTimer <= 0 && p.dashTimer <= 0 && p.attackTimer <= 0) {
-      p.attackDuration = animDuration(p.heroId, 'attack');
+      p.attackDefinition = attackDefinition(p.heroId);
+      p.attackDuration = p.attackDefinition?.duration || animDuration(p.heroId, 'attack');
       p.attackTimer = p.attackDuration;
       p.attackHit = false;
       p.attackFrameLast = -1;
@@ -872,33 +931,38 @@
 
   function updatePlayerAttack(p, dt, h) {
     if (p.attackTimer <= 0) return;
-    const def = SPRITE_SHEETS[p.heroId]?.animations?.attack;
+    const def = p.attackDefinition || SPRITE_SHEETS[p.heroId]?.animations?.attack;
     const count = def?.count || 4;
     const elapsed = p.attackDuration - p.attackTimer;
     const progress = clamp(elapsed / Math.max(.001, p.attackDuration), 0, .9999);
     const frameIndex = Math.min(count - 1, Math.floor(progress * count));
     p.comboStep = frameIndex;
-    if (frameIndex <= 0 || p.attackHitFrames.has(frameIndex)) return;
-    p.attackHitFrames.add(frameIndex);
-
-    const factors = [0, .72, .90, 1.28];
-    const dmg = h.damage * (factors[frameIndex] || 1);
-    const range = h.attackRange + (frameIndex === count - 1 ? 18 : 0);
-    let hits = 0;
-    game.enemies.forEach(e => {
-      if (e.dead || e.invuln > 0) return;
-      const dx = e.x - p.x;
-      const dy = Math.abs(e.y - p.y);
-      const inFront = p.facing > 0 ? dx > -26 && dx < range : dx < 26 && dx > -range;
-      if (inFront && dy < 54 && Math.abs(e.z - p.z) < 70) {
-        damageEnemy(e, dmg, p.facing * (frameIndex === count - 1 ? 120 : 62));
-        hits++;
+    // Only the three impact poses deal damage; also process impacts crossed by a slow frame.
+    const impacts = def?.hitFrames || Array.from({ length: count - 1 }, (_, i) => i + 1);
+    for (let hitIndex = 0; hitIndex < impacts.length; hitIndex++) {
+      const impactFrame = impacts[hitIndex];
+      if (frameIndex < impactFrame || p.attackHitFrames.has(impactFrame)) continue;
+      p.attackHitFrames.add(impactFrame);
+      const finalHit = hitIndex === impacts.length - 1;
+      const factors = [.72, .90, 1.28];
+      const dmg = h.damage * (factors[hitIndex] || 1);
+      const range = h.attackRange + (finalHit ? 18 : 0);
+      let hits = 0;
+      game.enemies.forEach(e => {
+        if (e.dead || e.invuln > 0) return;
+        const dx = e.x - p.x;
+        const dy = Math.abs(e.y - p.y);
+        const inFront = p.facing > 0 ? dx > -26 && dx < range : dx < 26 && dx > -range;
+        if (inFront && dy < 54 && Math.abs(e.z - p.z) < 70) {
+          damageEnemy(e, dmg, p.facing * (finalHit ? 120 : 62));
+          hits++;
+        }
+      });
+      if (hits) {
+        p.energy = Math.min(p.maxEnergy, p.energy + 2 + hits * 1.5);
+        screenShake = Math.max(screenShake, finalHit ? 7 : 3);
+        beep(96 + hitIndex * 12, .035, 'square', .025);
       }
-    });
-    if (hits) {
-      p.energy = Math.min(p.maxEnergy, p.energy + 2 + hits * 1.5);
-      screenShake = Math.max(screenShake, frameIndex === count - 1 ? 7 : 3);
-      beep(84 + frameIndex * 12, .035, 'square', .025);
     }
   }
 
@@ -1480,24 +1544,26 @@
       const x = 50 + (i - 1) * 305;
       const info = slotInfo(i);
       const sel = selectedSlot === i;
+      if (!drawUiSprite(sel ? 'slot_selected' : 'slot_normal', x, 402, 270, 76)) {
       ctx.fillStyle = sel ? 'rgba(67,165,205,.18)' : 'rgba(255,255,255,.025)';
       roundRect(x, 402, 270, 76, 8, true);
       ctx.strokeStyle = sel ? '#72e8ff' : '#263a54';
       ctx.lineWidth = sel ? 2 : 1;
       roundRect(x, 402, 270, 76, 8, false, true);
+      }
       ctx.fillStyle = sel ? '#dcf9ff' : '#b9c7d8';
       ctx.font = '900 17px ui-monospace, monospace';
-      ctx.fillText(`SLOT ${i}`, x + 14, 427);
+      ctx.fillText(`SLOT ${i}`, x + 24, 431);
       ctx.font = '12px ui-monospace, monospace';
       if (info) {
         const progress = Math.min(4, info.completed?.length || 0);
         ctx.fillStyle = '#8fa5bd';
-        ctx.fillText(`${progress}/4 setores • ${DIFFICULTY[info.difficulty]?.label || 'NORMAL'}`, x + 14, 449);
+        ctx.fillText(`${progress}/4 setores • ${DIFFICULTY[info.difficulty]?.label || 'NORMAL'}`, x + 24, 451);
         ctx.fillStyle = '#ffe77c';
-        ctx.fillText(`${info.credits || 0} créditos`, x + 14, 468);
+        ctx.fillText(`${info.credits || 0} créditos`, x + 24, 466);
       } else {
-        ctx.fillStyle = '#637790';
-        ctx.fillText('NOVO JOGO', x + 14, 455);
+        ctx.fillStyle = '#a2b8d0';
+        ctx.fillText('NOVO JOGO', x + 24, 455);
       }
     }
 
@@ -1854,8 +1920,8 @@
     ctx.globalAlpha=1;
   }
 
-  function getAnimationFrame(heroId, action, time, duration = null) {
-    const def = getSheetDefinition(heroId)?.animations?.[action];
+  function getAnimationFrame(heroId, action, time, duration = null, definition = null) {
+    const def = definition || getSheetDefinition(heroId)?.animations?.[action];
     if (!def) return { action: 'idle', index: 0 };
     let index = 0;
     if (duration != null && duration > 0 && !def.loop) {
@@ -1877,12 +1943,33 @@
       idx = Math.min((def?.count || 3) - 1, idx);
       return { action: 'jump', index: idx };
     }
-    if (p.attackTimer > 0) return getAnimationFrame(p.heroId, 'attack', p.attackDuration - p.attackTimer, p.attackDuration);
+    if (p.attackTimer > 0) return getAnimationFrame(p.heroId, 'attack', p.attackDuration - p.attackTimer, p.attackDuration, p.attackDefinition);
     if (p.moving) return getAnimationFrame(p.heroId, 'walk', p.animTime);
     return getAnimationFrame(p.heroId, 'idle', p.animTime);
   }
 
-  function drawSheetFrame(x, groundY, heroId, action, frameIndex, facing = 1, scaleMul = 1) {
+  function drawSheetFrame(x, groundY, heroId, action, frameIndex, facing = 1, scaleMul = 1, useCombo = false) {
+    const combo = comboAtlas?.heroes[heroId];
+    const comboImg = comboImages[heroId];
+    if (action === 'attack' && useCombo && comboImg?.complete && comboImg.naturalWidth) {
+      const f = combo.frames[clamp(frameIndex, 0, combo.frames.length - 1)];
+      const scale = comboScales[heroId] * scaleMul;
+      ctx.save();
+      ctx.translate(Math.round(x), Math.round(groundY));
+      ctx.scale(facing, 1);
+      if (f.clip) {
+        ctx.beginPath();
+        f.clip.forEach(([px, py], i) => {
+          const dx = (px - f.pivotX) * scale, dy = (py - f.pivotY) * scale;
+          if (i) ctx.lineTo(dx, dy); else ctx.moveTo(dx, dy);
+        });
+        ctx.closePath();
+        ctx.clip();
+      }
+      ctx.drawImage(comboImg, f.x, f.y, f.w, f.h, -f.pivotX * scale, -f.pivotY * scale, f.w * scale, f.h * scale);
+      ctx.restore();
+      return true;
+    }
     const sheet = getSheetDefinition(heroId);
     const img = spriteImages[heroId];
     const def = sheet?.animations?.[action];
@@ -1914,7 +2001,7 @@
     if (p.hp <= 0) ctx.globalAlpha = .35;
     if (p.flash > 0 || (p.invuln > 0 && Math.floor(performance.now()/55)%2===0)) ctx.globalAlpha=.55;
     const anim = playerAnimation(p);
-    const drawn = drawSheetFrame(sx, sy, p.heroId, anim.action, anim.index, p.facing, 1);
+    const drawn = drawSheetFrame(sx, sy, p.heroId, anim.action, anim.index, p.facing, 1, p.attackDefinition?.combo);
     if (!drawn) drawHeroSprite(sx, sy, hero, p.facing, 1.0, p.attackTimer > 0, p.comboStep, p.specialTimer > 0);
     ctx.restore();
     if (coopMode) {
@@ -2058,15 +2145,16 @@
       drawMiniHero(x+14,30,h,1.05);
       ctx.fillStyle=h.primary;ctx.font='900 16px ui-monospace, monospace';ctx.fillText(`${coopMode ? `P${p.slot} ` : ''}${h.name}`,x+72,35);
       ctx.fillStyle='#7890aa';ctx.font='10px ui-monospace, monospace';ctx.fillText(p.hp>0?h.role.toUpperCase():'FORA DE COMBATE',x+72,49);
-      drawBar(x+72,59,238,14,p.hp/p.maxHp,'#ff5d6e','#30131a');
-      drawBar(x+72,80,238,8,p.energy/p.maxEnergy,h.primary,'#112436');
-      ctx.fillStyle='#dcecff';ctx.font='900 10px ui-monospace, monospace';ctx.fillText(`${Math.ceil(p.hp)} / ${p.maxHp}`,x+78,70);
+      drawHudBar(x+72,59,238,14,p.hp/p.maxHp,'health','#ff5d6e','#30131a');
+      drawHudBar(x+72,80,238,8,p.energy/p.maxEnergy,'energy',h.primary,'#112436');
+      ctx.fillStyle='#dcecff';ctx.font='900 10px ui-monospace, monospace';ctx.fillText(`${Math.ceil(p.hp)} / ${p.maxHp}`,x+92,70);
     }
 
     ctx.textAlign='right';ctx.fillStyle='rgba(2,7,14,.76)';roundRect(705,14,241,72,9,true);ctx.strokeStyle='#223a58';roundRect(705,14,241,72,9,false,true);
     ctx.fillStyle='#8ca4bd';ctx.font='10px ui-monospace, monospace';ctx.fillText(game.stage.name,930,34);
     ctx.fillStyle='#f7e672';ctx.font='900 16px ui-monospace, monospace';ctx.fillText(String(game.score).padStart(6,'0'),930,56);
     ctx.fillStyle='#7e93aa';ctx.font='10px ui-monospace, monospace';ctx.fillText(`${save.credits} CR`,930,73);ctx.textAlign='left';
+    drawUiSprite('credits',716,60,16,16);
 
     if(game.combo>1 && game.comboTimer>0){ctx.fillStyle='#fff18b';ctx.font='900 25px ui-monospace, monospace';ctx.textAlign='center';ctx.fillText(`${game.combo} HIT`,W/2,72);ctx.textAlign='left';}
 

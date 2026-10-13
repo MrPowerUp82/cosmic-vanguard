@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cosmic Vanguard — Combos v1</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#050914;color:#edf5ff}body{max-width:1100px;margin:auto;padding:24px}h1{font-size:26px}p{line-height:1.6;color:#9cb2cb}a{color:#79e6ff}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:20px 0}button,select,input{font:inherit}button,select{padding:9px 12px;background:#10223b;border:1px solid #345377;color:#fff;border-radius:6px}label{display:flex;align-items:center;gap:8px}canvas{display:block;width:100%;height:auto;border:1px solid #29496c;background-color:#091222;background-image:linear-gradient(45deg,#14223b 25%,transparent 25%),linear-gradient(-45deg,#14223b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#14223b 75%),linear-gradient(-45deg,transparent 75%,#14223b 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}#sheet{width:100%;border:1px solid #29496c;background:#101a29}output{min-width:150px;font:13px monospace}#scrub{flex:1;min-width:150px}small{color:#9cb2cb}details{margin-top:24px}summary{cursor:pointer;padding:14px;background:#10223b}
+</style>
+<h1>Cosmic Vanguard · Novos combos</h1>
+<p>Seis sheets transparentes, com 12 poses por herói. A linha ciano marca o chão na prévia. Os recortes têm pivôs para alinhar os pés; as imagens originais estão preservadas.</p>
+<div class="controls">
+<label>Herói <select id="hero"></select></label>
+<button id="play" type="button">Pausar</button>
+<label>Velocidade <input id="fps" type="range" min="4" max="24" value="12"><span id="fps-label">12 fps</span></label>
+<label><input id="mirror" type="checkbox"> Espelhar</label>
+</div>
+<canvas id="preview" width="960" height="380" role="img" aria-label="Prévia animada dos ataques de combo"></canvas>
+<div class="controls"><label for="scrub">Frame</label><input id="scrub" type="range" min="0" max="11" value="0"><output id="status"></output><a id="download" download>Baixar sheet PNG</a></div>
+<p id="attacks"></p>
+<p><a href="atlas.json">Coordenadas e pivôs</a> · <a href="PROMPTS.md">Prompts completos</a> · <a href="../../../index.html">Abrir jogo</a></p>
+<small>Os novos sheets estão integrados ao jogo: J/Z no solo, F para P1 e J para P2 no cooperativo. Uma pressão executa os três golpes. A prévia é mais lenta para facilitar a inspeção.</small>
+<details><summary>Ver sheet completo</summary><img id="sheet" alt="Sheet completo do herói selecionado"></details>
+<script src="atlas.js?v=2"></script>
+<script>
+const select=document.getElementById('hero'), canvas=document.getElementById('preview'), ctx=canvas.getContext('2d'), status=document.getElementById('status'), scrub=document.getElementById('scrub');
+const images={};let selected='solarion', playing=true, frame=0, last=0, elapsed=0;
+for(const [id,hero] of Object.entries(COMBO_ATLAS.heroes)){const option=document.createElement('option');option.value=id;option.textContent=hero.name;select.append(option);const img=new Image();img.src=hero.src;images[id]=img;}
+function choose(){selected=select.value;frame=0;elapsed=0;const hero=COMBO_ATLAS.heroes[selected];document.getElementById('sheet').src=hero.src;document.getElementById('download').href=hero.src;document.getElementById('attacks').textContent=hero.attacks.join(' → ');}
+select.addEventListener('change',choose);choose();
+document.getElementById('play').addEventListener('click',()=>{playing=!playing;document.getElementById('play').textContent=playing?'Pausar':'Reproduzir';elapsed=0;});
+document.getElementById('fps').addEventListener('input',e=>{document.getElementById('fps-label').textContent=e.target.value+' fps';elapsed=0;});
+scrub.addEventListener('input',()=>{playing=false;document.getElementById('play').textContent='Reproduzir';frame=Number(scrub.value);elapsed=0;});
+function render(now){const dt=last?Math.min(100,now-last):0;last=now;const hero=COMBO_ATLAS.heroes[selected],img=images[selected];
+if(playing){elapsed+=dt;const interval=1000/Number(document.getElementById('fps').value);while(elapsed>=interval){frame=(frame+1)%hero.frames.length;elapsed-=interval;}}
+const f=hero.frames[frame];ctx.clearRect(0,0,960,380);ctx.strokeStyle='#79e6ff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,340.5);ctx.lineTo(960,340.5);ctx.stroke();
+if(img.complete&&img.naturalWidth){const scale=.88;ctx.save();ctx.translate(480,340);ctx.scale(document.getElementById('mirror').checked?-1:1,1);if(f.clip){ctx.beginPath();f.clip.forEach(([x,y],i)=>i?ctx.lineTo((x-f.pivotX)*scale,(y-f.pivotY)*scale):ctx.moveTo((x-f.pivotX)*scale,(y-f.pivotY)*scale));ctx.closePath();ctx.clip();}ctx.drawImage(img,f.x,f.y,f.w,f.h,-f.pivotX*scale,-f.pivotY*scale,f.w*scale,f.h*scale);ctx.restore();}
+status.textContent=(frame+1)+' / 12 · Golpe '+f.hit;scrub.value=String(frame);requestAnimationFrame(render);}
+requestAnimationFrame(render);
+</script>
+</html>

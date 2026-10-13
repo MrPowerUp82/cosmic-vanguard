@@ -28,6 +28,8 @@ Os sheets originais ficam em `assets/sprites/`. Para evitar textos, bordas e par
 
 ## Heróis e golpes
 
+Os seis heróis usam novos sheets de combo com 12 poses por personagem e três impactos por ataque. Uma pressão em J/Z no solo, F para P1 ou J para P2 no cooperativo executa a sequência completa. Os sprites novos estão integrados ao jogo web; a versão nativa mantém os anteriores. O catálogo animado está em `assets/sprites/combos/preview.html`.
+
 - **Solarion** — combo solar, salto/takeoff, voo solar e **Solar Burst**.
 - **Night Talon** — baton combo, grapple leap, glide/dash e **Shadow Onslaught**.
 - **Valoria** — spear combo, battle leap, aerial lunge e **Aegis Storm**.

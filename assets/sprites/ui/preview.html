@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cosmic Vanguard — Sprites de interface</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#050914;color:#e9f2ff}
+body{max-width:1200px;margin:auto;padding:32px 20px}h1{font-size:28px}p{color:#9bb0ca;line-height:1.6}a{color:#79e6ff}
+section{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}figure{margin:0;border:1px solid #244060;border-radius:8px;overflow:hidden;background:#091529}
+.preview{height:180px;display:grid;place-items:center;background-color:#08101d;background-image:linear-gradient(45deg,#122033 25%,transparent 25%),linear-gradient(-45deg,#122033 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#122033 75%),linear-gradient(-45deg,transparent 75%,#122033 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+canvas{max-width:92%;max-height:150px;object-fit:contain}figcaption{padding:12px;font:12px monospace}figcaption a{float:right}h2{margin-top:32px}
+</style>
+<h1>Cosmic Vanguard · HUD e menus</h1>
+<p>32 sprites PNG com transparência. Molduras e botões sem texto: o jogo desenha os rótulos por cima. O fundo quadriculado abaixo serve para conferir o canal alfa e não faz parte dos arquivos.</p>
+<p><a href="../../../index.html">Abrir jogo</a> · <a href="atlas.json">Coordenadas do atlas</a> · <a href="PROMPTS.md">Prompts usados</a></p>
+<h2>HUD</h2><section id="hud"></section>
+<h2>Menu</h2><section id="menu"></section>
+<script src="atlas.js"></script>
+<script>
+for (const [id, sheet] of Object.entries(window.UI_SPRITES.sheets)) {
+  const img = new Image();
+  img.onload = () => {
+    for (const [name, s] of Object.entries(window.UI_SPRITES.sprites)) {
+      if(s.sheet !== id) continue;
+      const figure=document.createElement('figure'), preview=document.createElement('div'), canvas=document.createElement('canvas'), caption=document.createElement('figcaption');
+      preview.className='preview';canvas.width=s.w;canvas.height=s.h;canvas.setAttribute('role','img');canvas.setAttribute('aria-label',name);
+      canvas.getContext('2d').drawImage(img,s.x,s.y,s.w,s.h,0,0,s.w,s.h);
+      caption.textContent=name+' · '+s.w+' × '+s.h;
+      const download=document.createElement('a');download.textContent='PNG';download.download=name+'.png';download.href=canvas.toDataURL('image/png');
+      caption.append(download);preview.append(canvas);figure.append(preview,caption);document.getElementById(id).append(figure);
+    }
+  };
+  img.onerror=()=>{document.getElementById(id).textContent='Falha ao carregar '+sheet.src;};
+  img.src='../../../'+sheet.src;
+}
+</script>
+</html>

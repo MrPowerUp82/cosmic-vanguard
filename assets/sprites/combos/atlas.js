@@ -1,0 +1,880 @@
+window.COMBO_ATLAS = {
+  "version": 1,
+  "width": 1536,
+  "height": 1024,
+  "columns": 4,
+  "rows": 3,
+  "frameCount": 12,
+  "heroes": {
+    "solarion": {
+      "name": "Solarion",
+      "src": "solarion-combo-v1.png",
+      "fps": 12,
+      "attacks": [
+        "Jab solar",
+        "Direto solar",
+        "Uppercut solar"
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 322,
+          "hit": 1,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 322,
+          "hit": 1,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 0,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 322,
+          "hit": 1,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 322,
+          "hit": 1,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 335,
+          "w": 384,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 320,
+          "hit": 2,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 335,
+          "w": 384,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 320,
+          "hit": 2,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 335,
+          "w": 384,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 320,
+          "hit": 2,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 335,
+          "w": 384,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 320,
+          "hit": 2,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 665,
+          "w": 384,
+          "h": 359,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 3,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 665,
+          "w": 384,
+          "h": 359,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 3,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 665,
+          "w": 384,
+          "h": 359,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 3,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 665,
+          "w": 384,
+          "h": 359,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 3,
+          "phase": "recovery"
+        }
+      ]
+    },
+    "night_talon": {
+      "name": "Night Talon",
+      "src": "night_talon-combo-v1.png",
+      "fps": 12,
+      "attacks": [
+        "Golpe horizontal",
+        "Golpe diagonal",
+        "Estocada dupla"
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 1,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 1,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 0,
+          "w": 400,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 1,
+          "phase": "impact",
+          "clip": [
+            [
+              0,
+              0
+            ],
+            [
+              400,
+              0
+            ],
+            [
+              400,
+              260
+            ],
+            [
+              384,
+              280
+            ],
+            [
+              384,
+              350
+            ],
+            [
+              0,
+              350
+            ]
+          ]
+        },
+        {
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 1,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 350,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 328,
+          "hit": 2,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 350,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 328,
+          "hit": 2,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 350,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 328,
+          "hit": 2,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 350,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 328,
+          "hit": 2,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 700,
+          "w": 384,
+          "h": 324,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 700,
+          "w": 416,
+          "h": 324,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 700,
+          "w": 384,
+          "h": 324,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 700,
+          "w": 384,
+          "h": 324,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "recovery"
+        }
+      ]
+    },
+    "valoria": {
+      "name": "Valoria",
+      "src": "valoria-combo-v1.png",
+      "fps": 12,
+      "attacks": [
+        "Estocada",
+        "Varredura",
+        "Impacto de escudo"
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 355,
+          "pivotX": 192,
+          "pivotY": 338,
+          "hit": 1,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 355,
+          "pivotX": 192,
+          "pivotY": 338,
+          "hit": 1,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 0,
+          "w": 464,
+          "h": 355,
+          "pivotX": 192,
+          "pivotY": 338,
+          "hit": 1,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 355,
+          "pivotX": 192,
+          "pivotY": 338,
+          "hit": 1,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 355,
+          "w": 384,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 308,
+          "hit": 2,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 355,
+          "w": 448,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 308,
+          "hit": 2,
+          "phase": "anticipation",
+          "clip": [
+            [
+              0,
+              0
+            ],
+            [
+              448,
+              0
+            ],
+            [
+              448,
+              155
+            ],
+            [
+              384,
+              195
+            ],
+            [
+              384,
+              330
+            ],
+            [
+              0,
+              330
+            ]
+          ]
+        },
+        {
+          "x": 768,
+          "y": 355,
+          "w": 448,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 308,
+          "hit": 2,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 355,
+          "w": 384,
+          "h": 330,
+          "pivotX": 192,
+          "pivotY": 308,
+          "hit": 2,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 685,
+          "w": 384,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 685,
+          "w": 416,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 685,
+          "w": 384,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 685,
+          "w": 384,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 289,
+          "hit": 3,
+          "phase": "recovery"
+        }
+      ]
+    },
+    "red_velocity": {
+      "name": "Red Velocity",
+      "src": "red_velocity-combo-v1.png",
+      "fps": 12,
+      "attacks": [
+        "Jab veloz",
+        "Direto veloz",
+        "Chute lateral"
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 331,
+          "hit": 1,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 331,
+          "hit": 1,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 331,
+          "hit": 1,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 331,
+          "hit": 1,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 350,
+          "w": 384,
+          "h": 327,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 2,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 350,
+          "w": 384,
+          "h": 327,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 2,
+          "phase": "anticipation"
+        },
+        {
+          "x": 736,
+          "y": 350,
+          "w": 416,
+          "h": 327,
+          "pivotX": 224,
+          "pivotY": 317,
+          "hit": 2,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 350,
+          "w": 384,
+          "h": 327,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 2,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 677,
+          "w": 384,
+          "h": 347,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 3,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 677,
+          "w": 432,
+          "h": 347,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 3,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 677,
+          "w": 384,
+          "h": 347,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 3,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 677,
+          "w": 384,
+          "h": 347,
+          "pivotX": 192,
+          "pivotY": 317,
+          "hit": 3,
+          "phase": "recovery"
+        }
+      ]
+    },
+    "abyss_king": {
+      "name": "Abyss King",
+      "src": "abyss_king-combo-v1.png",
+      "fps": 12,
+      "attacks": [
+        "Estocada de tridente",
+        "Corte ascendente",
+        "Golpe pesado"
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 334,
+          "hit": 1,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 334,
+          "hit": 1,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 0,
+          "w": 416,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 334,
+          "hit": 1,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 334,
+          "hit": 1,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 350,
+          "w": 400,
+          "h": 340,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 2,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 350,
+          "w": 384,
+          "h": 340,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 2,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 350,
+          "w": 416,
+          "h": 340,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 2,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 350,
+          "w": 384,
+          "h": 340,
+          "pivotX": 192,
+          "pivotY": 333,
+          "hit": 2,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 690,
+          "w": 384,
+          "h": 334,
+          "pivotX": 192,
+          "pivotY": 304,
+          "hit": 3,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 690,
+          "w": 384,
+          "h": 334,
+          "pivotX": 192,
+          "pivotY": 304,
+          "hit": 3,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 690,
+          "w": 384,
+          "h": 334,
+          "pivotX": 192,
+          "pivotY": 304,
+          "hit": 3,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 690,
+          "w": 384,
+          "h": 334,
+          "pivotX": 192,
+          "pivotY": 304,
+          "hit": 3,
+          "phase": "recovery"
+        }
+      ]
+    },
+    "emerald_nova": {
+      "name": "Emerald Nova",
+      "src": "emerald_nova-combo-v1.png",
+      "fps": 12,
+      "attacks": [
+        "Soco de construto",
+        "Lâmina de luz",
+        "Impacto pesado"
+      ],
+      "frames": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 341,
+          "hit": 1,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 341,
+          "hit": 1,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 341,
+          "hit": 1,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 350,
+          "pivotX": 192,
+          "pivotY": 341,
+          "hit": 1,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 350,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 310,
+          "hit": 2,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 350,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 310,
+          "hit": 2,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 350,
+          "w": 416,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 310,
+          "hit": 2,
+          "phase": "impact"
+        },
+        {
+          "x": 1152,
+          "y": 350,
+          "w": 384,
+          "h": 335,
+          "pivotX": 192,
+          "pivotY": 310,
+          "hit": 2,
+          "phase": "recovery"
+        },
+        {
+          "x": 0,
+          "y": 685,
+          "w": 384,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 301,
+          "hit": 3,
+          "phase": "preparation"
+        },
+        {
+          "x": 384,
+          "y": 685,
+          "w": 384,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 301,
+          "hit": 3,
+          "phase": "anticipation"
+        },
+        {
+          "x": 768,
+          "y": 685,
+          "w": 464,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 301,
+          "hit": 3,
+          "phase": "impact",
+          "clip": [
+            [
+              0,
+              0
+            ],
+            [
+              464,
+              0
+            ],
+            [
+              464,
+              230
+            ],
+            [
+              384,
+              230
+            ],
+            [
+              384,
+              339
+            ],
+            [
+              0,
+              339
+            ]
+          ]
+        },
+        {
+          "x": 1152,
+          "y": 685,
+          "w": 384,
+          "h": 339,
+          "pivotX": 192,
+          "pivotY": 301,
+          "hit": 3,
+          "phase": "recovery"
+        }
+      ]
+    }
+  }
+};

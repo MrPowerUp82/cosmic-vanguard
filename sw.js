@@ -3,7 +3,7 @@
    Garante funcionamento 100% offline do jogo e leitor de HQs.
    ========================================================================== */
 
-const CACHE_NAME = 'cv-cache-v2';
+const CACHE_NAME = 'cv-cache-v5';
 
 const PRECACHE_URLS = [
   './',
@@ -11,6 +11,7 @@ const PRECACHE_URLS = [
   './style.css',
   './core.js',
   './game.js',
+  './game.js?v=combos-v1',
   './pwa.js',
   './manifest.webmanifest',
   './manifest.json',
@@ -25,6 +26,16 @@ const PRECACHE_URLS = [
 
   // Sprites e Atlases Principais
   './assets/banner.png',
+  './assets/sprites/ui/atlas.js',
+  './assets/sprites/ui/hud.png',
+  './assets/sprites/ui/menu.png',
+  './assets/sprites/combos/atlas.js?v=2',
+  './assets/sprites/combos/solarion-combo-v1.png',
+  './assets/sprites/combos/night_talon-combo-v1.png',
+  './assets/sprites/combos/valoria-combo-v1.png',
+  './assets/sprites/combos/red_velocity-combo-v1.png',
+  './assets/sprites/combos/abyss_king-combo-v1.png',
+  './assets/sprites/combos/emerald_nova-combo-v1.png',
   './assets/sprites/processed/atlas.js',
   './assets/sprites/scenarios/scenarios.js',
 

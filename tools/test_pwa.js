@@ -39,7 +39,7 @@ assert(urls.length >= 70, `PRECACHE_URLS deve ter lista completa de arquivos (en
 
 for (const relUrl of urls) {
   if (relUrl === './') continue; // Raiz é servida por index.html
-  const filePath = path.join(baseDir, relUrl.replace(/^\.\//, ''));
+  const filePath = path.join(baseDir, relUrl.split('?')[0].replace(/^\.\//, ''));
   assert(fs.existsSync(filePath), `Arquivo em PRECACHE_URLS deve existir: ${relUrl}`);
   assert(fs.statSync(filePath).size > 0, `Arquivo ${relUrl} não deve estar vazio`);
 }
